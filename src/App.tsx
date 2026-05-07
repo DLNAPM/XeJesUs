@@ -46,6 +46,7 @@ import AdminDashboard from './components/AdminDashboard';
 import SettingsPage from './components/Settings';
 import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
+import Chatbot from './components/Chatbot';
 import { FileText, User as UserIcon, GraduationCap, Shield, Settings as SettingsIcon } from 'lucide-react';
 
 type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin';
@@ -518,6 +519,7 @@ export default function App() {
           onClose={() => setPremiumModal({ ...premiumModal, isOpen: false })} 
           featureName={premiumModal.feature} 
         />
+        <Chatbot userProfile={userProfile} />
       </main>
 
       {/* Mobile Nav */}
