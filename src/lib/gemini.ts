@@ -1,12 +1,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const apiKey = import.meta.env.VITE_API_KEY || process.env.GEMINI_API_KEY;
+let aiInstance: GoogleGenAI | null = null;
 
-if (!apiKey) {
-  console.warn("GEMINI_API_KEY is not defined. AI features will not work.");
+function getAi() {
+  if (aiInstance) return aiInstance;
+  
+  const apiKey = import.meta.env.VITE_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not defined. Please configure it in your environment settings.");
+  }
+  
+  aiInstance = new GoogleGenAI({ apiKey });
+  return aiInstance;
 }
-
-export const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 export const MODELS = {
   TEXT: "gemini-3-flash-preview",
@@ -14,6 +20,7 @@ export const MODELS = {
 };
 
 export async function generateExegesis(scripture: string, queryText: string) {
+  const ai = getAi();
   const prompt = `
     You are an expert biblical scholar specializing in exegesis (leading out the author's original meaning).
     Your goal is to explain the following scripture reference deeply, avoiding subjective or forced interpretations (eisegesis).
@@ -100,6 +107,7 @@ export async function generateExegesis(scripture: string, queryText: string) {
 }
 
 export async function fetchDefinition(word: string, context: string): Promise<string> {
+  const ai = getAi();
   const prompt = `
     Define the following word or phrase in a biblical, theological, or historical context related to the study of the Bible:
     "${word}"
@@ -122,6 +130,7 @@ export async function fetchDefinition(word: string, context: string): Promise<st
 }
 
 export async function searchScriptureBySubject(subject: string): Promise<{reference: string, reason: string}[]> {
+  const ai = getAi();
   const prompt = `
     Find relevant biblical scripture references for the following subject: "${subject}".
     Return a JSON array of objects, each containing:
