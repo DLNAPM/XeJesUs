@@ -95,15 +95,18 @@ service cloud.firestore {
         allow delete: if (isOwner(userId) && !isFrozen()) || isAdmin();
         
         function isValidChatSession(data) {
-          return data.keys().hasAll(['userId', 'name', 'messages', 'createdAt'])
+          return isValidId(sessionId)
+            && data.keys().hasAll(['userId', 'name', 'messages', 'createdAt'])
             && data.userId == userId
             && data.name is string && data.name.size() <= 200
             && data.messages is list && data.messages.size() <= 100
-            && (data.createdAt == request.time || data.createdAt is timestamp);
+            && (data.createdAt == request.time || data.createdAt is timestamp)
+            && (!('updatedAt' in data.keys()) || data.updatedAt == request.time || data.updatedAt is timestamp);
         }
         
         allow create: if isOwner(userId) && isVerified() && isValidChatSession(incoming()) && !isFrozen();
-        allow update: if isOwner(userId) && isVerified() && isValidChatSession(incoming()) && !isFrozen();
+        allow update: if isOwner(userId) && isVerified() && isValidChatSession(incoming()) && !isFrozen()
+          && incoming().createdAt == existing().createdAt; // Immutability
       }
     }
 
