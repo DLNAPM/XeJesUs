@@ -73,3 +73,15 @@ export interface Message {
   text: string;
   createdAt: any;
 }
+
+export interface ChatSession {
+  id?: string;
+  userId: string;
+  name: string;
+  messages: {
+    role: 'user' | 'model';
+    text: string;
+  }[];
+  createdAt: any;
+  updatedAt?: any;
+}

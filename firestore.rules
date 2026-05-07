@@ -88,6 +88,23 @@ service cloud.firestore {
         allow update: if isOwner(userId) && isVerified() && isValidGlossary(incoming()) && !isFrozen()
           && incoming().word == existing().word; // Word is immutable in this app's context
       }
+
+      // Chat Sessions
+      match /chat_sessions/{sessionId} {
+        allow get, list: if isOwner(userId);
+        allow delete: if (isOwner(userId) && !isFrozen()) || isAdmin();
+        
+        function isValidChatSession(data) {
+          return data.keys().hasAll(['userId', 'name', 'messages', 'createdAt'])
+            && data.userId == userId
+            && data.name is string && data.name.size() <= 200
+            && data.messages is list && data.messages.size() <= 100
+            && (data.createdAt == request.time || data.createdAt is timestamp);
+        }
+        
+        allow create: if isOwner(userId) && isVerified() && isValidChatSession(incoming()) && !isFrozen();
+        allow update: if isOwner(userId) && isVerified() && isValidChatSession(incoming()) && !isFrozen();
+      }
     }
 
     // --- Direct Shares ---

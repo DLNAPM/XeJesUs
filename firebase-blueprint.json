@@ -116,6 +116,28 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["senderId", "recipientEmail", "inquiryId", "createdAt"]
+    },
+    "ChatSession": {
+      "title": "Chat Session",
+      "description": "A saved AI chat session for premium users.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string", "enum": ["user", "model"] },
+              "text": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "messages", "createdAt"]
     }
   },
   "firestore": {
@@ -130,6 +152,10 @@
     "/users/{userId}/glossary/{entryId}": {
       "schema": "GlossaryEntry",
       "description": "Personal theological lexicon"
+    },
+    "/users/{userId}/chat_sessions/{sessionId}": {
+      "schema": "ChatSession",
+      "description": "Saved AI conversations"
     },
     "/inquiries/{inquiryId}": {
       "schema": "Inquiry",
