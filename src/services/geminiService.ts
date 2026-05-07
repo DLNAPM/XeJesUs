@@ -6,9 +6,11 @@ let aiInstance: GoogleGenAI | null = null;
 function getAi() {
   if (aiInstance) return aiInstance;
   
-  const apiKey = process.env.GEMINI_API_KEY || '';
+  // Use both possible locations for the API key in a Vite environment
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  
   if (!apiKey) {
-    throw new Error("Gemini API key is missing. Please ensure it is set in the environment.");
+    throw new Error("Gemini API key is missing. Please ensure GEMINI_API_KEY is configured in your project settings.");
   }
   
   aiInstance = new GoogleGenAI({ apiKey });
@@ -35,16 +37,18 @@ ${contextStrings}
 
 Guidelines:
 1. Be encouraging, scholarly, and spiritually insightful.
-2. When asked about recent studies, refer to the provided context.
-3. Help the user apply these biblical truths to modern life and current worldly events.
-4. Keep the tone "EiseJesUs" - blending traditional exegesis with modern application.
-5. If a user asks something completely unrelated to faith or their studies, gently guide them back to their spiritual journey.
-6. Keep responses relatively concise but profound.`;
+2. Use the provided Google Search tool to research current events or additional context if relevant to the user's questions.
+3. When asked about recent studies, refer to the provided context.
+4. Help the user apply these biblical truths to modern life and current worldly events.
+5. Keep the tone "EiseJesUs" - blending traditional exegesis with modern application.
+6. If a user asks something completely unrelated to faith or their studies, gently guide them back to their spiritual journey.
+7. Keep responses relatively concise but profound.`;
 
   const chat = ai.chats.create({
     model: modelName,
     config: {
       systemInstruction,
+      tools: [{ googleSearch: {} }] // Adding Google Search Grounding
     },
     history: history.map(h => ({
       role: h.role,

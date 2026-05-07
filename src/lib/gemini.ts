@@ -5,9 +5,9 @@ let aiInstance: GoogleGenAI | null = null;
 function getAi() {
   if (aiInstance) return aiInstance;
   
-  const apiKey = import.meta.env.VITE_API_KEY || process.env.GEMINI_API_KEY;
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not defined. Please configure it in your environment settings.");
+    throw new Error("Gemini API key is missing. Please ensure GEMINI_API_KEY is configured in your project settings.");
   }
   
   aiInstance = new GoogleGenAI({ apiKey });
@@ -43,6 +43,7 @@ export async function generateExegesis(scripture: string, queryText: string) {
       contents: prompt,
       config: {
         responseMimeType: "application/json",
+        tools: [{ googleSearch: {} }],
         responseSchema: {
           type: Type.OBJECT,
           properties: {
