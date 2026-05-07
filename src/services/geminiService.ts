@@ -1,13 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { Inquiry } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || (import.meta as any).env.VITE_GEMINI_API_KEY || '' });
 
 export async function chatWithSanctuary(
   message: string, 
   history: { role: 'user' | 'model', text: string }[],
   recentInquiries: Inquiry[]
 ) {
+  if (!process.env.GEMINI_API_KEY && !(import.meta as any).env.VITE_GEMINI_API_KEY) {
+    throw new Error("API key is missing. Please ensure GEMINI_API_KEY is set in the environment.");
+  }
+
   const modelName = "gemini-3-flash-preview";
   
   const contextStrings = recentInquiries.map(inq => 
