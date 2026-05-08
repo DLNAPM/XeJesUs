@@ -27,7 +27,7 @@ import {
   signInAnonymously,
   updateDoc
 } from './lib/firebase';
-import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX, UserSearch } from 'lucide-react';
+import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX, UserSearch, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -58,6 +58,10 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showHowTo, setShowHowTo] = useState(false);
+  const [hasWatchedHowTo, setHasWatchedHowTo] = useState(() => {
+    return sessionStorage.getItem('hasWatchedHowTo') === 'true';
+  });
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [showHelpPointer, setShowHelpPointer] = useState(false);
@@ -333,6 +337,20 @@ export default function App() {
               <UserSearch className="w-5 h-5 text-accent group-hover:text-bg-primary transition-colors" />
               Test Drive as Guest
             </button>
+
+            <motion.button 
+              animate={!hasWatchedHowTo ? { opacity: [1, 0.5, 1], scale: [1, 1.02, 1] } : {}}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              onClick={() => {
+                setShowHowTo(true);
+                setHasWatchedHowTo(true);
+                sessionStorage.setItem('hasWatchedHowTo', 'true');
+              }}
+              className="w-full px-8 py-4 bg-accent/10 border border-accent/20 text-accent font-sans font-bold rounded-xl text-lg shadow-sm hover:bg-accent/20 transition-all flex items-center justify-center gap-3 group"
+            >
+              <Play className="w-5 h-5 fill-current" />
+              Play How To
+            </motion.button>
           </div>
 
           {!getAuthService() && (
@@ -463,6 +481,23 @@ export default function App() {
               <span className="tracking-wide text-left">{item.label}</span>
             </button>
           ))}
+
+          <motion.button
+            animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], x: [0, 2, 0] } : {}}
+            transition={{ repeat: Infinity, duration: 2 }}
+            onClick={() => {
+              setShowHowTo(true);
+              setHasWatchedHowTo(true);
+              sessionStorage.setItem('hasWatchedHowTo', 'true');
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-bold",
+              "bg-accent/5 text-accent border border-accent/10 hover:bg-accent/10"
+            )}
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span className="tracking-wide text-left">Play How To</span>
+          </motion.button>
         </div>
         
         <div className="pt-6 border-t border-ui-border font-sans">
@@ -514,6 +549,61 @@ export default function App() {
         {/* Global Modals */}
         <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
         <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+        
+        {/* How To Video Modal */}
+        <AnimatePresence>
+          {showHowTo && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowHowTo(false)}
+                className="absolute inset-0 bg-bg-primary/95 backdrop-blur-xl"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-5xl bg-ui-card rounded-3xl overflow-hidden shadow-2xl border border-ui-border"
+              >
+                <div className="p-4 border-b border-ui-border flex items-center justify-between bg-ui-sidebar/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
+                      <Video className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-serif font-bold text-text-primary">EiseJesUs App Tour</h3>
+                      <p className="text-xs text-text-secondary uppercase tracking-widest font-bold">Guided Sanctuary Orientation</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowHowTo(false)}
+                    className="w-10 h-10 rounded-full hover:bg-accent/10 flex items-center justify-center text-text-secondary hover:text-accent transition-all"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="aspect-video bg-black relative">
+                  <video 
+                    src="/HowToUseEiseJesUsApp.mp4" 
+                    controls 
+                    autoPlay 
+                    className="w-full h-full"
+                    onPlay={() => {
+                      setHasWatchedHowTo(true);
+                      sessionStorage.setItem('hasWatchedHowTo', 'true');
+                    }}
+                  />
+                </div>
+                <div className="p-4 bg-ui-sidebar/30 text-center">
+                  <p className="text-xs text-text-secondary font-serif italic">Discover how to travel through the text to discover Jesus' true intentions.</p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         <PremiumOverlay 
           isOpen={premiumModal.isOpen} 
           onClose={() => setPremiumModal({ ...premiumModal, isOpen: false })} 
