@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle } from 'lucide-react';
+import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle, Play, Video } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -51,6 +51,22 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 <div className="p-8 bg-text-primary text-bg-primary rounded-3xl shadow-xl border border-ui-border/10 italic font-serif text-xl leading-relaxed">
                   <span className="text-accent font-bold">EiseJesUs</span> is the divine synthesis of <span className="underline decoration-accent/40 underline-offset-4">Eisegesis</span> (leading out meaning) and the name of <span className="text-accent">Our Savior, Jesus Christ</span>.
                   <p className="mt-4 text-base opacity-80 not-italic font-sans tracking-wide">Our purpose is to travel through the text to discover Jesus' true intentions for <span className="text-accent italic">Us</span> today.</p>
+                </div>
+              </section>
+
+              {/* Orientation */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">App Orientation</h3>
+                <div className="p-6 bg-accent/5 border border-accent/20 rounded-3xl flex items-center gap-6">
+                  <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center text-bg-primary shadow-lg flex-shrink-0">
+                    <Video className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-text-primary uppercase tracking-tight mb-1">New to the Sanctuary?</h4>
+                    <p className="text-sm font-serif italic text-text-secondary leading-relaxed">
+                      Click the <span className="font-sans font-bold text-accent inline-flex items-center gap-1 bg-accent/10 px-2 py-0.5 rounded-lg"><Play className="w-3 h-3 fill-current" /> Play How To</span> button in the "Test Drive as Guest" section to watch a guided tour of the app's powerful study features.
+                    </p>
+                  </div>
                 </div>
               </section>
 

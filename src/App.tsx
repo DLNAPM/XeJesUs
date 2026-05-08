@@ -27,7 +27,31 @@ import {
   signInAnonymously,
   updateDoc
 } from './lib/firebase';
-import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX, UserSearch, Play } from 'lucide-react';
+import { 
+  Home, 
+  Search, 
+  Users, 
+  LogOut, 
+  ChevronRight, 
+  BookOpen, 
+  Map, 
+  Video, 
+  MessageSquare, 
+  Share2, 
+  HelpCircle, 
+  Moon, 
+  Sun, 
+  Settings, 
+  UserX, 
+  UserSearch, 
+  Play, 
+  X,
+  FileText,
+  User as UserIcon,
+  GraduationCap,
+  Shield,
+  Settings as SettingsIcon 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -47,7 +71,6 @@ import SettingsPage from './components/Settings';
 import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
 import Chatbot from './components/Chatbot';
-import { FileText, User as UserIcon, GraduationCap, Shield, Settings as SettingsIcon } from 'lucide-react';
 
 type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin';
 
