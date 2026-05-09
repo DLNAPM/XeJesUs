@@ -608,25 +608,16 @@ export default function App() {
                   </button>
                 </div>
                 <div className="aspect-video bg-black relative">
-                  <video 
-                    src="/HowToUseEiseJesUsApp.mp4" 
-                    controls 
-                    autoPlay 
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src="https://www.youtube.com/embed/B2auVBhpcjU?autoplay=1" 
+                    title="YouTube video player" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowFullScreen
                     className="w-full h-full"
-                    onPlay={() => {
-                      setHasWatchedHowTo(true);
-                      sessionStorage.setItem('hasWatchedHowTo', 'true');
-                    }}
-                    onError={(e) => {
-                      const target = e.target as HTMLVideoElement;
-                      if (!target.src.includes('undefined')) {
-                        console.error("Video asset missing:", target.src);
-                      }
-                    }}
-                  />
-                  <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-8 text-center bg-black/40">
-                    <p className="text-white/20 text-xs font-serif italic">Video asset should be placed in the public/ directory.</p>
-                  </div>
+                  ></iframe>
                 </div>
                 <div className="p-4 bg-ui-sidebar/30 text-center">
                   <p className="text-xs text-text-secondary font-serif italic">Discover how to travel through the text to discover Jesus' true intentions.</p>
