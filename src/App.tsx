@@ -361,19 +361,15 @@ export default function App() {
               Test Drive as Guest
             </button>
 
-            <motion.button 
-              animate={!hasWatchedHowTo ? { opacity: [1, 0.5, 1], scale: [1, 1.02, 1] } : {}}
+            <motion.div 
+              animate={{ opacity: [1, 0.5, 1] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              onClick={() => {
-                setShowHowTo(true);
-                setHasWatchedHowTo(true);
-                sessionStorage.setItem('hasWatchedHowTo', 'true');
-              }}
-              className="w-full px-8 py-4 bg-accent/10 border border-accent/20 text-accent font-sans font-bold rounded-xl text-lg shadow-sm hover:bg-accent/20 transition-all flex items-center justify-center gap-3 group"
+              className="w-full px-6 py-4 bg-accent/5 border border-accent/10 rounded-xl text-center"
             >
-              <Play className="w-5 h-5 fill-current" />
-              Play How To
-            </motion.button>
+              <p className="text-[10px] sm:text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] leading-relaxed">
+                Log into the "Test Drive as Guest" above and Click on the "Play How To" Video once inside
+              </p>
+            </motion.div>
           </div>
 
           {!getAuthService() && (
