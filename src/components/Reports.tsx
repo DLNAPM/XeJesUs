@@ -12,6 +12,7 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showSettingsGuidance, setShowSettingsGuidance] = useState(false);
   const [bibleWebsite, setBibleWebsite] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -290,7 +291,13 @@ export default function Reports() {
                             {selectedInquiry.scripture}
                           </a>
                         ) : (
-                          <div className="text-2xl font-black italic mb-4">{selectedInquiry.scripture}</div>
+                          <button 
+                            onClick={() => setShowSettingsGuidance(true)}
+                            className="text-2xl font-black italic mb-4 block hover:opacity-70 transition-opacity text-left cursor-help"
+                            style={{ color: '#3b82f6' }}
+                          >
+                            {selectedInquiry.scripture}
+                          </button>
                         )}
                         <div className="text-xs uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Primary Inquiry</div>
                         <div className="text-xl italic leading-relaxed text-[#1e293b]">"{selectedInquiry.query}"</div>
@@ -363,9 +370,14 @@ export default function Reports() {
                             {ref}
                           </a>
                         ) : (
-                          <span key={i} className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold border border-[#e2e8f0]" style={{ color: '#3b82f6' }}>
+                          <button 
+                            key={i} 
+                            onClick={() => setShowSettingsGuidance(true)}
+                            className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold border border-[#e2e8f0] hover:opacity-70 transition-opacity cursor-help" 
+                            style={{ color: '#3b82f6' }}
+                          >
                             {ref}
-                          </span>
+                          </button>
                         );
                       })}
                     </div>
@@ -421,6 +433,33 @@ export default function Reports() {
           }
         }
       `}</style>
+      {/* Guidance Modal */}
+      <AnimatePresence>
+        {showSettingsGuidance && (
+          <div className="fixed inset-0 z-[120] bg-text-primary/10 backdrop-blur-sm flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-bg-primary p-8 rounded-[2.5rem] shadow-2xl border border-ui-border max-w-md w-full text-center"
+            >
+              <div className="w-16 h-16 rounded-3xl bg-accent/10 flex items-center justify-center text-accent mx-auto mb-6">
+                <BookOpen className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-serif italic font-bold text-text-primary mb-4">Registry Configuration</h3>
+              <p className="text-sm font-serif italic text-text-secondary leading-relaxed mb-8">
+                To activate these links, please navigate to your <span className="text-accent font-sans font-bold uppercase tracking-tight">Sanctuary Settings</span> and configure your <span className="text-accent font-sans font-bold uppercase tracking-tight">Preferred Bible Website Link</span> within the Bible Canonical Link section.
+              </p>
+              <button 
+                onClick={() => setShowSettingsGuidance(false)}
+                className="w-full py-4 bg-text-primary text-bg-primary rounded-xl font-sans font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-all"
+              >
+                Return to Registry
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

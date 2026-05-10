@@ -77,6 +77,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [senderEmail, setSenderEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showSettingsGuidance, setShowSettingsGuidance] = useState(false);
   const [activeTab, setActiveTab] = useState<'faith' | 'academic' | 'geo' | 'video'>('faith');
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareMode, setShareMode] = useState<'groups' | 'individual'>('groups');
@@ -403,7 +404,13 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                 <ExternalLink className="w-2.5 h-2.5" />
               </a>
             ) : (
-              <span className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
+              <button 
+                onClick={() => setShowSettingsGuidance(true)}
+                className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2 hover:opacity-70 transition-opacity text-left cursor-help"
+                title="Configure Bible Link in Settings"
+              >
+                {inquiry.scripture}
+              </button>
             )}
             <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
             <div className="text-xs text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
@@ -481,7 +488,13 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                                     <ExternalLink className="w-3 h-3 opacity-0 group-hover/ref:opacity-100 transition-opacity" />
                                   </a>
                                 ) : (
-                                  <span className="text-sm italic font-serif leading-relaxed text-text-secondary">{ref}</span>
+                                  <button 
+                                    onClick={() => setShowSettingsGuidance(true)}
+                                    className="text-sm italic font-serif leading-relaxed text-text-secondary hover:text-accent transition-colors text-left cursor-help"
+                                    title="Configure Bible Link in Settings"
+                                  >
+                                    {ref}
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -622,6 +635,36 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
           </div>
         </div>
       </div>
+
+      {/* Scripture Link Guidance Modal */}
+      <AnimatePresence>
+        {showSettingsGuidance && (
+          <div className="fixed inset-0 z-[120] bg-text-primary/10 backdrop-blur-sm flex items-end justify-center p-6 md:pb-12 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="bg-text-primary text-bg-primary p-6 md:p-8 rounded-[2.5rem] shadow-2xl border border-white/10 flex flex-col md:flex-row items-center gap-6 max-w-xl w-full pointer-events-auto"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                <Globe className="w-7 h-7" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h4 className="text-sm font-sans font-black uppercase tracking-[0.2em] text-accent mb-2">Canonical Link Required</h4>
+                <p className="text-sm font-serif italic leading-relaxed opacity-80">
+                  To open this scripture, please visit your <span className="text-white font-bold font-sans">Sanctuary Settings</span> and configure your <span className="text-white font-bold font-sans">Preferred Bible Website Link</span> in the <span className="text-accent underline font-sans font-bold">Bible Canonical Link</span> section.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowSettingsGuidance(false)}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-sans font-bold uppercase tracking-widest transition-all"
+              >
+                I Understand
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Share Modal */}
       <AnimatePresence>
