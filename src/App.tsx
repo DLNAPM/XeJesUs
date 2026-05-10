@@ -118,7 +118,7 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
-    const saved = localStorage.getItem('eisejesus-theme');
+    const saved = localStorage.getItem('xejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
   });
 
@@ -141,7 +141,7 @@ export default function App() {
   }, [user, isPremium, showHelp, hasInquiries]);
 
   useEffect(() => {
-    localStorage.setItem('eisejesus-theme', theme);
+    localStorage.setItem('xejesus-theme', theme);
     document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
   }, [theme]);
 
@@ -217,7 +217,7 @@ export default function App() {
             try {
               const newProfile: UserProfile = {
                 uid: u.uid,
-                email: u.isAnonymous ? 'guest@eisejesus.app' : (u.email || ''),
+                email: u.isAnonymous ? 'guest@xejesus.app' : (u.email || ''),
                 displayName: u.isAnonymous ? 'Test Pilgrim' : (u.displayName || 'Pilgrim'),
                 photoURL: u.isAnonymous ? 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest' : (u.photoURL || ''),
                 role: isTargetAdmin ? 'admin' : 'user',
@@ -325,7 +325,7 @@ export default function App() {
           transition={{ repeat: Infinity, duration: 2 }}
           className="text-accent font-serif text-3xl italic font-bold"
         >
-          EiseJesUs
+          XeJesUs
         </motion.div>
       </div>
     );
@@ -342,7 +342,7 @@ export default function App() {
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
           onClick={() => setShowHelp(true)}
           className="absolute top-8 right-8 w-12 h-12 rounded-full bg-ui-card shadow-xl border border-ui-border flex items-center justify-center text-accent hover:scale-110 transition-all z-50 group"
-          title="Understanding EiseJesUs"
+          title="Understanding XeJesUs"
         >
           <span className="font-serif italic font-bold text-xl group-hover:not-italic group-hover:scale-125 transition-all">?</span>
         </motion.button>
@@ -369,7 +369,7 @@ export default function App() {
              </div>
           </div>
           <h1 className="text-6xl md:text-8xl text-text-primary font-serif mb-2 tracking-tight">
-            EiseJesUs
+            XeJesUs
           </h1>
           <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-12 opacity-80 uppercase tracking-widest text-xs leading-tight">
             The divine synthesis of Eisegesis and the name of Our Savior, Jesus Christ
@@ -418,7 +418,7 @@ export default function App() {
         {/* Privacy Policy Footer */}
         <div className="absolute bottom-8 left-0 right-0 text-center z-10 px-6">
           <p className="text-xs font-sans font-bold text-natural-text/40 uppercase tracking-[0.2em] mb-2 leading-relaxed">
-            By using "EiseJesUs", you agree to the terms outlined in this <button onClick={() => setShowPrivacy(true)} className="text-natural-accent hover:underline underline-offset-4 decoration-natural-accent/30">Privacy Policy</button>.
+            By using "XeJesUs", you agree to the terms outlined in this <button onClick={() => setShowPrivacy(true)} className="text-natural-accent hover:underline underline-offset-4 decoration-natural-accent/30">Privacy Policy</button>.
           </p>
         </div>
 
@@ -516,9 +516,9 @@ export default function App() {
       <div className="md:hidden flex items-center justify-between px-4 py-3 bg-ui-sidebar border-b border-ui-border sticky top-0 z-[60]">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-t from-accent to-accent-soft rounded-full flex items-center justify-center text-bg-primary shadow-sm border border-accent/20">
-             <span className="text-[10px] font-serif font-black italic">EJ</span>
+             <span className="text-[10px] font-serif font-black italic">XJ</span>
           </div>
-          <span className="font-serif italic font-bold text-lg tracking-tight">EiseJesUs</span>
+          <span className="font-serif italic font-bold text-lg tracking-tight">XeJesUs</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -576,7 +576,7 @@ export default function App() {
                 setShowHelpPointer(false);
               }}
               className="w-8 h-8 rounded-full bg-ui-card flex items-center justify-center text-accent hover:bg-ui-card/80 transition-all shadow-sm group"
-              title="Understanding EiseJesUs"
+              title="Understanding XeJesUs"
             >
               <span className="font-serif italic font-bold group-hover:not-italic">?</span>
             </motion.button>
@@ -606,7 +606,7 @@ export default function App() {
           <div className="w-16 h-16 bg-gradient-to-t from-accent to-accent-soft rounded-full relative overflow-hidden flex items-center justify-center border border-accent/20 shadow-sm transition-all">
             <div className="absolute bottom-0 w-full h-1/2 bg-white/10 blur-sm"></div>
           </div>
-          <h2 className="text-2xl font-serif text-text-primary tracking-tight italic font-bold">EiseJesUs</h2>
+          <h2 className="text-2xl font-serif text-text-primary tracking-tight italic font-bold">XeJesUs</h2>
           <p className="text-xs text-text-secondary uppercase tracking-widest leading-tight">Faith through Understanding</p>
         </div>
         
@@ -728,7 +728,7 @@ export default function App() {
                       <Video className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-serif font-bold text-text-primary">EiseJesUs App Tour</h3>
+                      <h3 className="text-lg font-serif font-bold text-text-primary">XeJesUs App Tour</h3>
                       <p className="text-xs text-text-secondary uppercase tracking-widest font-bold">Guided Sanctuary Orientation</p>
                     </div>
                   </div>

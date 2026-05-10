@@ -32,7 +32,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </div>
                 <div>
                   <h2 className="text-3xl font-serif text-text-primary italic leading-tight font-bold">Sanctuary Guidance</h2>
-                  <p className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] mt-1">Understanding EiseJesUs</p>
+                  <p className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] mt-1">Understanding XeJesUs</p>
                 </div>
               </div>
               <button 
@@ -49,7 +49,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               <section className="space-y-4">
                 <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">The Name</h3>
                 <div className="p-8 bg-text-primary text-bg-primary rounded-3xl shadow-xl border border-ui-border/10 italic font-serif text-xl leading-relaxed">
-                  <span className="text-accent font-bold">EiseJesUs</span> is the divine synthesis of <span className="underline decoration-accent/40 underline-offset-4">Eisegesis</span> (leading out meaning) and the name of <span className="text-accent">Our Savior, Jesus Christ</span>.
+                  <span className="text-accent font-bold">XeJesUs</span> is the divine synthesis of <span className="underline decoration-accent/40 underline-offset-4">Eisegesis</span> (leading out meaning) and the name of <span className="text-accent">Our Savior, Jesus Christ</span>.
                   <p className="mt-4 text-base opacity-80 not-italic font-sans tracking-wide">Our purpose is to travel through the text to discover Jesus' true intentions for <span className="text-accent italic">Us</span> today.</p>
                 </div>
               </section>
@@ -109,7 +109,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </div>
                 <div className="text-sm text-text-secondary/80 font-serif leading-relaxed space-y-4 italic">
                   <p>
-                    EiseJesUs utilizes advanced AI to assist in scriptural analysis. While we strive for theological accuracy, these results should be used for educational and spiritual exploration.
+                    XeJesUs utilizes advanced AI to assist in scriptural analysis. While we strive for theological accuracy, these results should be used for educational and spiritual exploration.
                   </p>
                   <p className="font-bold text-text-primary">
                     This search is NOT a replacement for personal prayer, pastoral guidance, or the direct leading of the Holy Spirit.

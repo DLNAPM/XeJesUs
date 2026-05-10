@@ -1,4 +1,4 @@
-# Security Specification for EiseJesUs
+# Security Specification for XeJesUs
 
 ## Data Invariants
 1. **Users**: Users can only read and write their own profile.

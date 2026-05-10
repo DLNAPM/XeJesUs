@@ -48,7 +48,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
               <section>
                 <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-3 not-italic">Our Commitment</h3>
                 <p>
-                  Your spiritual seeking is deeply personal. We are committed to protecting your privacy and the sanctity of your study experiences within EiseJesUs.
+                  Your spiritual seeking is deeply personal. We are committed to protecting your privacy and the sanctity of your study experiences within XeJesUs.
                 </p>
               </section>
 
@@ -74,7 +74,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
               </section>
               
               <div className="p-6 bg-ui-sidebar/30 rounded-2xl border border-ui-border text-xs opacity-70">
-                By using "EiseJesUs", you agree to the terms outlined in this Privacy Policy. We may update this covenant as the sanctuary grows.
+                By using "XeJesUs", you agree to the terms outlined in this Privacy Policy. We may update this covenant as the sanctuary grows.
               </div>
             </div>
 

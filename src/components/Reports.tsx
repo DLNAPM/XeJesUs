@@ -115,7 +115,7 @@ export default function Reports() {
         }
       });
       
-      pdf.save(`EiseJesUs-Report-${selectedInquiry.scripture.replace(/\s+/g, '-')}.pdf`);
+      pdf.save(`XeJesUs-Report-${selectedInquiry.scripture.replace(/\s+/g, '-')}.pdf`);
     } catch (error) {
       console.error("PDF Generation failed:", error);
     } finally {
@@ -257,8 +257,8 @@ export default function Reports() {
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-4" style={{ color: '#3b82f6' }}>
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold italic" style={{ backgroundColor: '#3b82f6' }}>EJ</div>
-                        <span className="font-sans font-black uppercase tracking-[0.3em] text-xs">EiseJesUs Registry</span>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold italic" style={{ backgroundColor: '#3b82f6' }}>XJ</div>
+                        <span className="font-sans font-black uppercase tracking-[0.3em] text-xs">XeJesUs Registry</span>
                       </div>
                       <h1 className="text-4xl font-black italic tracking-tight mb-2">Technical Exegesis Report</h1>
                       <p className="text-sm font-sans font-medium text-[#64748b] uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
@@ -404,7 +404,7 @@ export default function Reports() {
                   {/* Footer Seal */}
                   <footer className="mt-20 pt-10 border-t border-[#f1f5f9] flex justify-between items-end">
                     <div className="text-[11px] text-[#cbd5e1] font-sans uppercase tracking-[0.5em] font-bold">
-                       Official Registry of EiseJesUs • Sanctuary Study Archives
+                       Official Registry of XeJesUs • Sanctuary Study Archives
                     </div>
                     <div className="opacity-10 grayscale brightness-0">
                        <span className="text-4xl font-serif italic text-[#0f172a]">Truth.</span>
