@@ -51,7 +51,8 @@ import {
   GraduationCap,
   Shield,
   Settings as SettingsIcon,
-  Menu
+  Menu,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -90,6 +91,7 @@ export default function App() {
   const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [showHelpPointer, setShowHelpPointer] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = localStorage.getItem('eisejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
@@ -241,8 +243,9 @@ export default function App() {
         alert("Firebase Auth Domain is not configured correctly.");
       } else if (error.code === 'auth/operation-not-supported-in-this-environment' || 
                  error.message?.includes('missing initial state') ||
-                 error.message?.includes('storage-partitioned')) {
-        alert("Login is restricted in this mobile browser view. Please tap the 'Open in New Tab' icon or use a desktop browser to complete the login.");
+                 error.message?.includes('storage-partitioned') ||
+                 error.message?.includes('sessionStorage is inaccessible')) {
+        setShowLoginErrorModal(true);
       } else {
         alert("Login failed: " + (error.message || "Unknown error"));
       }
@@ -396,6 +399,63 @@ export default function App() {
 
         <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
         <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+
+        {/* Login Error Modal for Restrictive Browser Environments */}
+        <AnimatePresence>
+          {showLoginErrorModal && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowLoginErrorModal(false)}
+                className="absolute inset-0 bg-text-primary/20 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative bg-bg-primary p-8 rounded-[3rem] shadow-2xl border border-ui-border max-w-lg w-full overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-2 bg-accent opacity-20"></div>
+                
+                <div className="w-20 h-20 bg-accent/10 rounded-[2rem] flex items-center justify-center text-accent mx-auto mb-8">
+                  <Globe className="w-10 h-10" />
+                </div>
+                
+                <h3 className="text-2xl font-serif font-bold text-text-primary text-center italic mb-4">Login Boundary Detected</h3>
+                
+                <div className="space-y-4 mb-8">
+                  <p className="text-text-secondary font-serif italic text-center leading-relaxed">
+                    This browser view (common on tablets and mobile) restricts the secure verification process required for the Sanctuary.
+                  </p>
+                  
+                  <div className="bg-ui-sidebar/50 p-6 rounded-2xl border border-ui-border">
+                    <p className="text-xs font-sans font-black uppercase tracking-widest text-accent mb-4 text-center">To continue your journey:</p>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-6 h-6 rounded-full bg-text-primary text-bg-primary flex flex-shrink-0 items-center justify-center text-[10px] font-bold">1</div>
+                      <p className="text-sm text-text-primary font-medium leading-tight">Tap the <span className="text-accent underline font-bold uppercase tracking-tighter">"Open in New Tab"</span> icon in your browser's toolbar.</p>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-6 h-6 rounded-full bg-text-primary text-bg-primary flex flex-shrink-0 items-center justify-center text-[10px] font-bold">2</div>
+                      <p className="text-sm text-text-primary font-medium leading-tight">Complete the login in the new window to bypass storage restrictions.</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-4">
+                  <button 
+                    onClick={() => setShowLoginErrorModal(false)}
+                    className="w-full py-4 bg-text-primary text-bg-primary rounded-2xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                  >
+                    I Understand
+                  </button>
+                  <p className="text-[10px] text-text-secondary text-center font-sans tracking-widest opacity-60 uppercase">Error: Missing Initial State (Restricted Browser)</p>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
