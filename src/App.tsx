@@ -23,6 +23,9 @@ import {
   setDoc,
   addDoc,
   collection,
+  getDocs,
+  query,
+  where,
   serverTimestamp,
   signInAnonymously,
   updateDoc
@@ -88,6 +91,28 @@ export default function App() {
     return sessionStorage.getItem('hasWatchedHowTo') === 'true';
   });
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [hasInquiries, setHasInquiries] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkInquiries = async () => {
+      if (!user) {
+        setHasInquiries(null);
+        return;
+      }
+      try {
+        const q = query(
+          collection(getDbService(), 'inquiries'),
+          where('userId', '==', user.uid)
+        );
+        const snapshot = await getDocs(q);
+        setHasInquiries(!snapshot.empty);
+      } catch (e) {
+        console.error("Error checking inquiries", e);
+      }
+    };
+    checkInquiries();
+  }, [user, currentPage]); // Re-check when landing on dashboard or elsewhere
+
   const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [showHelpPointer, setShowHelpPointer] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -105,7 +130,7 @@ export default function App() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (user && !isPremium && !showHelp) {
+    if (user && !isPremium && !showHelp && hasInquiries === false) {
       timer = setTimeout(() => {
         setShowHelpPointer(true);
       }, 30000); // 30 seconds
@@ -113,7 +138,7 @@ export default function App() {
       setShowHelpPointer(false);
     }
     return () => clearTimeout(timer);
-  }, [user, isPremium, showHelp]);
+  }, [user, isPremium, showHelp, hasInquiries]);
 
   useEffect(() => {
     localStorage.setItem('eisejesus-theme', theme);
@@ -512,22 +537,24 @@ export default function App() {
              <FileText className="w-5 h-5" />
            </button>
            <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
-           <motion.button
-             animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], scale: [1, 1.05, 1] } : {}}
-             transition={{ repeat: Infinity, duration: 2 }}
-             onClick={() => {
-               setShowHowTo(true);
-               setHasWatchedHowTo(true);
-               sessionStorage.setItem('hasWatchedHowTo', 'true');
-             }}
-             className={cn(
-               "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all font-sans text-[10px] font-bold uppercase tracking-wider",
-               "bg-accent text-bg-primary shadow-sm active:scale-95"
-             )}
-           >
-             <Play className="w-3 h-3 fill-current" />
-             <span>Play How To</span>
-           </motion.button>
+           {hasInquiries === false && (
+             <motion.button
+               animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], scale: [1, 1.05, 1] } : {}}
+               transition={{ repeat: Infinity, duration: 2 }}
+               onClick={() => {
+                 setShowHowTo(true);
+                 setHasWatchedHowTo(true);
+                 sessionStorage.setItem('hasWatchedHowTo', 'true');
+               }}
+               className={cn(
+                 "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all font-sans text-[10px] font-bold uppercase tracking-wider",
+                 "bg-accent text-bg-primary shadow-sm active:scale-95"
+               )}
+             >
+               <Play className="w-3 h-3 fill-current" />
+               <span>Play How To</span>
+             </motion.button>
+           )}
         </div>
       </div>
 
@@ -608,22 +635,24 @@ export default function App() {
             </button>
           ))}
 
-          <motion.button
-            animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], x: [0, 2, 0] } : {}}
-            transition={{ repeat: Infinity, duration: 2 }}
-            onClick={() => {
-              setShowHowTo(true);
-              setHasWatchedHowTo(true);
-              sessionStorage.setItem('hasWatchedHowTo', 'true');
-            }}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-bold",
-              "bg-accent/5 text-accent border border-accent/10 hover:bg-accent/10"
-            )}
-          >
-            <Play className="w-4 h-4 fill-current" />
-            <span className="tracking-wide text-left">Play How To</span>
-          </motion.button>
+          {hasInquiries === false && (
+            <motion.button
+              animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], x: [0, 2, 0] } : {}}
+              transition={{ repeat: Infinity, duration: 2 }}
+              onClick={() => {
+                setShowHowTo(true);
+                setHasWatchedHowTo(true);
+                sessionStorage.setItem('hasWatchedHowTo', 'true');
+              }}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-bold",
+                "bg-accent/5 text-accent border border-accent/10 hover:bg-accent/10"
+              )}
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span className="tracking-wide text-left">Play How To</span>
+            </motion.button>
+          )}
         </div>
         
         <div className="pt-6 border-t border-ui-border font-sans">
