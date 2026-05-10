@@ -497,6 +497,21 @@ export default function App() {
         </div>
         
         <div className="flex items-center gap-2">
+           <button 
+             onClick={() => setCurrentPage('groups')} 
+             className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-primary/60")}
+             title="Groups"
+           >
+             <Users className="w-5 h-5" />
+           </button>
+           <button 
+             onClick={() => navigateToPage('reports', 'Reports Menu')} 
+             className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-primary/60")}
+             title="Reports"
+           >
+             <FileText className="w-5 h-5" />
+           </button>
+           <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
            <motion.button
              animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], scale: [1, 1.05, 1] } : {}}
              transition={{ repeat: Infinity, duration: 2 }}
@@ -724,25 +739,19 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-ui-sidebar text-text-primary flex justify-around p-4 border-t border-ui-border z-50 shadow-lg">
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-ui-sidebar/80 backdrop-blur-xl text-text-primary flex items-center justify-center gap-8 px-8 py-3 rounded-2xl border border-ui-border z-50 shadow-2xl">
         <button onClick={() => setCurrentPage('dashboard')} className={cn("p-2 transition-colors", currentPage === 'dashboard' ? "text-accent" : "text-text-secondary")}>
-          <Home className="w-6 h-6" />
+          <Home className="w-7 h-7" />
         </button>
         <button onClick={() => setCurrentPage('inquiry')} className={cn("p-2 transition-colors", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}>
-          <Search className="w-6 h-6" />
-        </button>
-        <button onClick={() => setCurrentPage('groups')} className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-secondary")}>
-          <Users className="w-6 h-6" />
-        </button>
-        <button onClick={() => navigateToPage('reports', 'Reports Menu')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
-          <FileText className="w-6 h-6" />
+          <Search className="w-7 h-7" />
         </button>
         <button 
           onClick={() => setShowMobileMenu(true)} 
           className={cn("p-2 transition-colors relative", showMobileMenu ? "text-accent" : "text-text-secondary")}
         >
-          <Menu className="w-6 h-6" />
-          {showHelpPointer && <div className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full animate-ping" />}
+          <Menu className="w-7 h-7" />
+          {showHelpPointer && <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-accent rounded-full animate-ping" />}
         </button>
       </div>
 

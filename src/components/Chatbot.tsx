@@ -188,14 +188,14 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
   if (!isPremium || !isVisible) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end">
+    <div className="fixed bottom-24 md:bottom-6 right-6 z-[100] flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="mb-4 w-[350px] md:w-[400px] h-[500px] bg-ui-card border border-ui-border rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            className="mb-4 w-[calc(100vw-3rem)] md:w-[400px] h-[500px] max-h-[70vh] bg-ui-card border border-ui-border rounded-3xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 bg-accent flex items-center justify-between">
@@ -419,22 +419,22 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col md:flex-row items-center gap-4">
         {!isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ 
-              opacity: [0, 1, 1, 0],
-              y: [-2, 2, -2, 2],
-              scale: [1, 1.05, 1, 1.05],
-              x: 0
+              opacity: [1, 1, 1],
+              y: [-4, 4, -4],
+              scale: [1, 1.05, 1],
+              opacity: [0, 1, 1, 0]
             }}
             transition={{ 
-              opacity: { repeat: Infinity, duration: 5 },
-              y: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+              opacity: { repeat: Infinity, duration: 6, times: [0, 0.1, 0.9, 1] },
+              y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
               scale: { repeat: Infinity, duration: 2.5, ease: "easeInOut" }
             }}
-            className="bg-accent text-bg-primary px-4 py-2 rounded-full font-serif font-bold italic text-sm shadow-lg border border-white/10"
+            className="bg-accent text-bg-primary px-4 py-2 rounded-2xl rounded-br-sm font-serif font-bold italic text-sm shadow-xl border border-white/10 order-first md:order-none"
           >
             Chat With Us
           </motion.div>
