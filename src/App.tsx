@@ -372,7 +372,7 @@ export default function App() {
             XeJesUs
           </h1>
           <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-12 opacity-80 uppercase tracking-widest text-xs leading-tight">
-            The divine synthesis of Eisegesis and the name of Our Savior, Jesus Christ
+            The divine synthesis of Exegesis and the name of Our Savior, Jesus Christ
           </p>
           
           <div className="flex flex-col gap-4 w-full max-w-sm mx-auto">
