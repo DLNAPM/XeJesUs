@@ -50,7 +50,8 @@ import {
   User as UserIcon,
   GraduationCap,
   Shield,
-  Settings as SettingsIcon 
+  Settings as SettingsIcon,
+  Menu
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -88,6 +89,7 @@ export default function App() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [showHelpPointer, setShowHelpPointer] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = localStorage.getItem('eisejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
@@ -279,6 +281,7 @@ export default function App() {
       return;
     }
     setCurrentPage(page);
+    setShowMobileMenu(false);
   };
 
   const navigateToDetails = (id: string) => {
@@ -424,6 +427,35 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col md:flex-row text-text-primary transition-colors">
+      {/* Mobile Top Header */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 bg-ui-sidebar border-b border-ui-border sticky top-0 z-[60]">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-t from-accent to-accent-soft rounded-full flex items-center justify-center text-bg-primary shadow-sm border border-accent/20">
+             <span className="text-[10px] font-serif font-black italic">EJ</span>
+          </div>
+          <span className="font-serif italic font-bold text-lg tracking-tight">EiseJesUs</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+           <motion.button
+             animate={user?.isAnonymous && !hasWatchedHowTo ? { opacity: [1, 0.5, 1], scale: [1, 1.05, 1] } : {}}
+             transition={{ repeat: Infinity, duration: 2 }}
+             onClick={() => {
+               setShowHowTo(true);
+               setHasWatchedHowTo(true);
+               sessionStorage.setItem('hasWatchedHowTo', 'true');
+             }}
+             className={cn(
+               "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all font-sans text-[10px] font-bold uppercase tracking-wider",
+               "bg-accent text-bg-primary shadow-sm active:scale-95"
+             )}
+           >
+             <Play className="w-3 h-3 fill-current" />
+             <span>Play How To</span>
+           </motion.button>
+        </div>
+      </div>
+
       {/* Sidebar - Desktop */}
       <nav className="hidden md:flex flex-col w-72 bg-ui-sidebar p-8 border-r border-ui-border relative">
         <div className="absolute top-6 right-6 flex gap-2">
@@ -543,7 +575,7 @@ export default function App() {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-screen relative">
+      <main className="flex-1 overflow-y-auto h-screen relative scroll-smooth">
         <ScriptureBanner />
         <AnimatePresence mode="wait">
           <motion.div
@@ -631,7 +663,7 @@ export default function App() {
         <Chatbot userProfile={userProfile} />
       </main>
 
-      {/* Mobile Nav */}
+      {/* Mobile Bottom Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-ui-sidebar text-text-primary flex justify-around p-4 border-t border-ui-border z-50 shadow-lg">
         <button onClick={() => setCurrentPage('dashboard')} className={cn("p-2 transition-colors", currentPage === 'dashboard' ? "text-accent" : "text-text-secondary")}>
           <Home className="w-6 h-6" />
@@ -639,50 +671,120 @@ export default function App() {
         <button onClick={() => setCurrentPage('inquiry')} className={cn("p-2 transition-colors", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}>
           <Search className="w-6 h-6" />
         </button>
-        <button onClick={() => navigateToPage('reports', 'Reports Menu')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
-          <FileText className="w-6 h-6" />
-        </button>
-        <button onClick={() => navigateToPage('glossary', 'Lexicon Glossary')} className={cn("p-2 transition-colors", currentPage === 'glossary' ? "text-accent" : "text-text-secondary")}>
-          <GraduationCap className="w-6 h-6" />
-        </button>
-        <button onClick={() => setCurrentPage('settings')} className={cn("p-2 transition-colors", currentPage === 'settings' ? "text-accent" : "text-text-secondary")}>
-          <SettingsIcon className="w-6 h-6" />
-        </button>
-        <button onClick={toggleTheme} className="p-2 text-text-secondary">
-          {theme === 'modern' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6 text-accent" />}
-        </button>
-        <motion.button 
-          animate={{ y: [0, -4, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-          onClick={() => {
-            setShowHelp(true);
-            setShowHelpPointer(false);
-          }} 
-          className="p-2 text-accent relative"
-        >
-          <HelpCircle className="w-6 h-6" />
-          {showHelpPointer && (
-            <motion.div 
-              animate={{ y: [-10, 0, -10] }}
-              transition={{ repeat: Infinity, duration: 1 }}
-              className="absolute -top-12 left-1/2 -translate-x-1/2 text-2xl"
-            >
-              👇
-            </motion.div>
-          )}
-        </motion.button>
         <button onClick={() => setCurrentPage('groups')} className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-secondary")}>
           <Users className="w-6 h-6" />
         </button>
-        {isAdmin && (
-          <button onClick={() => setCurrentPage('admin')} className={cn("p-2 transition-colors", currentPage === 'admin' ? "text-accent" : "text-text-secondary")}>
-            <Shield className="w-6 h-6" />
-          </button>
-        )}
-        <button onClick={handleLogout} className="p-2 text-text-secondary hover:text-accent">
-          <LogOut className="w-6 h-6" />
+        <button onClick={() => navigateToPage('reports', 'Reports Menu')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
+          <FileText className="w-6 h-6" />
+        </button>
+        <button 
+          onClick={() => setShowMobileMenu(true)} 
+          className={cn("p-2 transition-colors relative", showMobileMenu ? "text-accent" : "text-text-secondary")}
+        >
+          <Menu className="w-6 h-6" />
+          {showHelpPointer && <div className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full animate-ping" />}
         </button>
       </div>
+
+      {/* Mobile Full Menu Modal */}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <div className="fixed inset-0 z-[100] md:hidden">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileMenu(false)}
+              className="absolute inset-0 bg-bg-primary/95 backdrop-blur-xl"
+            />
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute bottom-0 left-0 right-0 bg-ui-sidebar rounded-t-[3rem] border-t border-ui-border shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 pb-12">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <img src={user.photoURL || ''} alt="" className="w-12 h-12 rounded-full border border-ui-border" referrerPolicy="no-referrer" />
+                    <div>
+                      <p className="font-serif font-bold text-text-primary italic">{user.displayName}</p>
+                      <p className="text-[10px] text-text-secondary uppercase tracking-widest">{user.email}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setShowMobileMenu(false)} className="w-10 h-10 rounded-full bg-ui-card flex items-center justify-center text-text-secondary">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <button 
+                    onClick={() => navigateToPage('glossary', 'Lexicon Glossary')}
+                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"
+                  >
+                    <GraduationCap className="w-6 h-6" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest">Glossary</span>
+                  </button>
+                  <button 
+                    onClick={() => navigateToPage('settings', 'Sanctuary Settings')}
+                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"
+                  >
+                    <SettingsIcon className="w-6 h-6" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest">Settings</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      toggleTheme();
+                      setShowMobileMenu(false);
+                    }}
+                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"
+                  >
+                    {theme === 'modern' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest">Theme</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowHelp(true);
+                      setShowHelpPointer(false);
+                      setShowMobileMenu(false);
+                    }}
+                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-accent transition-all shadow-sm"
+                  >
+                    <HelpCircle className="w-6 h-6" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest">How to Use</span>
+                    {showHelpPointer && (
+                      <motion.div 
+                        animate={{ scale: [1, 1.2, 1] }} 
+                        transition={{ repeat: Infinity, duration: 1 }}
+                        className="absolute top-2 right-2 w-3 h-3 bg-accent rounded-full" 
+                      />
+                    )}
+                  </button>
+                </div>
+
+                {isAdmin && (
+                  <button 
+                    onClick={() => navigateToPage('admin', 'Admin Cabinet')}
+                    className="w-full flex items-center justify-center gap-3 p-5 bg-accent/5 text-accent border border-accent/10 rounded-2xl mb-4 transition-all"
+                  >
+                    <Shield className="w-5 h-5" />
+                    <span className="text-xs font-sans font-bold uppercase tracking-[0.2em]">Admin Cabinet</span>
+                  </button>
+                )}
+
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-3 p-5 bg-red-500/5 text-red-500 border border-red-500/10 rounded-2xl transition-all"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-xs font-sans font-bold uppercase tracking-[0.2em]">Depart Sanctuary</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
