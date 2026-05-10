@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { getDbService, getAuthService, collection, query, orderBy, getDocs, deleteDoc, doc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Book, Search, Trash2, Loader2, ChevronRight, Hash } from 'lucide-react';
+import { Book, Search, Trash2, Loader2, ChevronRight, Hash, Info, Lightbulb, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface GlossaryEntry {
@@ -14,6 +14,7 @@ export default function Glossary() {
   const [entries, setEntries] = useState<GlossaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showInfo, setShowInfo] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,10 +83,58 @@ export default function Glossary() {
 
   return (
     <div className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
-      <header className="mb-8">
-        <h1 className="text-4xl font-serif text-text-primary mb-2 italic font-bold">Lexicon of Truth</h1>
-        <p className="text-text-secondary italic">Your personal repository of theological terms and deep meanings.</p>
+      <header className="mb-6">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h1 className="text-4xl font-serif text-text-primary italic font-bold">Lexicon of Truth</h1>
+            <p className="text-text-secondary italic">Your personal repository of theological terms and deep meanings.</p>
+          </div>
+          <button 
+            onClick={() => setShowInfo(!showInfo)}
+            className={`p-3 rounded-2xl transition-all ${showInfo ? 'bg-accent text-bg-primary' : 'bg-ui-card text-text-secondary border border-ui-border hover:border-accent'}`}
+          >
+            <Lightbulb className="w-5 h-5" />
+          </button>
+        </div>
       </header>
+
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-8 p-6 bg-accent/5 border border-accent/20 rounded-[2rem] relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12">
+              <Book className="w-32 h-32 text-accent" />
+            </div>
+            <div className="relative z-10 space-y-4">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-accent" />
+                <h3 className="font-sans font-black text-xs uppercase tracking-[0.3em] text-accent">How to Use Your Lexicon</h3>
+              </div>
+              <p className="text-text-primary font-serif italic text-lg leading-relaxed">
+                The Lexicon of Truth is designed to deepen your theological vocabulary and clarify complex biblical terms encountered during your Seekings.
+              </p>
+              <div className="grid md:grid-cols-2 gap-6 pt-2">
+                <div className="bg-bg-primary/50 p-4 rounded-xl border border-ui-border">
+                  <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-2">Capturing Truth</h4>
+                  <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
+                    Simply <span className="text-text-primary font-bold">highlight any word or phrase</span> within a Result's text to trigger the "Ask for Meaning" tooltip.
+                  </p>
+                </div>
+                <div className="bg-bg-primary/50 p-4 rounded-xl border border-ui-border">
+                  <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-2">Defining Truth</h4>
+                  <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
+                    Once defined by the Divine Intelligence, tap <span className="text-text-primary font-bold inline-flex items-center gap-1">Add to Lexicon <ChevronRight className="w-3 h-3" /></span> to save it here permanently.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Alphabet Navigation */}
       <div className="flex flex-wrap gap-1 mb-6 bg-ui-card p-2 rounded-xl border border-ui-border sticky top-0 z-10 shadow-sm">

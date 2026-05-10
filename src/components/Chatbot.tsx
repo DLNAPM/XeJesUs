@@ -424,7 +424,6 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ 
-              opacity: [1, 1, 1],
               y: [-4, 4, -4],
               scale: [1, 1.05, 1],
               opacity: [0, 1, 1, 0]
