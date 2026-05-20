@@ -28,7 +28,8 @@ import {
   Users as UsersIcon,
   Crown,
   Settings,
-  Bell
+  Bell,
+  ArrowUpDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -47,6 +48,13 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
+  
+  type SortField = 'pilgrim' | 'role' | 'tier' | 'status' | 'lastLogin';
+  type SortOrder = 'asc' | 'desc';
+
+  const [sortField, setSortField] = useState<SortField>('pilgrim');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+
   const auth = getAuthService();
   const db = getDbService();
 
@@ -159,6 +167,54 @@ export default function AdminDashboard() {
     u.email.toLowerCase().includes(search.toLowerCase()) || 
     u.displayName?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    let valA: any = '';
+    let valB: any = '';
+
+    switch (sortField) {
+      case 'pilgrim':
+        valA = (a.displayName || a.email || '').toLowerCase();
+        valB = (b.displayName || b.email || '').toLowerCase();
+        break;
+      case 'role':
+        valA = (a.role || 'user').toLowerCase();
+        valB = (b.role || 'user').toLowerCase();
+        break;
+      case 'tier':
+        valA = (a.tier || 'basic').toLowerCase();
+        valB = (b.tier || 'basic').toLowerCase();
+        break;
+      case 'status':
+        valA = a.isFrozen ? 1 : 0;
+        valB = b.isFrozen ? 1 : 0;
+        break;
+      case 'lastLogin':
+        const getTime = (u: any) => {
+          if (!u.lastLoginAt) return 0;
+          if (u.lastLoginAt.toDate && typeof u.lastLoginAt.toDate === 'function') {
+            return u.lastLoginAt.toDate().getTime();
+          }
+          return new Date(u.lastLoginAt).getTime() || 0;
+        };
+        valA = getTime(a);
+        valB = getTime(b);
+        break;
+    }
+
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const stats = [
     { name: 'Basic', value: users.filter(u => u.tier !== 'premium').length },
@@ -307,16 +363,56 @@ export default function AdminDashboard() {
           <table className="w-full text-left font-sans text-xs">
             <thead>
               <tr className="bg-ui-sidebar/10 text-text-secondary uppercase tracking-widest font-bold border-b border-ui-border">
-                <th className="px-8 py-4">Pilgrim</th>
-                <th className="px-8 py-4">Role</th>
-                <th className="px-8 py-4">Tier</th>
-                <th className="px-8 py-4">Status</th>
-                <th className="px-8 py-4">Last Login</th>
+                <th 
+                  className="px-8 py-4 cursor-pointer hover:bg-ui-sidebar/20 select-none group/th transition-all duration-200"
+                  onClick={() => handleSort('pilgrim')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Pilgrim</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 transition-all duration-200 ${sortField === 'pilgrim' ? 'opacity-100 text-accent scale-110' : 'opacity-20 group-hover/th:opacity-60'}`} />
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-4 cursor-pointer hover:bg-ui-sidebar/20 select-none group/th transition-all duration-200"
+                  onClick={() => handleSort('role')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Role</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 transition-all duration-200 ${sortField === 'role' ? 'opacity-100 text-accent scale-110' : 'opacity-20 group-hover/th:opacity-60'}`} />
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-4 cursor-pointer hover:bg-ui-sidebar/20 select-none group/th transition-all duration-200"
+                  onClick={() => handleSort('tier')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Tier</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 transition-all duration-200 ${sortField === 'tier' ? 'opacity-100 text-accent scale-110' : 'opacity-20 group-hover/th:opacity-60'}`} />
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-4 cursor-pointer hover:bg-ui-sidebar/20 select-none group/th transition-all duration-200"
+                  onClick={() => handleSort('status')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Status</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 transition-all duration-200 ${sortField === 'status' ? 'opacity-100 text-accent scale-110' : 'opacity-20 group-hover/th:opacity-60'}`} />
+                  </div>
+                </th>
+                <th 
+                  className="px-8 py-4 cursor-pointer hover:bg-ui-sidebar/20 select-none group/th transition-all duration-200"
+                  onClick={() => handleSort('lastLogin')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Last Login</span>
+                    <ArrowUpDown className={`w-3.5 h-3.5 transition-all duration-200 ${sortField === 'lastLogin' ? 'opacity-100 text-accent scale-110' : 'opacity-20 group-hover/th:opacity-60'}`} />
+                  </div>
+                </th>
                 <th className="px-8 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ui-border">
-              {filteredUsers.map((u) => (
+              {sortedUsers.map((u) => (
                 <tr key={u.uid} className="hover:bg-ui-sidebar/5 transition-colors">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-3">
