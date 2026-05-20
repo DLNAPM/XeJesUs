@@ -126,6 +126,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteLog = async (logId: string) => {
+    if (!confirm('Are you sure you want to delete this activity log?')) return;
+    try {
+      await deleteDoc(doc(db, 'system_logs', logId));
+      setLogs(prev => prev.filter(log => log.id !== logId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `system_logs/${logId}`);
+    }
+  };
+
   const bootstrapAdmin = async () => {
     if (!auth.currentUser) return;
     setBootstrapping(true);
@@ -246,7 +256,7 @@ export default function AdminDashboard() {
               </div>
             ) : (
               logs.map((log) => (
-                <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-bg-primary/30 border border-ui-border/50">
+                <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-bg-primary/30 border border-ui-border/50 group hover:border-ui-border transition-colors duration-200">
                   <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
                     <UsersIcon className="w-4 h-4 text-accent" />
                   </div>
@@ -257,8 +267,18 @@ export default function AdminDashboard() {
                       {log.timestamp?.toDate().toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-accent/10 px-2 py-1 rounded text-[8px] font-black uppercase text-accent tracking-tighter">
-                    NEW USER
+                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    <div className="bg-accent/10 px-2 py-1 rounded text-[8px] font-black uppercase text-accent tracking-tighter">
+                      NEW USER
+                    </div>
+                    <button
+                      onClick={() => handleDeleteLog(log.id)}
+                      className="p-1.5 rounded-lg text-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-all opacity-40 md:opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center gap-1 text-[10px] font-bold"
+                      title="Delete activity log"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span className="sr-only">Delete</span>
+                    </button>
                   </div>
                 </div>
               ))
