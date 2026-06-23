@@ -46,10 +46,10 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
 
   useEffect(() => {
     if (isOpen && recentInquiries.length === 0) {
-      fetchRecentInquiries();
+      fetchRecentInquiries().catch(err => console.error("Error in fetchRecentInquiries:", err));
     }
     if (isOpen && isPremium) {
-      fetchSessions();
+      fetchSessions().catch(err => console.error("Error in fetchSessions:", err));
     }
   }, [isOpen]);
 
@@ -83,7 +83,13 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
     if (!auth || !auth.currentUser || !db || messages.length <= 1) return;
 
     setIsSaving(true);
-    const sessionId = currentSessionId || crypto.randomUUID();
+    const generateUUID = () => {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+      }
+      return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    };
+    const sessionId = currentSessionId || generateUUID();
     const path = `users/${auth.currentUser.uid}/chat_sessions/${sessionId}`;
 
     try {
@@ -152,13 +158,24 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
     try {
       const q = query(
         collection(db, 'inquiries'),
-        where('userId', '==', auth.currentUser.uid),
-        orderBy('createdAt', 'desc'),
-        limit(5)
+        where('userId', '==', auth.currentUser.uid)
       );
       const snap = await getDocs(q);
       const inqs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Inquiry));
-      setRecentInquiries(inqs);
+      
+      // Client-side sort & limit to avoid requiring composite indexes
+      inqs.sort((a, b) => {
+        const getMs = (val: any) => {
+          if (!val) return 0;
+          if (typeof val.toMillis === 'function') return val.toMillis();
+          if (val.seconds) return val.seconds * 1000;
+          if (val instanceof Date) return val.getTime();
+          return new Date(val).getTime() || 0;
+        };
+        return getMs(b.createdAt) - getMs(a.createdAt);
+      });
+      
+      setRecentInquiries(inqs.slice(0, 5));
     } catch (error) {
       console.error("Failed to fetch recent inquiries for chatbot context", error);
     }
@@ -397,7 +414,21 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
                         <div className="flex-1 min-w-0 pr-2">
                           <h5 className="text-sm font-serif font-bold text-text-primary truncate">{session.name}</h5>
                           <p className="text-[10px] text-text-secondary">
-                            {session.messages.length} messages • {new Date(session.updatedAt?.seconds * 1000 || session.createdAt?.seconds * 1000).toLocaleDateString()}
+                            {session.messages.length} messages • {(() => {
+                              try {
+                                const parseTime = (val: any) => {
+                                  if (!val) return null;
+                                  if (typeof val.toDate === 'function') return val.toDate();
+                                  if (val.seconds !== undefined) return new Date(val.seconds * 1000);
+                                  const d = new Date(val);
+                                  return isNaN(d.getTime()) ? null : d;
+                                };
+                                const d = parseTime(session.updatedAt) || parseTime(session.createdAt) || new Date();
+                                return d.toLocaleDateString();
+                              } catch (err) {
+                                return new Date().toLocaleDateString();
+                              }
+                            })()}
                           </p>
                         </div>
                         <button 

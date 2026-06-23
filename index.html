@@ -4,6 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>XeJesUs</title>
+    <script>
+      // Early protection against cross-origin Script errors and iframe sandbox restrictions
+      window.process = { env: { NODE_ENV: 'development' } };
+      
+      window.onerror = function (message, source, lineno, colno, error) {
+        var msg = String(message || '').toLowerCase();
+        if (msg.indexOf('script error') !== -1 || msg.indexOf('resizeobserver') !== -1 || !message) {
+          console.warn("⛪ [Global Shield]: Intercepted cross-origin noise:", message);
+          return true; // Silence the cross-origin/iframe noise
+        }
+        return false; // Let genuine errors bubble so they can be captured by React Error Boundaries
+      };
+      window.addEventListener('error', function (event) {
+        var msg = String(event.message || '').toLowerCase();
+        if (msg.indexOf('script error') !== -1 || msg.indexOf('resizeobserver') !== -1 || !event.message) {
+          console.warn("⛪ [Global Event Shield]: Handled noise event:", event.message);
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = String(event.reason || '').toLowerCase();
+        if (reason.indexOf('script error') !== -1 || reason.indexOf('resizeobserver') !== -1) {
+          console.warn("⛪ [Global Rejection Shield]: Handled rejection noise:", event.reason);
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

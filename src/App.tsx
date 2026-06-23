@@ -77,6 +77,36 @@ import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
 import Chatbot from './components/Chatbot';
 
+const safeSessionStorage = {
+  getItem(key: string): string | null {
+    try {
+      return sessionStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem(key: string, value: string): void {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch (e) {}
+  }
+};
+
+const safeLocalStorage = {
+  getItem(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return null;
+    }
+  },
+  setItem(key: string, value: string): void {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {}
+  }
+};
+
 type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin';
 
 export default function App() {
@@ -88,7 +118,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const [hasWatchedHowTo, setHasWatchedHowTo] = useState(() => {
-    return sessionStorage.getItem('hasWatchedHowTo') === 'true';
+    return safeSessionStorage.getItem('hasWatchedHowTo') === 'true';
   });
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [hasInquiries, setHasInquiries] = useState<boolean | null>(null);
@@ -115,7 +145,7 @@ export default function App() {
         console.error("Error checking inquiries", e);
       }
     };
-    checkInquiries();
+    checkInquiries().catch(err => console.error("Error in checkInquiries:", err));
   }, [user, currentPage]); // Re-check when landing on dashboard or elsewhere
 
   const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
@@ -123,7 +153,7 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
-    const saved = localStorage.getItem('xejesus-theme');
+    const saved = safeLocalStorage.getItem('xejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
   });
 
@@ -146,7 +176,7 @@ export default function App() {
   }, [user, isPremium, showHelp, hasInquiries]);
 
   useEffect(() => {
-    localStorage.setItem('xejesus-theme', theme);
+    safeLocalStorage.setItem('xejesus-theme', theme);
     document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
   }, [theme]);
 
@@ -555,7 +585,7 @@ export default function App() {
                onClick={() => {
                  setShowHowTo(true);
                  setHasWatchedHowTo(true);
-                 sessionStorage.setItem('hasWatchedHowTo', 'true');
+                 safeSessionStorage.setItem('hasWatchedHowTo', 'true');
                }}
                className={cn(
                  "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all font-sans text-[10px] font-bold uppercase tracking-wider",
@@ -653,7 +683,7 @@ export default function App() {
               onClick={() => {
                 setShowHowTo(true);
                 setHasWatchedHowTo(true);
-                sessionStorage.setItem('hasWatchedHowTo', 'true');
+                safeSessionStorage.setItem('hasWatchedHowTo', 'true');
               }}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-bold",
@@ -669,14 +699,14 @@ export default function App() {
         <div className="pt-6 border-t border-ui-border font-sans">
           <div className="flex items-center gap-3 mb-6 px-2">
             <div className="relative">
-              <img src={user.photoURL || ''} alt="" className="w-10 h-10 rounded-full border border-ui-border shadow-sm" referrerPolicy="no-referrer" />
+              <img src={user?.photoURL || ''} alt="" className="w-10 h-10 rounded-full border border-ui-border shadow-sm" referrerPolicy="no-referrer" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-accent rounded-full border-2 border-ui-sidebar flex items-center justify-center">
                 <div className="w-1.5 h-1.5 bg-bg-primary rounded-full"></div>
               </div>
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-text-primary">{user.displayName}</p>
-              <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user.email}</p>
+              <p className="text-xs font-bold truncate text-text-primary">{user?.displayName}</p>
+              <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user?.email}</p>
             </div>
           </div>
           <button 
@@ -816,10 +846,10 @@ export default function App() {
               <div className="p-8 pb-12">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <img src={user.photoURL || ''} alt="" className="w-12 h-12 rounded-full border border-ui-border" referrerPolicy="no-referrer" />
+                    <img src={user?.photoURL || ''} alt="" className="w-12 h-12 rounded-full border border-ui-border" referrerPolicy="no-referrer" />
                     <div>
-                      <p className="font-serif font-bold text-text-primary italic">{user.displayName}</p>
-                      <p className="text-[10px] text-text-secondary uppercase tracking-widest">{user.email}</p>
+                      <p className="font-serif font-bold text-text-primary italic">{user?.displayName}</p>
+                      <p className="text-[10px] text-text-secondary uppercase tracking-widest">{user?.email}</p>
                     </div>
                   </div>
                   <button onClick={() => setShowMobileMenu(false)} className="w-10 h-10 rounded-full bg-ui-card flex items-center justify-center text-text-secondary">

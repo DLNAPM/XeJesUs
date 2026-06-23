@@ -30,7 +30,7 @@ export default function Reports() {
         console.error(e);
       }
     };
-    fetchUserPreferences();
+    fetchUserPreferences().catch(err => console.error("Error in fetchUserPreferences:", err));
   }, []);
 
   const getBibleLink = (ref: string) => {
@@ -61,11 +61,23 @@ export default function Reports() {
       try {
         const q = query(
           collection(db, inquiriesPath),
-          where('userId', '==', auth.currentUser.uid),
-          orderBy('createdAt', 'desc')
+          where('userId', '==', auth.currentUser.uid)
         );
         const snapshot = await getDocs(q);
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Inquiry));
+        
+        // Client-side sort to avoid requiring composite indexes
+        data.sort((a, b) => {
+          const getMs = (val: any) => {
+            if (!val) return 0;
+            if (typeof val.toMillis === 'function') return val.toMillis();
+            if (val.seconds) return val.seconds * 1000;
+            if (val instanceof Date) return val.getTime();
+            return new Date(val).getTime() || 0;
+          };
+          return getMs(b.createdAt) - getMs(a.createdAt);
+        });
+        
         setInquiries(data);
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, inquiriesPath);
@@ -74,7 +86,7 @@ export default function Reports() {
       }
     };
 
-    fetchInquiries();
+    fetchInquiries().catch(err => console.error("Error in fetchInquiries:", err));
   }, []);
 
   const generatePDF = async () => {
@@ -271,11 +283,26 @@ export default function Reports() {
                     <div className="text-right">
                       <div className="text-xs font-sans font-bold uppercase tracking-widest mb-1" style={{ color: '#3b82f6' }}>Date Created</div>
                       <div className="text-sm font-sans font-bold text-[#0f172a]">
-                        {new Date(selectedInquiry.createdAt?.toDate()).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
+                        {(() => {
+                          const dateObj = (() => {
+                            if (!selectedInquiry?.createdAt) return new Date();
+                            if (typeof selectedInquiry.createdAt.toDate === 'function') {
+                              return selectedInquiry.createdAt.toDate();
+                            }
+                            if (typeof selectedInquiry.createdAt === 'string') {
+                              return new Date(selectedInquiry.createdAt);
+                            }
+                            if (selectedInquiry.createdAt.seconds !== undefined) {
+                              return new Date(selectedInquiry.createdAt.seconds * 1000);
+                            }
+                            return new Date(selectedInquiry.createdAt);
+                          })();
+                          return dateObj.toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          });
+                        })()}
                       </div>
                     </div>
                   </header>

@@ -91,7 +91,7 @@ export default function AdminDashboard() {
       await Promise.all([fetchUsers(), fetchLogs()]);
       setLoading(false);
     };
-    init();
+    init().catch(err => console.error("Error in init:", err));
   }, []);
 
   const handleUpdateRole = async (uid: string, role: 'user' | 'admin') => {
@@ -166,8 +166,8 @@ export default function AdminDashboard() {
   };
 
   const filteredUsers = users.filter(u => 
-    u.email.toLowerCase().includes(search.toLowerCase()) || 
-    u.displayName?.toLowerCase().includes(search.toLowerCase())
+    String(u.email || '').toLowerCase().includes(search.toLowerCase()) || 
+    String(u.displayName || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleSort = (field: SortField) => {
@@ -248,32 +248,39 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1 bg-ui-card rounded-[2rem] border border-ui-border p-6 shadow-sm">
           <h3 className="text-[10px] font-sans font-black text-accent uppercase tracking-[0.3em] mb-6">User Distribution</h3>
-          <div className="h-[200px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stats}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {stats.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--ui-card)', 
-                    borderRadius: '1rem', 
-                    border: '1px solid var(--ui-border)',
-                    fontSize: '10px'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="h-[200px] w-full flex items-center justify-center">
+            {stats.some(s => s.value > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {stats.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--ui-card)', 
+                      borderRadius: '1rem', 
+                      border: '1px solid var(--ui-border)',
+                      fontSize: '10px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center p-4">
+                <div className="w-16 h-16 rounded-full border border-[#1e293b] border-t-[#cb9f43] animate-spin mb-3" />
+                <span className="text-[10px] font-sans text-stone-400 capitalize tracking-wider">Awaiting assembly...</span>
+              </div>
+            )}
           </div>
           <div className="flex justify-center gap-4 mt-2">
             {stats.map((s, i) => (
@@ -322,7 +329,21 @@ export default function AdminDashboard() {
                     <p className="text-sm font-bold text-text-primary">First Login Attempt</p>
                     <p className="text-xs text-text-secondary truncate">{log.userEmail}</p>
                     <p className="text-[9px] text-accent/60 font-black uppercase tracking-widest mt-1">
-                      {log.timestamp?.toDate().toLocaleString()}
+                      {(() => {
+                        if (!log.timestamp) return 'N/A';
+                        const t = log.timestamp as any;
+                        try {
+                          if (t.toDate && typeof t.toDate === 'function') {
+                            return t.toDate().toLocaleString();
+                          }
+                          if (t.seconds !== undefined) {
+                            return new Date(t.seconds * 1000).toLocaleString();
+                          }
+                          return new Date(t).toLocaleString();
+                        } catch (e) {
+                          return 'N/A';
+                        }
+                      })()}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2 flex-shrink-0">
@@ -461,10 +482,40 @@ export default function AdminDashboard() {
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
                       <span className="font-bold text-text-primary">
-                        {u.lastLoginAt ? (u.lastLoginAt.toDate ? u.lastLoginAt.toDate().toLocaleDateString() : new Date(u.lastLoginAt).toLocaleDateString()) : 'N/A'}
+                        {(() => {
+                          if (!u.lastLoginAt) return 'N/A';
+                          const t = u.lastLoginAt as any;
+                          try {
+                            if (t.toDate && typeof t.toDate === 'function') {
+                              return t.toDate().toLocaleDateString();
+                            }
+                            if (t.seconds !== undefined) {
+                              return new Date(t.seconds * 1000).toLocaleDateString();
+                            }
+                            const d = new Date(t);
+                            return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+                          } catch (e) {
+                            return 'N/A';
+                          }
+                        })()}
                       </span>
                       <span className="text-[10px] text-text-secondary opacity-60">
-                        {u.lastLoginAt ? (u.lastLoginAt.toDate ? u.lastLoginAt.toDate().toLocaleTimeString() : new Date(u.lastLoginAt).toLocaleTimeString()) : '--:--'}
+                        {(() => {
+                          if (!u.lastLoginAt) return '--:--';
+                          const t = u.lastLoginAt as any;
+                          try {
+                            if (t.toDate && typeof t.toDate === 'function') {
+                              return t.toDate().toLocaleTimeString();
+                            }
+                            if (t.seconds !== undefined) {
+                              return new Date(t.seconds * 1000).toLocaleTimeString();
+                            }
+                            const d = new Date(t);
+                            return isNaN(d.getTime()) ? '--:--' : d.toLocaleTimeString();
+                          } catch (e) {
+                            return '--:--';
+                          }
+                        })()}
                       </span>
                     </div>
                   </td>

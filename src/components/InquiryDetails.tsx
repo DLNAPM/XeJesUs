@@ -191,7 +191,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         console.error(e);
       }
     };
-    fetchUserPreferences();
+    fetchUserPreferences().catch(err => console.error("Error in fetchUserPreferences:", err));
   }, [auth]);
 
   const getBibleLink = (ref: string) => {
@@ -259,7 +259,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       }
     };
 
-    fetchInquiry();
+    fetchInquiry().catch(err => console.error("Error in fetchInquiry:", err));
   }, [inquiryId]);
 
   const handleShareClick = async () => {
@@ -406,6 +406,36 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         <span className="font-sans font-bold text-sm tracking-wide uppercase">Back to Library</span>
       </button>
 
+      {/* Mobile-Only Ribbon of consolidated buttons at the top of the page */}
+      <div className="lg:hidden grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-8">
+        {[
+          { id: 'faith', label: "God's Intent", icon: Sparkles, emoji: '✨' },
+          { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
+          { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
+          { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => handleTabClick(tab.id, tab.label)}
+            className={`flex flex-col sm:flex-row items-center justify-center gap-2 px-4 py-3.5 rounded-xl transition-all text-center sm:text-left font-sans text-xs sm:text-sm font-semibold border cursor-pointer ${
+              activeTab === tab.id 
+                ? 'bg-text-primary text-bg-primary shadow-lg border-text-primary' 
+                : 'bg-ui-card hover:bg-ui-sidebar text-text-secondary border-ui-border'
+            }`}
+          >
+            <span className="text-base sm:text-lg">{tab.emoji}</span>
+            <span className="tracking-wide leading-tight">{tab.label}</span>
+          </button>
+        ))}
+        <button
+          onClick={handleShareClick}
+          className="col-span-2 sm:col-span-1 flex flex-col sm:flex-row items-center justify-center gap-2 px-4 py-3.5 rounded-xl transition-all text-center sm:text-left font-sans text-xs sm:text-sm font-semibold border bg-ui-card hover:bg-accent hover:text-white text-text-secondary border-ui-border cursor-pointer shadow-sm"
+        >
+          <span className="text-base sm:text-lg">👥</span>
+          <span className="tracking-wide leading-tight">Community Study</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Headers and Navigation */}
         <div className="lg:col-span-1 space-y-8">
@@ -435,10 +465,26 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               </button>
             )}
             <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
-            <div className="text-xs text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
+            <div className="text-xs text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {(() => {
+              if (!inquiry?.createdAt) return 'N/A';
+              try {
+                if (typeof inquiry.createdAt.toDate === 'function') {
+                  return new Date(inquiry.createdAt.toDate()).toLocaleDateString();
+                }
+                if (typeof inquiry.createdAt === 'string') {
+                  return new Date(inquiry.createdAt).toLocaleDateString();
+                }
+                if (inquiry.createdAt.seconds !== undefined) {
+                  return new Date(inquiry.createdAt.seconds * 1000).toLocaleDateString();
+                }
+              } catch (e) {
+                console.error("Error formatting date", e);
+              }
+              return 'N/A';
+            })()}</div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="hidden lg:flex flex-col gap-2">
             {[
               { id: 'faith', label: 'God\'s Intent', icon: Sparkles, emoji: '✨' },
               { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
@@ -460,7 +506,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
             ))}
           </div>
 
-          <div className="p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm">
+          <div className="hidden lg:block p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm">
             <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
               <Share2 className="w-4 h-4" />
               Community Study
@@ -474,7 +520,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
           </div>
 
           {inquiry.userId === currentUserId && (
-            <div className="p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm border-red-500/10">
+            <div className="hidden lg:block p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm border-red-500/10">
               <h3 className="text-xs font-sans font-bold text-red-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-red-500" />
                 Library Controls
@@ -684,6 +730,37 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                </motion.div>
              )}
           </div>
+
+          {/* Mobile-Only Library Controls at the bottom */}
+          {inquiry.userId === currentUserId && (
+            <div className="lg:hidden mt-8 p-8 bg-ui-card rounded-[2.5rem] border border-ui-border shadow-sm border-red-500/10">
+              <h3 className="text-xs font-sans font-bold text-red-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-red-500" />
+                Library Controls
+              </h3>
+              <p className="text-xs text-text-secondary mb-4 italic leading-relaxed">
+                Remove this seeking permanently from your Exegesis Library. This action is irreversible.
+              </p>
+              <button 
+                onClick={handleDeleteClick}
+                disabled={deleting}
+                className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-xs font-sans font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete Seeking
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
 

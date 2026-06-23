@@ -50,7 +50,7 @@ export const getDbService = () => {
     const app = getFirebaseApp();
     if (!app) return null;
     const dbId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID;
-    dbInstance = getFirestore(app, dbId);
+    dbInstance = dbId && dbId.trim() ? getFirestore(app, dbId) : getFirestore(app);
   }
   return dbInstance;
 };

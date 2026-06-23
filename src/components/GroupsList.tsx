@@ -36,7 +36,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
         setLoading(false);
       }
     };
-    fetchGroups();
+    fetchGroups().catch(err => console.error("Error in fetchGroups:", err));
   }, []);
 
   const handleCreateGroup = async (e: React.FormEvent) => {

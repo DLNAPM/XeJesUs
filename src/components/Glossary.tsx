@@ -44,20 +44,20 @@ export default function Glossary() {
       }
     };
 
-    fetchEntries();
+    fetchEntries().catch(err => console.error("Error in fetchEntries:", err));
   }, []);
 
   const filteredEntries = useMemo(() => {
     return entries.filter(e => 
-      e.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.definition.toLowerCase().includes(searchTerm.toLowerCase())
+      String(e.word || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(e.definition || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [entries, searchTerm]);
 
   const groupedEntries = useMemo(() => {
     const groups: { [key: string]: GlossaryEntry[] } = {};
     filteredEntries.forEach(entry => {
-      const char = entry.word.charAt(0).toUpperCase();
+      const char = String(entry.word || '').charAt(0).toUpperCase();
       const key = /^[A-Z]$/.test(char) ? char : '#';
       if (!groups[key]) groups[key] = [];
       groups[key].push(entry);

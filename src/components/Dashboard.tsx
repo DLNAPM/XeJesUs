@@ -70,11 +70,22 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
     try {
       const q = query(
         collection(db, inquiriesPath),
-        where('userId', '==', auth.currentUser.uid),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', auth.currentUser.uid)
       );
       const snapshot = await getDocs(q);
       let data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Inquiry));
+      
+      // Client-side sort to avoid requiring composite indexes
+      data.sort((a, b) => {
+        const getMs = (val: any) => {
+          if (!val) return 0;
+          if (typeof val.toMillis === 'function') return val.toMillis();
+          if (val.seconds) return val.seconds * 1000;
+          if (val instanceof Date) return val.getTime();
+          return new Date(val).getTime() || 0;
+        };
+        return getMs(b.createdAt) - getMs(a.createdAt);
+      });
       
       if (isGuest && data.length === 0) {
         data = TEST_INQUIRIES;
@@ -91,7 +102,8 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
         const shareSnap = await getDocs(sharesQ);
         const shareDocs = shareSnap.docs;
         
-        const inquiryPromises = shareDocs.map(s => getDoc(doc(db, 'inquiries', s.data().inquiryId)));
+        const validShareDocs = shareDocs.filter(s => s.data() && s.data().inquiryId);
+        const inquiryPromises = validShareDocs.map(s => getDoc(doc(db, 'inquiries', s.data().inquiryId)));
         const inqSnaps = await Promise.all(inquiryPromises);
         
         const shared = inqSnaps
@@ -100,7 +112,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
             return { 
               id: s.id, 
               ...s.data(), 
-              shareId: shareDocs[idx].id 
+              shareId: validShareDocs[idx].id 
             } as Inquiry & { shareId: string };
           })
           .filter((item): item is Inquiry & { shareId: string } => item !== null);
@@ -123,7 +135,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
   };
 
   useEffect(() => {
-    fetchInquiries();
+    fetchInquiries().catch(err => console.error("Error in fetchInquiries:", err));
   }, []);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {

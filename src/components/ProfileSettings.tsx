@@ -38,7 +38,7 @@ export default function ProfileSettings() {
       }
     };
 
-    fetchProfile();
+    fetchProfile().catch(err => console.error("Error in fetchProfile:", err));
   }, []);
 
   const handleSave = async () => {

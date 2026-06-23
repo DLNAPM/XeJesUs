@@ -42,8 +42,8 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
         
         const discData = await Promise.all(discSnap.docs.map(async (d) => {
           const disc = { id: d.id, ...d.data() } as Discussion;
-          const inqSnap = await getDoc(doc(db, `inquiries/${disc.inquiryId}`));
-          return { ...disc, inquiry: inqSnap.exists() ? { id: inqSnap.id, ...inqSnap.data() } as Inquiry : undefined };
+          const inqSnap = disc.inquiryId ? await getDoc(doc(db, `inquiries/${disc.inquiryId}`)) : null;
+          return { ...disc, inquiry: (inqSnap && inqSnap.exists()) ? { id: inqSnap.id, ...inqSnap.data() } as Inquiry : undefined };
         }));
         
         setDiscussions(discData);
@@ -56,7 +56,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
   };
 
   useEffect(() => {
-    fetchGroupData();
+    fetchGroupData().catch(err => console.error("Error in fetchGroupData:", err));
   }, [groupId]);
 
   const handleInvite = async (e: React.FormEvent) => {
