@@ -58,10 +58,11 @@ export default function AdminDashboard() {
   const auth = getAuthService();
   const db = getDbService();
 
-  const isAdminEmail = auth.currentUser?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
-                      auth.currentUser?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
+  const isAdminEmail = auth?.currentUser?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
+                      auth?.currentUser?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
 
   const fetchUsers = async () => {
+    if (!db) return;
     try {
       const q = query(collection(db, 'users'), orderBy('email'));
       const snapshot = await getDocs(q);
@@ -73,6 +74,7 @@ export default function AdminDashboard() {
   };
 
   const fetchLogs = async () => {
+    if (!db) return;
     try {
       const q = query(collection(db, 'system_logs'), orderBy('timestamp', 'desc'), limit(10));
       const snapshot = await getDocs(q);
@@ -145,7 +147,7 @@ export default function AdminDashboard() {
   };
 
   const bootstrapAdmin = async () => {
-    if (!auth.currentUser) return;
+    if (!auth || !auth.currentUser || !db) return;
     setBootstrapping(true);
     try {
       await setDoc(doc(db, 'admins', auth.currentUser.uid), { email: auth.currentUser.email });

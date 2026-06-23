@@ -53,7 +53,8 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const auth = getAuthService();
-    if (!scripture || !queryText || !auth.currentUser) return;
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db || !scripture || !queryText) return;
 
     setLoading(true);
     setError(null);
@@ -62,7 +63,7 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
       const exegesis = await generateExegesis(scripture, queryText);
       
       const inquiriesPath = 'inquiries';
-      const docRef = await addDoc(collection(getDbService(), inquiriesPath), {
+      const docRef = await addDoc(collection(db, inquiriesPath), {
         userId: auth.currentUser.uid,
         userEmail: auth.currentUser.email,
         scripture,

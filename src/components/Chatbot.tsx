@@ -61,11 +61,12 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
 
   const fetchSessions = async () => {
     const auth = getAuthService();
-    if (!auth.currentUser) return;
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db) return;
 
     try {
       const q = query(
-        collection(getDbService(), 'users', auth.currentUser.uid, 'chat_sessions'),
+        collection(db, 'users', auth.currentUser.uid, 'chat_sessions'),
         orderBy('createdAt', 'desc')
       );
       const snap = await getDocs(q);
@@ -79,7 +80,7 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
   const saveCurrentSession = async () => {
     const auth = getAuthService();
     const db = getDbService();
-    if (!auth.currentUser || messages.length <= 1) return;
+    if (!auth || !auth.currentUser || !db || messages.length <= 1) return;
 
     setIsSaving(true);
     const sessionId = currentSessionId || crypto.randomUUID();
@@ -118,7 +119,7 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
   const deleteSession = async (sessionId: string) => {
     const auth = getAuthService();
     const db = getDbService();
-    if (!auth.currentUser) return;
+    if (!auth || !auth.currentUser || !db) return;
 
     const path = `users/${auth.currentUser.uid}/chat_sessions/${sessionId}`;
     try {
@@ -145,11 +146,12 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
 
   const fetchRecentInquiries = async () => {
     const auth = getAuthService();
-    if (!auth.currentUser) return;
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db) return;
 
     try {
       const q = query(
-        collection(getDbService(), 'inquiries'),
+        collection(db, 'inquiries'),
         where('userId', '==', auth.currentUser.uid),
         orderBy('createdAt', 'desc'),
         limit(5)

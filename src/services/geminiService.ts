@@ -7,7 +7,7 @@ function getAi() {
   if (aiInstance) return aiInstance;
   
   // Use both possible locations for the API key in a Vite environment
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process?.env?.GEMINI_API_KEY : '') || '';
   
   if (!apiKey) {
     throw new Error("Gemini API key is missing. Please ensure GEMINI_API_KEY is configured in your project settings.");

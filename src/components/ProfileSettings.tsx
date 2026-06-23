@@ -15,10 +15,16 @@ export default function ProfileSettings() {
   useEffect(() => {
     const fetchProfile = async () => {
       const auth = getAuthService();
-      if (!auth.currentUser) return;
+      if (!auth || !auth.currentUser) return;
+
+      const db = getDbService();
+      if (!db) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
           setProfile(data);
@@ -37,11 +43,12 @@ export default function ProfileSettings() {
 
   const handleSave = async () => {
     const auth = getAuthService();
-    if (!auth.currentUser) return;
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db) return;
 
     setSaving(true);
     try {
-      await setDoc(doc(getDbService(), 'users', auth.currentUser.uid), {
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
         displayName: auth.currentUser.displayName,

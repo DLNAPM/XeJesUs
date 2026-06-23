@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService } from '../lib/firebase';
+import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService, deleteDoc } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
-import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { fetchDefinition } from '../lib/gemini';
@@ -74,6 +74,10 @@ const TEST_INQUIRIES: Inquiry[] = [
 ];
 
 export default function InquiryDetails({ inquiryId, onBack, isPremium }: InquiryDetailsProps) {
+  const auth = getAuthService();
+  const db = getDbService();
+  const currentUserId = auth?.currentUser?.uid;
+
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [senderEmail, setSenderEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +102,22 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   const [isDefining, setIsDefining] = useState(false);
   const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = async () => {
+    if (!confirm('Are you sure you wish to remove this seeking from your library? This action cannot be undone.')) return;
+    if (!db) return;
+    setDeleting(true);
+    const docPath = `inquiries/${inquiryId}`;
+    try {
+      await deleteDoc(doc(db, 'inquiries', inquiryId));
+      onBack();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, docPath);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
@@ -140,12 +160,11 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
   const addToGlossary = async () => {
     if (!definitionResult) return;
-    const auth = getAuthService();
-    if (!auth.currentUser) return;
+    if (!auth || !auth.currentUser || !db) return;
 
     const path = `users/${auth.currentUser.uid}/glossary`;
     try {
-      await addDoc(collection(getDbService(), path), {
+      await addDoc(collection(db, path), {
         userId: auth.currentUser.uid,
         word: definitionResult.word,
         definition: definitionResult.definition,
@@ -161,10 +180,9 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
   useEffect(() => {
     const fetchUserPreferences = async () => {
-      const auth = getAuthService();
-      if (!auth.currentUser) return;
+      if (!auth || !auth.currentUser || !db) return;
       try {
-        const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
           setBibleWebsite(data.bibleWebsite || null);
@@ -174,7 +192,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       }
     };
     fetchUserPreferences();
-  }, []);
+  }, [auth]);
 
   const getBibleLink = (ref: string) => {
     if (!bibleWebsite) return null;
@@ -208,9 +226,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         return;
       }
 
+      if (!db) {
+        setLoading(false);
+        return;
+      }
+
       const docPath = `inquiries/${inquiryId}`;
       try {
-        const snapshot = await getDoc(doc(getDbService(), docPath));
+        const snapshot = await getDoc(doc(db, docPath));
         if (snapshot.exists()) {
           const data = snapshot.data();
           setInquiry({ id: snapshot.id, ...data } as Inquiry);
@@ -220,7 +243,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
           } else if (data.userId) {
             // Fetch profile for earlier inquiries that don't have userEmail saved
             try {
-              const userProfileDoc = await getDoc(doc(getDbService(), 'users', data.userId));
+              const userProfileDoc = await getDoc(doc(db, 'users', data.userId));
               if (userProfileDoc.exists()) {
                 setSenderEmail(userProfileDoc.data().email);
               }
@@ -241,12 +264,12 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
   const handleShareClick = async () => {
     setShowShareModal(true);
-    if (!getAuthService().currentUser) return;
+    if (!auth || !auth.currentUser || !db) return;
     
     // In a real app we'd query groups/members, but for now we'll just query all groups
     const groupsPath = 'groups';
     try {
-      const q = query(collection(getDbService(), groupsPath));
+      const q = query(collection(db, groupsPath));
       const snapshot = await getDocs(q);
       setMyGroups(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as BibleGroup)));
     } catch (e) {
@@ -255,14 +278,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   };
 
   const shareToGroup = async (groupId: string) => {
+    if (!auth || !auth.currentUser || !db) return;
     setSharing(groupId);
     try {
       const discussionsPath = `groups/${groupId}/discussions`;
       
       // Check for existing share to prevent duplicates
-      const currentUserId = getAuthService().currentUser?.uid;
       const q = query(
-        collection(getDbService(), discussionsPath), 
+        collection(db, discussionsPath), 
         where('inquiryId', '==', inquiryId),
         where('sharedBy', '==', currentUserId)
       );
@@ -276,7 +299,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         return;
       }
 
-      await addDoc(collection(getDbService(), discussionsPath), {
+      await addDoc(collection(db, discussionsPath), {
         groupId,
         inquiryId,
         sharedBy: currentUserId,
@@ -296,7 +319,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
   const shareToIndividual = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!getAuthService().currentUser || !recipientEmail) return;
+    if (!auth || !auth.currentUser || !db || !recipientEmail) return;
     
     const email = recipientEmail.toLowerCase().trim();
     // Basic email validation instead of strict @gmail.com check
@@ -311,11 +334,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     try {
       const sharesPath = 'direct_shares';
       const emailLower = email.toLowerCase().trim();
-      const currentUserId = getAuthService().currentUser?.uid;
 
       // Check for existing share to prevent duplicates
       const q = query(
-        collection(getDbService(), sharesPath),
+        collection(db, sharesPath),
         where('inquiryId', '==', inquiryId),
         where('recipientEmail', '==', emailLower),
         where('senderId', '==', currentUserId)
@@ -328,7 +350,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         return;
       }
 
-      await addDoc(collection(getDbService(), sharesPath), {
+      await addDoc(collection(db, sharesPath), {
         senderId: currentUserId,
         recipientEmail: emailLower,
         inquiryId,
@@ -388,7 +410,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         {/* Left Column: Headers and Navigation */}
         <div className="lg:col-span-1 space-y-8">
           <div>
-            {senderEmail && inquiry.userId !== getAuthService().currentUser?.uid && (
+            {senderEmail && inquiry.userId !== currentUserId && (
               <div className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.3em] mb-1 opacity-60">
                 Shared by: {senderEmail}
               </div>
@@ -450,6 +472,35 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               Share with Group and/or Individual
             </button>
           </div>
+
+          {inquiry.userId === currentUserId && (
+            <div className="p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm border-red-500/10">
+              <h3 className="text-xs font-sans font-bold text-red-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-red-500" />
+                Library Controls
+              </h3>
+              <p className="text-xs text-text-secondary mb-4 italic leading-relaxed">
+                Remove this seeking permanently from your Exegesis Library. This action is irreversible.
+              </p>
+              <button 
+                onClick={handleDeleteClick}
+                disabled={deleting}
+                className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-xs font-sans font-bold shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete Seeking
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Content Area */}

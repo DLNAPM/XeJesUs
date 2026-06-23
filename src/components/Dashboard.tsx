@@ -57,7 +57,11 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
 
   const fetchInquiries = async () => {
     const auth = getAuthService();
-    if (!auth.currentUser) return;
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db) {
+      setLoading(false);
+      return;
+    }
     
     // Guest Mode: Pre-populate with test data
     const isGuest = auth.currentUser.isAnonymous;
@@ -65,7 +69,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
     const inquiriesPath = 'inquiries';
     try {
       const q = query(
-        collection(getDbService(), inquiriesPath),
+        collection(db, inquiriesPath),
         where('userId', '==', auth.currentUser.uid),
         orderBy('createdAt', 'desc')
       );
@@ -81,13 +85,13 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
       // Fetch Shared with Me
       if (auth.currentUser.email) {
         const sharesQ = query(
-          collection(getDbService(), 'direct_shares'),
+          collection(db, 'direct_shares'),
           where('recipientEmail', '==', auth.currentUser.email.toLowerCase())
         );
         const shareSnap = await getDocs(sharesQ);
         const shareDocs = shareSnap.docs;
         
-        const inquiryPromises = shareDocs.map(s => getDoc(doc(getDbService(), 'inquiries', s.data().inquiryId)));
+        const inquiryPromises = shareDocs.map(s => getDoc(doc(db, 'inquiries', s.data().inquiryId)));
         const inqSnaps = await Promise.all(inquiryPromises);
         
         const shared = inqSnaps
@@ -124,11 +128,13 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    const db = getDbService();
+    if (!db) return;
     if (!confirm('Are you sure you wish to remove this seeking from your library? This action cannot be undone.')) return;
 
     setDeletingId(id);
     try {
-      await deleteDoc(doc(getDbService(), 'inquiries', id));
+      await deleteDoc(doc(db, 'inquiries', id));
       setRecentInquiries(prev => prev.filter(inq => inq.id !== id));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `inquiries/${id}`);
@@ -139,11 +145,13 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
 
   const handleDeleteShared = async (e: React.MouseEvent, shareId: string) => {
     e.stopPropagation();
+    const db = getDbService();
+    if (!db) return;
     if (!confirm('Are you sure you wish to remove this shared seeking from your library?')) return;
 
     setDeletingShareId(shareId);
     try {
-      await deleteDoc(doc(getDbService(), 'direct_shares', shareId));
+      await deleteDoc(doc(db, 'direct_shares', shareId));
       setSharedInquiries(prev => prev.filter(inq => inq.shareId !== shareId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `direct_shares/${shareId}`);
@@ -227,7 +235,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
                 <button
                   onClick={(e) => handleDelete(e, inquiry.id!)}
                   disabled={deletingId === inquiry.id}
-                  className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                  className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-40 md:opacity-0 group-hover:opacity-100 disabled:opacity-50 cursor-pointer"
                   title="Remove Seeking"
                 >
                   {deletingId === inquiry.id ? (
@@ -272,7 +280,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
                 <button
                   onClick={(e) => handleDeleteShared(e, inquiry.shareId!)}
                   disabled={deletingShareId === inquiry.shareId}
-                  className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                  className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-40 md:opacity-0 group-hover:opacity-100 disabled:opacity-50 cursor-pointer"
                   title="Remove Shared Seeking"
                 >
                   {deletingShareId === inquiry.shareId ? (

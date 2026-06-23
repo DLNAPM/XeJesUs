@@ -100,8 +100,13 @@ export default function App() {
         return;
       }
       try {
+        const db = getDbService();
+        if (!db) {
+          setHasInquiries(null);
+          return;
+        }
         const q = query(
-          collection(getDbService(), 'inquiries'),
+          collection(db, 'inquiries'),
           where('userId', '==', user.uid)
         );
         const snapshot = await getDocs(q);
@@ -163,7 +168,13 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         try {
-          const userDoc = await getDoc(doc(getDbService(), 'users', u.uid));
+          const db = getDbService();
+          if (!db) {
+            setUser(u);
+            setLoading(false);
+            return;
+          }
+          const userDoc = await getDoc(doc(db, 'users', u.uid));
           const isTargetAdmin = u.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || u.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
 
           if (userDoc.exists()) {
@@ -173,7 +184,7 @@ export default function App() {
             if (isTargetAdmin) {
               try {
                 // Ensure admins collection doc exists for isAdmin() check in rules
-                const adminRef = doc(getDbService(), 'admins', u.uid);
+                const adminRef = doc(db, 'admins', u.uid);
                 const adminSnap = await getDoc(adminRef);
                 if (!adminSnap.exists()) {
                   await setDoc(adminRef, { email: u.email });
@@ -187,11 +198,11 @@ export default function App() {
                     isFrozen: false,
                     lastLoginAt: serverTimestamp()
                   };
-                  await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
+                  await setDoc(doc(db, 'users', u.uid), updatedProfile);
                   setUserProfile(updatedProfile);
                 } else {
                   // Profile is correct, just update last login
-                  await updateDoc(doc(getDbService(), 'users', u.uid), { lastLoginAt: serverTimestamp() });
+                  await updateDoc(doc(db, 'users', u.uid), { lastLoginAt: serverTimestamp() });
                   setUserProfile({ ...data, lastLoginAt: new Date() });
                 }
               } catch (err) {
@@ -201,7 +212,7 @@ export default function App() {
             } else {
               // Standard last login update
               try {
-                const userRef = doc(getDbService(), 'users', u.uid);
+                const userRef = doc(db, 'users', u.uid);
                 await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
                 setUserProfile({ ...data, lastLoginAt: new Date() }); // Optimistic update
               } catch (updateErr) {
@@ -225,12 +236,12 @@ export default function App() {
                 isFrozen: false,
                 lastLoginAt: serverTimestamp()
               };
-              await setDoc(doc(getDbService(), 'users', u.uid), newProfile);
+              await setDoc(doc(db, 'users', u.uid), newProfile);
               if (isTargetAdmin) {
-                await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
+                await setDoc(doc(db, 'admins', u.uid), { email: u.email });
               }
               // Log first-time login for admin monitoring
-              await addDoc(collection(getDbService(), 'system_logs'), {
+              await addDoc(collection(db, 'system_logs'), {
                 type: 'first_login',
                 userId: u.uid,
                 userEmail: newProfile.email,

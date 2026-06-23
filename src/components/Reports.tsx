@@ -19,9 +19,10 @@ export default function Reports() {
   useEffect(() => {
     const fetchUserPreferences = async () => {
       const auth = getAuthService();
-      if (!auth.currentUser) return;
+      const db = getDbService();
+      if (!auth || !auth.currentUser || !db) return;
       try {
-        const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
           setBibleWebsite(userDoc.data().bibleWebsite || null);
         }
@@ -50,12 +51,16 @@ export default function Reports() {
   useEffect(() => {
     const fetchInquiries = async () => {
       const auth = getAuthService();
-      if (!auth.currentUser) return;
+      const db = getDbService();
+      if (!auth || !auth.currentUser || !db) {
+        setLoading(false);
+        return;
+      }
       
       const inquiriesPath = 'inquiries';
       try {
         const q = query(
-          collection(getDbService(), inquiriesPath),
+          collection(db, inquiriesPath),
           where('userId', '==', auth.currentUser.uid),
           orderBy('createdAt', 'desc')
         );

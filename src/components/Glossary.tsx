@@ -20,12 +20,18 @@ export default function Glossary() {
   useEffect(() => {
     const fetchEntries = async () => {
       const auth = getAuthService();
-      if (!auth.currentUser) return;
+      if (!auth || !auth.currentUser) return;
+
+      const db = getDbService();
+      if (!db) {
+        setLoading(false);
+        return;
+      }
 
       const path = `users/${auth.currentUser.uid}/glossary`;
       try {
         const q = query(
-          collection(getDbService(), path),
+          collection(db, path),
           orderBy('word', 'asc')
         );
         const snapshot = await getDocs(q);
@@ -70,11 +76,12 @@ export default function Glossary() {
 
   const handleDelete = async (id: string) => {
     const auth = getAuthService();
-    if (!auth.currentUser) return;
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db) return;
 
     const path = `users/${auth.currentUser.uid}/glossary/${id}`;
     try {
-      await deleteDoc(doc(getDbService(), `users/${auth.currentUser.uid}/glossary`, id));
+      await deleteDoc(doc(db, `users/${auth.currentUser.uid}/glossary`, id));
       setEntries(prev => prev.filter(e => e.id !== id));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
