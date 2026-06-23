@@ -1017,7 +1017,9 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-xs font-serif leading-relaxed opacity-80">{definitionResult.definition}</p>
+                <div className="max-h-40 overflow-y-auto pr-1.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded">
+                  <p className="text-xs font-serif leading-relaxed opacity-80 whitespace-pre-wrap">{definitionResult.definition}</p>
+                </div>
                 <button 
                   onClick={addToGlossary}
                   className="w-full bg-accent text-bg-primary py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all"
