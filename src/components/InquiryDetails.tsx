@@ -406,8 +406,8 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         <span className="font-sans font-bold text-sm tracking-wide uppercase">Back to Library</span>
       </button>
 
-      {/* Mobile-Only Ribbon of consolidated buttons at the top of the page */}
-      <div className="lg:hidden grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-8">
+      {/* Mobile & Notebook Ribbon of consolidated buttons at the top of the page */}
+      <div className="xl:hidden grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-8">
         {[
           { id: 'faith', label: "God's Intent", icon: Sparkles, emoji: '✨' },
           { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
@@ -436,9 +436,9 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
         {/* Left Column: Headers and Navigation */}
-        <div className="lg:col-span-1 space-y-8">
+        <div className="xl:col-span-1 space-y-8">
           <div>
             {senderEmail && inquiry.userId !== currentUserId && (
               <div className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.3em] mb-1 opacity-60">
@@ -484,7 +484,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
             })()}</div>
           </div>
 
-          <div className="hidden lg:flex flex-col gap-2">
+          <div className="hidden xl:flex flex-col gap-2">
             {[
               { id: 'faith', label: 'God\'s Intent', icon: Sparkles, emoji: '✨' },
               { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
@@ -506,7 +506,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
             ))}
           </div>
 
-          <div className="hidden lg:block p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm">
+          <div className="hidden xl:block p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm">
             <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
               <Share2 className="w-4 h-4" />
               Community Study
@@ -520,7 +520,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
           </div>
 
           {inquiry.userId === currentUserId && (
-            <div className="hidden lg:block p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm border-red-500/10">
+            <div className="hidden xl:block p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm border-red-500/10">
               <h3 className="text-xs font-sans font-bold text-red-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-red-500" />
                 Library Controls
@@ -550,7 +550,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         </div>
 
         {/* Right Column: Content Area */}
-        <div className="lg:col-span-2" onMouseUp={handleMouseUp}>
+        <div className="xl:col-span-2" onMouseUp={handleMouseUp}>
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
@@ -731,9 +731,9 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
              )}
           </div>
 
-          {/* Mobile-Only Library Controls at the bottom */}
+          {/* Mobile & Notebook Library Controls at the bottom */}
           {inquiry.userId === currentUserId && (
-            <div className="lg:hidden mt-8 p-8 bg-ui-card rounded-[2.5rem] border border-ui-border shadow-sm border-red-500/10">
+            <div className="xl:hidden mt-8 p-8 bg-ui-card rounded-[2.5rem] border border-ui-border shadow-sm border-red-500/10">
               <h3 className="text-xs font-sans font-bold text-red-500 uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                 <Trash2 className="w-4 h-4 text-red-500" />
                 Library Controls
