@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Send, Loader2, Sparkles, User, Bot, History, Save, Trash2, PlusCircle, ArrowLeft } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, Sparkles, User, Bot, History, Save, Trash2, PlusCircle, ArrowLeft, Volume2, VolumeX, Play, Pause, Square, Mic, MicOff } from 'lucide-react';
 import { getAuthService, getDbService, collection, query, where, orderBy, limit, getDocs, setDoc, doc, serverTimestamp, deleteDoc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { chatWithSanctuary } from '../services/geminiService';
 import { Inquiry, UserProfile, ChatSession } from '../types';
@@ -30,9 +30,24 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [sessionName, setSessionName] = useState('');
   const [showSaveNaming, setShowSaveNaming] = useState(false);
+  
+  // Audio Speech (Text-to-Speech & Speech-to-Text) States
+  const [speakingSessionId, setSpeakingSessionId] = useState<string | null>(null);
+  const [speakingMessageText, setSpeakingMessageText] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isPremium = userProfile?.tier === 'premium' || userProfile?.role === 'admin';
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isPremium) return;
@@ -58,6 +73,135 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, view]);
+
+  // Text-To-Speech Functions
+  const stopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingSessionId(null);
+    setSpeakingMessageText(null);
+    setIsPaused(false);
+  };
+
+  const speakSession = (session: ChatSession) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert("Audible speech synthesis is not supported in your browser.");
+      return;
+    }
+
+    if (speakingSessionId === session.id) {
+      if (isPaused) {
+        window.speechSynthesis.resume();
+        setIsPaused(false);
+      } else {
+        window.speechSynthesis.pause();
+        setIsPaused(true);
+      }
+      return;
+    }
+
+    stopSpeech();
+
+    const fullScript = [
+      `Saved session titled ${session.name}.`,
+      ...session.messages.map(m => `${m.role === 'model' ? 'Sanctuary Scholar says: ' : 'Pilgrim asked: '} ${m.text}`)
+    ].join('. ');
+
+    if (!fullScript.trim()) return;
+
+    const utterance = new SpeechSynthesisUtterance(fullScript);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => {
+      setSpeakingSessionId(session.id || null);
+      setIsPaused(false);
+    };
+
+    utterance.onend = () => {
+      setSpeakingSessionId(null);
+      setIsPaused(false);
+    };
+
+    utterance.onerror = (e) => {
+      console.error("Speech synthesis error:", e);
+      setSpeakingSessionId(null);
+      setIsPaused(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const speakText = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert("Audible speech synthesis is not supported in your browser.");
+      return;
+    }
+
+    if (speakingMessageText === text) {
+      stopSpeech();
+      return;
+    }
+
+    stopSpeech();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+
+    utterance.onstart = () => {
+      setSpeakingMessageText(text);
+    };
+
+    utterance.onend = () => {
+      setSpeakingMessageText(null);
+    };
+
+    utterance.onerror = () => {
+      setSpeakingMessageText(null);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Speech-to-Text Function (Voice Dictation)
+  const toggleListening = () => {
+    if (typeof window === 'undefined') return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech-to-text dictation is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInput(prev => (prev ? `${prev} ${transcript}` : transcript));
+        }
+        setIsListening(false);
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+
+      recognition.start();
+    } catch (err) {
+      console.error("Speech recognition error:", err);
+      setIsListening(false);
+    }
+  };
 
   const fetchSessions = async () => {
     const auth = getAuthService();
@@ -281,12 +425,27 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
                           {m.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                         </div>
                         <div className={cn(
-                          "p-3 rounded-2xl text-sm leading-relaxed",
+                          "p-3 rounded-2xl text-sm leading-relaxed relative group/msg pr-8",
                           m.role === 'user' 
                             ? "bg-accent text-bg-primary rounded-tr-none" 
                             : "bg-ui-sidebar border border-ui-border text-text-primary rounded-tl-none font-serif italic"
                         )}>
                           {m.text}
+                          <button
+                            type="button"
+                            onClick={() => speakText(m.text)}
+                            className={cn(
+                              "absolute top-2 right-2 p-1 rounded-md opacity-70 hover:opacity-100 transition-opacity",
+                              m.role === 'user' ? "text-bg-primary hover:bg-black/10" : "text-text-secondary hover:bg-ui-border"
+                            )}
+                            title={speakingMessageText === m.text ? "Stop Reading" : "Read Audibly"}
+                          >
+                            {speakingMessageText === m.text ? (
+                              <VolumeX className="w-3.5 h-3.5 animate-pulse text-red-400" />
+                            ) : (
+                              <Volume2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -363,22 +522,38 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
                     </div>
                     <form 
                       onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                      className="relative"
+                      className="relative flex items-center"
                     >
                       <input 
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask the Sanctuary Scholar..."
-                        className="w-full bg-ui-card border border-ui-border rounded-2xl py-3 pl-4 pr-12 text-sm focus:outline-none focus:border-accent transition-all font-serif"
+                        placeholder={isListening ? "Listening to your voice..." : "Ask the Sanctuary Scholar..."}
+                        className={cn(
+                          "w-full bg-ui-card border border-ui-border rounded-2xl py-3 pl-4 pr-20 text-sm focus:outline-none focus:border-accent transition-all font-serif",
+                          isListening && "border-accent ring-2 ring-accent/30 animate-pulse placeholder:text-accent font-sans"
+                        )}
                       />
-                      <button 
-                        type="submit"
-                        disabled={!input.trim() || isLoading}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-accent text-bg-primary flex items-center justify-center hover:opacity-90 disabled:opacity-30 transition-all"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <button 
+                          type="button"
+                          onClick={toggleListening}
+                          className={cn(
+                            "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                            isListening ? "bg-red-500 text-white animate-bounce" : "bg-ui-sidebar border border-ui-border text-text-secondary hover:text-accent"
+                          )}
+                          title={isListening ? "Stop Listening" : "Dictate with Speech-to-Text"}
+                        >
+                          {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={!input.trim() || isLoading}
+                          className="w-8 h-8 rounded-xl bg-accent text-bg-primary flex items-center justify-center hover:opacity-90 disabled:opacity-30 transition-all"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </>
@@ -394,6 +569,46 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
                       <PlusCircle className="w-3 h-3" /> New Chat
                     </button>
                   </div>
+
+                  {/* Active Audio Player Control for Saved Sessions */}
+                  {speakingSessionId && (
+                    <div className="p-3 bg-accent/10 border border-accent/30 rounded-2xl flex items-center justify-between mb-3 text-xs">
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        <Volume2 className="w-4 h-4 text-accent animate-pulse flex-shrink-0" />
+                        <span className="font-serif italic text-text-primary truncate">
+                          Reading: <strong className="font-bold">{sessions.find(s => s.id === speakingSessionId)?.name || 'Saved Session'}</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                              if (isPaused) {
+                                window.speechSynthesis.resume();
+                                setIsPaused(false);
+                              } else {
+                                window.speechSynthesis.pause();
+                                setIsPaused(true);
+                              }
+                            }
+                          }}
+                          className="px-2 py-1 bg-accent text-bg-primary rounded-lg font-bold text-[10px] uppercase flex items-center gap-1 hover:opacity-90 transition-opacity"
+                        >
+                          {isPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+                          {isPaused ? 'Resume' : 'Pause'}
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={stopSpeech}
+                          className="p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors"
+                          title="Stop Reading"
+                        >
+                          <Square className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   
                   {sessions.length === 0 ? (
                     <div className="text-center py-12 opacity-50 space-y-2">
@@ -406,12 +621,13 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
                       <div 
                         key={session.id}
                         className={cn(
-                          "group p-3 rounded-2xl border border-ui-border bg-ui-card hover:border-accent transition-all cursor-pointer flex items-center justify-between",
-                          currentSessionId === session.id && "border-accent ring-1 ring-accent/20"
+                          "group p-3 rounded-2xl border border-ui-border bg-ui-card hover:border-accent transition-all cursor-pointer flex items-center justify-between gap-2",
+                          currentSessionId === session.id && "border-accent ring-1 ring-accent/20",
+                          speakingSessionId === session.id && "border-accent bg-accent/5 ring-1 ring-accent/30"
                         )}
                         onClick={() => loadSession(session)}
                       >
-                        <div className="flex-1 min-w-0 pr-2">
+                        <div className="flex-1 min-w-0 pr-1">
                           <h5 className="text-sm font-serif font-bold text-text-primary truncate">{session.name}</h5>
                           <p className="text-[10px] text-text-secondary">
                             {session.messages.length} messages • {(() => {
@@ -431,17 +647,54 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
                             })()}
                           </p>
                         </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm("Remove this session's records from the sanctuary?")) {
-                              deleteSession(session.id!);
-                            }
-                          }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500/50 hover:bg-red-500/10 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {/* Read Audibly Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              speakSession(session);
+                            }}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all",
+                              speakingSessionId === session.id
+                                ? "bg-accent text-bg-primary shadow-sm"
+                                : "bg-accent/10 text-accent hover:bg-accent/20"
+                            )}
+                            title={speakingSessionId === session.id ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") : "Read Session Audibly"}
+                          >
+                            {speakingSessionId === session.id ? (
+                              <>
+                                <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                                <span className="text-[10px] uppercase tracking-wider">{isPaused ? 'Paused' : 'Stop'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3.5 h-3.5" />
+                                <span className="text-[10px] uppercase tracking-wider">Listen</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* Delete Session Button */}
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (speakingSessionId === session.id) {
+                                stopSpeech();
+                              }
+                              if (window.confirm("Remove this session's records from the sanctuary?")) {
+                                deleteSession(session.id!);
+                              }
+                            }}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500/50 hover:bg-red-500/10 hover:text-red-500 transition-all opacity-80 md:opacity-0 group-hover:opacity-100"
+                            title="Delete Session"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
