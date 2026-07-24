@@ -77,6 +77,7 @@ import SettingsPage from './components/Settings';
 import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
 import Chatbot from './components/Chatbot';
+import SavedChatSessions from './components/SavedChatSessions';
 
 const safeSessionStorage = {
   getItem(key: string): string | null {
@@ -108,7 +109,7 @@ const safeLocalStorage = {
   }
 };
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin';
+type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin' | 'saved-chats';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -126,9 +127,11 @@ export default function App() {
   const [openChatbotSignal, setOpenChatbotSignal] = useState<{ open: boolean; view: 'chat' | 'sessions'; id: number }>({ open: false, view: 'chat', id: 0 });
 
   const openSavedChatSessions = () => {
+    setCurrentPage('saved-chats');
     setOpenChatbotSignal({ open: true, view: 'sessions', id: Date.now() });
     setShowMobileMenu(false);
   };
+
 
   useEffect(() => {
     const checkInquiries = async () => {
@@ -750,6 +753,7 @@ export default function App() {
             {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} isPremium={isPremium} />}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
+            {currentPage === 'saved-chats' && <SavedChatSessions userProfile={userProfile} onSelectSession={() => setOpenChatbotSignal({ open: true, view: 'chat', id: Date.now() })} />}
             {currentPage === 'glossary' && <Glossary />}
             {currentPage === 'settings' && <SettingsPage />}
             {currentPage === 'admin' && <AdminDashboard />}

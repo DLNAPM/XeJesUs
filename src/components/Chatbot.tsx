@@ -1,10 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Send, Loader2, Sparkles, User, Bot, History, Save, Trash2, PlusCircle, ArrowLeft, Volume2, VolumeX, Play, Pause, Square, Mic, MicOff } from 'lucide-react';
+import { 
+  MessageSquare, 
+  X, 
+  Send, 
+  Loader2, 
+  Sparkles, 
+  User, 
+  Bot, 
+  History, 
+  Save, 
+  Trash2, 
+  PlusCircle, 
+  ArrowLeft, 
+  Volume2, 
+  VolumeX, 
+  Play, 
+  Pause, 
+  Square, 
+  Mic, 
+  MicOff,
+  FileText,
+  Download,
+  Printer,
+  BookOpen,
+  ExternalLink,
+  Youtube,
+  GitBranch,
+  Image as ImageIcon
+} from 'lucide-react';
 import { getAuthService, getDbService, collection, query, where, orderBy, limit, getDocs, setDoc, doc, serverTimestamp, deleteDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { chatWithSanctuary } from '../services/geminiService';
-import { Inquiry, UserProfile, ChatSession } from '../types';
+import { chatWithSanctuary, generateLiteraryWorkExport } from '../services/geminiService';
+import { Inquiry, UserProfile, ChatSession, LiteraryWorkExport } from '../types';
 import { cn } from '../lib/utils';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import PremiumOverlay from './PremiumOverlay';
+
 
 interface Message {
   role: 'user' | 'model';
@@ -38,9 +70,87 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [isListening, setIsListening] = useState(false);
 
+  // Literary Work Export States
+  const [selectedSessionForExport, setSelectedSessionForExport] = useState<ChatSession | null>(null);
+  const [literaryWork, setLiteraryWork] = useState<LiteraryWorkExport | null>(null);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isPremium = userProfile?.tier === 'premium' || userProfile?.role === 'admin';
+
+  const handleExportLiteraryWork = async (session: ChatSession) => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+
+    setSelectedSessionForExport(session);
+    setIsSynthesizing(true);
+    setLiteraryWork(null);
+
+    try {
+      const data = await generateLiteraryWorkExport(session.name, session.messages);
+      setLiteraryWork(data);
+    } catch (err) {
+      console.error("Error synthesizing literary work:", err);
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
+  const downloadPdf = async () => {
+    if (!pdfRef.current || !selectedSessionForExport) return;
+    setIsGeneratingPdf(true);
+
+    try {
+      const container = pdfRef.current;
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = canvas.width / 2;
+      const pdfHeight = canvas.height / 2;
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [pdfWidth, pdfHeight]
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      const links = container.querySelectorAll('a');
+      const containerRect = container.getBoundingClientRect();
+
+      links.forEach((link) => {
+        const linkRect = link.getBoundingClientRect();
+        const url = link.getAttribute('href');
+        if (url) {
+          const x = linkRect.left - containerRect.left;
+          const y = linkRect.top - containerRect.top;
+          const w = linkRect.width;
+          const h = linkRect.height;
+          pdf.link(x, y, w, h, { url });
+        }
+      });
+
+      const cleanFileName = selectedSessionForExport.name.replace(/[^a-zA-Z0-9]/g, '_');
+      pdf.save(`XeJesUs-Literary-Work-${cleanFileName}.pdf`);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
 
   useEffect(() => {
     return () => {
@@ -679,6 +789,20 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                             )}
                           </button>
 
+                          {/* Export PDF Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExportLiteraryWork(session);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 bg-text-primary text-bg-primary hover:opacity-90 transition-all"
+                            title="Export Session as Professional Literary Work (PDF)"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-accent" />
+                            <span className="text-[10px] uppercase tracking-wider">PDF</span>
+                          </button>
+
                           {/* Delete Session Button */}
                           <button 
                             type="button"
@@ -706,6 +830,285 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Literary Work PDF Preview Modal */}
+      <AnimatePresence>
+        {selectedSessionForExport && (
+          <div className="fixed inset-0 z-[200] bg-text-primary/60 backdrop-blur-md flex items-center justify-center p-4 md:p-8 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-bg-primary w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] border border-ui-border shadow-2xl flex flex-col overflow-hidden relative"
+            >
+              {/* Modal Top Toolbar */}
+              <div className="p-6 bg-ui-card border-b border-ui-border flex items-center justify-between sticky top-0 z-20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-accent text-bg-primary flex items-center justify-center font-bold">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-bold text-text-primary text-lg">Professional Literary Work</h3>
+                    <p className="text-xs text-text-secondary font-sans uppercase tracking-wider">
+                      {selectedSessionForExport.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {literaryWork && (
+                    <>
+                      <button 
+                        onClick={downloadPdf}
+                        disabled={isGeneratingPdf}
+                        className="px-4 py-2.5 bg-accent text-bg-primary rounded-xl text-xs font-bold font-sans uppercase tracking-widest flex items-center gap-2 hover:opacity-90 transition-all shadow-md disabled:opacity-50"
+                      >
+                        {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        Save PDF
+                      </button>
+                      <button 
+                        onClick={() => window.print()}
+                        className="px-4 py-2.5 bg-ui-sidebar border border-ui-border text-text-primary rounded-xl text-xs font-bold font-sans uppercase tracking-widest flex items-center gap-2 hover:bg-ui-border transition-all"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Print
+                      </button>
+                    </>
+                  )}
+                  <button 
+                    onClick={() => {
+                      setSelectedSessionForExport(null);
+                      setLiteraryWork(null);
+                    }}
+                    className="p-2 text-text-secondary hover:text-text-primary rounded-xl hover:bg-ui-sidebar transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content Body */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-12 space-y-8 bg-ui-sidebar/20">
+                {isSynthesizing ? (
+                  <div className="py-24 text-center space-y-4">
+                    <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto" />
+                    <h4 className="text-xl font-serif italic text-text-primary font-bold">Synthesizing Literary Work & Historical Archives...</h4>
+                    <p className="text-xs font-sans text-text-secondary uppercase tracking-widest max-w-md mx-auto">
+                      Compiling biblical family trees, scholarly literature examples, imagery, and curated educational video archives.
+                    </p>
+                  </div>
+                ) : literaryWork ? (
+                  <div 
+                    ref={pdfRef}
+                    className="bg-white p-8 md:p-14 rounded-[2rem] shadow-xl border border-ui-border text-[#0f172a] font-serif space-y-10 relative overflow-hidden"
+                  >
+                    {/* Header Seal */}
+                    <header className="pb-8 border-b-2 border-accent/20 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3 text-[#3b82f6]">
+                          <div className="w-7 h-7 rounded-lg bg-[#3b82f6] text-white font-bold flex items-center justify-center text-xs">XJ</div>
+                          <span className="font-sans font-black uppercase tracking-[0.3em] text-[11px]">XeJesUs Sanctuary Publication</span>
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-black italic tracking-tight text-[#0f172a] leading-tight mb-2">
+                          {literaryWork.themeTitle}
+                        </h1>
+                        <p className="text-xs font-sans font-bold text-[#64748b] uppercase tracking-[0.2em]">
+                          {literaryWork.subtitle}
+                        </p>
+                      </div>
+
+                      <div className="text-left md:text-right text-xs font-sans text-[#64748b]">
+                        <span className="font-bold text-[#3b82f6] uppercase tracking-wider block">Archive Document</span>
+                        <span>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                    </header>
+
+                    {/* Executive Summary */}
+                    <section className="bg-[#f8fafc] p-6 rounded-2xl border border-[#e2e8f0]">
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] mb-3 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Executive Summary
+                      </h2>
+                      <p className="text-sm leading-relaxed text-[#334155] italic">
+                        {literaryWork.executiveSummary}
+                      </p>
+                    </section>
+
+                    {/* Thematic Analysis */}
+                    <section>
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] mb-4 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        Thematic Exegesis & Theological Synthesis
+                      </h2>
+                      <div className="text-sm leading-relaxed text-[#334155] space-y-3 font-serif">
+                        {literaryWork.thematicAnalysis}
+                      </div>
+                    </section>
+
+                    {/* SECTION A: Visual Imagery */}
+                    {literaryWork.images && literaryWork.images.length > 0 && (
+                      <section className="space-y-4">
+                        <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" />
+                          a. Sacred Imagery & Historical Artwork
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {literaryWork.images.map((img, idx) => (
+                            <div key={idx} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-sm">
+                              <img 
+                                src={img.imageUrl} 
+                                alt={img.title} 
+                                crossOrigin="anonymous" 
+                                className="w-full h-44 object-cover"
+                              />
+                              <div className="p-4">
+                                <h3 className="font-bold text-xs uppercase tracking-wider text-[#0f172a] mb-1">{img.title}</h3>
+                                <p className="text-xs text-[#64748b] italic leading-snug">{img.caption}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* SECTION B: Family Tree */}
+                    {literaryWork.familyTree && literaryWork.familyTree.length > 0 && (
+                      <section className="space-y-4">
+                        <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] flex items-center gap-2">
+                          <GitBranch className="w-4 h-4" />
+                          b. Biblical Family Tree & Genealogical Lineage
+                        </h2>
+                        <div className="bg-[#f8fafc] p-6 rounded-2xl border border-[#e2e8f0] space-y-4">
+                          <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#3b82f6]/30">
+                            {literaryWork.familyTree.map((node, idx) => (
+                              <div key={idx} className="relative">
+                                <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-[#3b82f6] ring-4 ring-[#f8fafc]" />
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm text-[#0f172a]">{node.person}</span>
+                                    <span className="text-[10px] font-sans font-bold uppercase px-2 py-0.5 bg-[#3b82f6]/10 text-[#3b82f6] rounded-md">
+                                      {node.biblicalTitle}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] font-sans text-[#64748b] uppercase tracking-wider font-semibold">
+                                    {node.generation} {node.keyScripture && `• ${node.keyScripture}`}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-[#475569] italic leading-relaxed">{node.significance}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </section>
+                    )}
+
+                    {/* SECTION C: Examples of Literary Work Researched by Scholars */}
+                    {literaryWork.scholarlyWorks && literaryWork.scholarlyWorks.length > 0 && (
+                      <section className="space-y-4">
+                        <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          c. Scholarly Researched Literary Works & Treatises
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {literaryWork.scholarlyWorks.map((work, idx) => (
+                            <div key={idx} className="bg-[#f8fafc] p-4 rounded-2xl border border-[#e2e8f0] flex flex-col justify-between">
+                              <div>
+                                <span className="text-[10px] font-sans font-bold uppercase text-[#3b82f6] tracking-wider block mb-1">
+                                  {work.era}
+                                </span>
+                                <h3 className="font-bold text-sm text-[#0f172a] mb-0.5">{work.title}</h3>
+                                <p className="text-xs text-[#64748b] italic font-semibold mb-2">By {work.author}</p>
+                                <p className="text-xs text-[#334155] leading-relaxed mb-3">{work.summary}</p>
+                              </div>
+                              <div className="pt-2 border-t border-[#e2e8f0] text-[11px] text-[#475569] italic">
+                                <strong>Relevance:</strong> {work.relevance}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* SECTION D: YouTube Videos Related to Chat Theme */}
+                    {literaryWork.youtubeVideos && literaryWork.youtubeVideos.length > 0 && (
+                      <section className="space-y-4">
+                        <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] flex items-center gap-2">
+                          <Youtube className="w-4 h-4 text-red-600" />
+                          d. Recommended Educational & Scholarly Media (YouTube)
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {literaryWork.youtubeVideos.map((video, idx) => (
+                            <a
+                              key={idx}
+                              href={video.url || `https://www.youtube.com/results?search_query=${encodeURIComponent(video.searchQuery || video.title)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-[#f8fafc] p-4 rounded-2xl border border-[#e2e8f0] hover:border-[#3b82f6] transition-all group block"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[10px] font-sans font-bold uppercase text-red-600 flex items-center gap-1">
+                                  <Youtube className="w-3.5 h-3.5" />
+                                  {video.channel}
+                                </span>
+                                <ExternalLink className="w-3.5 h-3.5 text-[#94a3b8] group-hover:text-[#3b82f6] transition-colors" />
+                              </div>
+                              <h3 className="font-bold text-xs text-[#0f172a] mb-1 group-hover:text-[#3b82f6] transition-colors line-clamp-2">
+                                {video.title}
+                              </h3>
+                              <p className="text-xs text-[#64748b] leading-relaxed italic line-clamp-3">
+                                {video.description}
+                              </p>
+                            </a>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Conversation Transcript Section */}
+                    <section className="space-y-4 pt-6 border-t border-[#e2e8f0]">
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.3em] text-[#3b82f6] flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        Annotated Dialogue Transcript
+                      </h2>
+                      <div className="space-y-3">
+                        {selectedSessionForExport.messages.map((m, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`p-4 rounded-xl text-xs leading-relaxed ${
+                              m.role === 'user' 
+                                ? 'bg-[#3b82f6]/10 border border-[#3b82f6]/20 text-[#0f172a]' 
+                                : 'bg-[#f8fafc] border border-[#e2e8f0] text-[#334155] italic'
+                            }`}
+                          >
+                            <span className="font-bold uppercase tracking-wider block mb-1 text-[10px] text-[#3b82f6]">
+                              {m.role === 'user' ? 'Pilgrim' : 'Sanctuary Scholar'}
+                            </span>
+                            {m.text}
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* Footer Seal */}
+                    <footer className="pt-8 border-t border-[#e2e8f0] flex justify-between items-center text-[10px] text-[#94a3b8] uppercase font-sans tracking-widest">
+                      <span>Official Literary Publication • XeJesUs Sanctuary</span>
+                      <span>Verified Exegesis</span>
+                    </footer>
+                  </div>
+                ) : null}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Upgrade to Premium Modal */}
+      <PremiumOverlay 
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        featureName="Professional Literary Work PDF Exporter"
+      />
+
 
       <div className="flex flex-col md:flex-row items-center gap-4">
         {!isOpen && (

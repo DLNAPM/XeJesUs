@@ -85,3 +85,37 @@ export interface ChatSession {
   createdAt: any;
   updatedAt?: any;
 }
+
+export interface LiteraryWorkExport {
+  themeTitle: string;
+  subtitle: string;
+  executiveSummary: string;
+  thematicAnalysis: string;
+  familyTree: {
+    generation: string;
+    person: string;
+    biblicalTitle: string;
+    significance: string;
+    keyScripture?: string;
+  }[];
+  scholarlyWorks: {
+    title: string;
+    author: string;
+    era: string;
+    summary: string;
+    relevance: string;
+  }[];
+  youtubeVideos: {
+    title: string;
+    channel: string;
+    searchQuery: string;
+    url: string;
+    description: string;
+  }[];
+  images: {
+    title: string;
+    caption: string;
+    imageUrl: string;
+  }[];
+}
+
