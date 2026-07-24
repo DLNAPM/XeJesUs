@@ -63,10 +63,125 @@ Guidelines:
   return result.text;
 }
 
+export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
+  const text = (sessionName + " " + conversationText).toLowerCase();
+  
+  if (text.includes("moses") || text.includes("exodus") || text.includes("commandment") || text.includes("sinai") || text.includes("red sea") || text.includes("egypt")) {
+    return [
+      {
+        title: "Wilderness of Sinai & Covenant Mountain",
+        caption: "The rugged peaks of Mount Sinai, where Moses received the Ten Commandments and the covenant law.",
+        imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Sacred Scrolls of the Law",
+        caption: "Ancient scripture parchment containing the books of the Torah and Mosaic statutes.",
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  if (text.includes("david") || text.includes("psalm") || text.includes("harp") || text.includes("worship") || text.includes("king") || text.includes("solomon") || text.includes("samuel")) {
+    return [
+      {
+        title: "City of David & Historic Jerusalem",
+        caption: "Ancient stone citadel of Jerusalem, heart of the Davidic kingdom and royal psalmists.",
+        imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Acoustic Praise & Lyrical Psalms",
+        caption: "Stringed melodies and songs of devotion reflecting the poetic heart of the Book of Psalms.",
+        imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  if (text.includes("creation") || text.includes("genesis") || text.includes("adam") || text.includes("eden") || text.includes("noah") || text.includes("ark") || text.includes("flood") || text.includes("nature") || text.includes("stars")) {
+    return [
+      {
+        title: "The Heavens Declare Creation's Glory",
+        caption: "The vast celestial expanse and star-filled cosmos celebrating Genesis creation.",
+        imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Living Waters of Paradise",
+        caption: "Pure cascading waters and lush flora symbolizing the pristine Garden of Eden and divine grace.",
+        imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  if (text.includes("jesus") || text.includes("cross") || text.includes("gospel") || text.includes("resurrection") || text.includes("christ") || text.includes("beatitudes") || text.includes("galilee") || text.includes("disciples") || text.includes("parable")) {
+    return [
+      {
+        title: "Sea of Galilee at Sunrise",
+        caption: "Serene shoreline of Galilee where Jesus called His disciples and delivered the Sermon on the Mount.",
+        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Dawn of the Resurrection",
+        caption: "Radiant morning light entering an ancient stone sanctuary, testifying to Christ's resurrection victory.",
+        imageUrl: "https://images.unsplash.com/photo-1518081461904-9d8f136351c2?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  if (text.includes("prayer") || text.includes("faith") || text.includes("sanctuary") || text.includes("spirit") || text.includes("peace") || text.includes("hope") || text.includes("love") || text.includes("forgiveness")) {
+    return [
+      {
+        title: "Sanctuary of Intercession & Prayer",
+        caption: "Warm candlelight illuminating a quiet house of prayer during heartfelt communion with God.",
+        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Beam of Heavenly Light & Grace",
+        caption: "Luminous light breaking through dark clouds, representing divine answer to prayer and steadfast faith.",
+        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  if (text.includes("jerusalem") || text.includes("temple") || text.includes("prophet") || text.includes("revelation") || text.includes("end times") || text.includes("vision")) {
+    return [
+      {
+        title: "Historic Gates of Old Jerusalem",
+        caption: "Ancient limestone arches and battlements of Jerusalem, city of prophets and messianic promises.",
+        imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Venerable Olive Grove of Gethsemane",
+        caption: "Ancient olive trees standing in quiet meditation near Jerusalem, rooted in biblical history.",
+        imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // General spiritual fallback
+  return [
+    {
+      title: "Sacred Manuscripts & Scriptures",
+      caption: "Illuminated biblical text and open scriptures representing divine truth in this study.",
+      imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      title: "Sanctuary of Study & Meditation",
+      caption: "Peaceful environment reserved for spiritual contemplation and scholarly exegesis.",
+      imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+    }
+  ];
+}
+
 export async function generateLiteraryWorkExport(
   sessionName: string,
   messages: { role: 'user' | 'model'; text: string }[]
 ): Promise<LiteraryWorkExport> {
+  const conversationText = messages
+    .slice(-15) // take up to last 15 messages for prompt context
+    .map(m => `${m.role === 'user' ? 'Pilgrim' : 'Sanctuary Scholar'}: ${m.text}`)
+    .join('\n\n');
+
+  const themeSpecificImages = getThematicImagesForTopic(sessionName, conversationText);
+
   const fallbackData: LiteraryWorkExport = {
     themeTitle: `Literary Exegesis: ${sessionName || 'Sanctuary Study'}`,
     subtitle: "A Formal Synthesis of Scripture, Lineage, and Scholarly Commentary",
@@ -155,28 +270,12 @@ export async function generateLiteraryWorkExport(
         description: "Documentary exploring the archaeological discoveries and socio-cultural environment of Jesus and His disciples."
       }
     ],
-    images: [
-      {
-        title: "Ancient Sacred Scriptures",
-        caption: "Illuminated biblical manuscripts and scrolls preserving divine truth across generations.",
-        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        title: "Historic Study & Reflection",
-        caption: "Quiet sanctuary space dedicated to scholarly research and prayerful meditation.",
-        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
+    images: themeSpecificImages
   };
 
   try {
     const ai = getAi();
     const modelName = "gemini-3-flash-preview";
-
-    const conversationText = messages
-      .slice(-15) // take up to last 15 messages for prompt context
-      .map(m => `${m.role === 'user' ? 'Pilgrim' : 'Sanctuary Scholar'}: ${m.text}`)
-      .join('\n\n');
 
     const prompt = `You are a distinguished Biblical Scholar and Literary Historian for XeJesUs.
 Analyze the following saved chat session conversation and synthesize a comprehensive "Professional Literary Work" report.
@@ -196,8 +295,11 @@ Produce a structured JSON response containing:
    Each item must have: "title", "author", "era" (e.g. "1st Century AD", "4th Century Patristic Era"), "summary" (brief synopsis of the work), and "relevance" (why it supports this chat theme).
 7. "youtubeVideos": An array of EXACTLY 2 to 3 curated educational or scholarly YouTube videos related to the theme (e.g. BibleProject series, Academic lectures, Documentary analyses).
    Each item must have: "title", "channel" (e.g. "The BibleProject", "Yale Divinity Courses"), "searchQuery" (search query string), "url" (valid YouTube search URL like "https://www.youtube.com/results?search_query=..."), "description" (why pilgrims should watch this).
-8. "images": An array of 2 curated thematic image descriptions with high quality unsplash image URLs relevant to ancient manuscript, open bible, ancient Jerusalem, starry night desert, ancient parchment, or olive trees.
-   Each item must have: "title", "caption", "imageUrl" (use valid unsplash URLs like "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80" or "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80").
+8. "images": An array of 2 curated thematic image descriptions with image URLs that are explicitly directly related to the theme of "${sessionName}".
+   Each item must have:
+   - "title": A descriptive title tailored directly to the theme "${sessionName}"
+   - "caption": A detailed caption explaining how this specific image relates to the chat session's topic
+   - "imageUrl": A high-quality Unsplash image URL matching the theme (e.g. "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80").
 
 Return ONLY valid JSON matching this schema.`;
 
@@ -212,13 +314,25 @@ Return ONLY valid JSON matching this schema.`;
     const text = response.text || "";
     if (text) {
       const parsed = JSON.parse(text);
+      
+      // Ensure image URLs are valid and fallback to topic-matched images if missing
+      const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
+        ? parsed.images.map((img: any, idx: number) => ({
+            title: img.title || themeSpecificImages[idx % themeSpecificImages.length].title,
+            caption: img.caption || themeSpecificImages[idx % themeSpecificImages.length].caption,
+            imageUrl: (img.imageUrl && img.imageUrl.startsWith('http')) 
+              ? img.imageUrl 
+              : themeSpecificImages[idx % themeSpecificImages.length].imageUrl
+          }))
+        : themeSpecificImages;
+
       return {
         ...fallbackData,
         ...parsed,
         familyTree: Array.isArray(parsed.familyTree) && parsed.familyTree.length > 0 ? parsed.familyTree : fallbackData.familyTree,
         scholarlyWorks: Array.isArray(parsed.scholarlyWorks) && parsed.scholarlyWorks.length > 0 ? parsed.scholarlyWorks : fallbackData.scholarlyWorks,
         youtubeVideos: Array.isArray(parsed.youtubeVideos) && parsed.youtubeVideos.length > 0 ? parsed.youtubeVideos : fallbackData.youtubeVideos,
-        images: Array.isArray(parsed.images) && parsed.images.length > 0 ? parsed.images : fallbackData.images,
+        images: imagesWithFallback,
       };
     }
   } catch (err) {
