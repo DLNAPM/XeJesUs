@@ -644,15 +644,15 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                       </section>
                     )}
 
-                    {/* Conversation Transcript Section - Time Magazine Q&A Editorial Style */}
+                    {/* Conversation Transcript Section - BibleGateway Literary Study Style */}
                     <section className="space-y-6 pt-8 border-t-2 border-[#0f172a]/10">
                       <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 border-[#0f172a] pb-3 gap-2">
                         <div>
                           <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] text-[#3b82f6] block mb-1">
-                            THE INTERVIEW ARCHIVE
+                            BIBLICAL EXEGESIS ARCHIVE
                           </span>
                           <h2 className="text-xl md:text-2xl font-serif font-black tracking-tight text-[#0f172a]">
-                            The Dialogue & Exegesis
+                            Annotated Dialogue & Commentary
                           </h2>
                         </div>
                         <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-[#64748b] bg-[#f1f5f9] px-3 py-1 rounded-full w-fit">
@@ -661,51 +661,63 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                       </div>
 
                       <p className="text-xs font-serif italic text-[#475569] leading-relaxed border-l-2 border-[#3b82f6] pl-3 py-0.5">
-                        An edited verbatim transcript documenting the pilgrimage inquiry and theological discourse between the Pilgrim and the Sanctuary Scholar.
+                        A formal scholarly transcript documenting the pilgrimage inquiry and exegetical study between the Pilgrim and the Sanctuary Scholar in the tradition of classical commentary archives.
                       </p>
 
-                      <div className="space-y-6 font-serif text-sm leading-relaxed text-[#1e293b]">
+                      <div className="space-y-8 font-serif text-sm leading-relaxed text-[#1e293b]">
                         {selectedSessionForExport.messages.map((m, idx) => {
                           const isUser = m.role === 'user';
-                          const isFirstScholar = !isUser && (idx === 0 || idx === 1);
+                          const paragraphs = m.text.split(/\n+/).filter(p => p.trim().length > 0);
 
                           return (
                             <article 
                               key={idx} 
-                              className={`relative pb-6 border-b border-[#e2e8f0] last:border-b-0 last:pb-0 ${
-                                isUser ? 'pl-4 border-l-2 border-[#3b82f6]/40 my-4 bg-[#f8fafc]/60 p-4 rounded-r-xl' : 'pt-2'
+                              className={`relative pb-8 border-b border-[#e2e8f0] last:border-b-0 last:pb-0 ${
+                                isUser 
+                                  ? 'pl-5 border-l-3 border-[#3b82f6] my-6 bg-[#f8fafc] p-5 rounded-r-xl shadow-xs' 
+                                  : 'pt-2 pl-2'
                               }`}
                             >
-                              {/* Speaker Header Tag */}
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className={`text-[10px] font-sans font-black uppercase tracking-[0.2em] px-2.5 py-0.5 rounded ${
+                              {/* Speaker Header Tag with explicit bullet gap */}
+                              <div className="flex items-center gap-3 mb-4">
+                                <span className={`text-[10px] font-sans font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded shadow-xs ${
                                   isUser 
                                     ? 'bg-[#3b82f6] text-white' 
                                     : 'bg-[#0f172a] text-white'
                                 }`}>
                                   {isUser ? 'PILGRIM' : 'SANCTUARY SCHOLAR'}
                                 </span>
-                                <span className="text-[10px] font-sans text-[#94a3b8] uppercase tracking-wider font-semibold">
-                                  {isUser ? 'Inquiry' : 'Exegetical Response'}
+                                <span className="text-xs font-serif italic text-[#64748b] font-medium tracking-wide">
+                                  {isUser ? '• Pilgrim Inquiry' : '• Exegetical Response'}
                                 </span>
                               </div>
 
-                              {/* Editorial Content */}
-                              <div className={`text-sm md:text-[15px] leading-relaxed ${
+                              {/* Editorial Content with BibleGateway Double-Line Spacing (leading-[2.2]) */}
+                              <div className={`text-[15px] ${
                                 isUser 
-                                  ? 'font-serif font-semibold text-[#0f172a] italic' 
-                                  : 'font-serif text-[#334155] space-y-3'
+                                  ? 'font-serif font-semibold text-[#0f172a] italic leading-[2.1]' 
+                                  : 'font-serif text-[#1e293b] leading-[2.25] tracking-wide space-y-5'
                               }`}>
-                                {!isUser && isFirstScholar && m.text.length > 30 ? (
-                                  <p className="leading-relaxed">
-                                    <span className="float-left text-4xl font-black font-serif leading-none pr-2 pt-1 text-[#3b82f6]">
-                                      {m.text.charAt(0)}
-                                    </span>
-                                    {m.text.slice(1)}
-                                  </p>
-                                ) : (
-                                  <p className="leading-relaxed">{m.text}</p>
-                                )}
+                                {paragraphs.map((para, pIdx) => {
+                                  const isFirstParagraph = !isUser && pIdx === 0 && para.length > 30;
+
+                                  if (isFirstParagraph) {
+                                    return (
+                                      <p key={pIdx} className="leading-[2.25] mb-4 text-justify">
+                                        <span className="float-left text-4xl font-black font-serif leading-none pr-2 pt-1 text-[#3b82f6]">
+                                          {para.charAt(0)}
+                                        </span>
+                                        {para.slice(1)}
+                                      </p>
+                                    );
+                                  }
+
+                                  return (
+                                    <p key={pIdx} className="leading-[2.25] mb-4 text-justify">
+                                      {para}
+                                    </p>
+                                  );
+                                })}
                               </div>
                             </article>
                           );
