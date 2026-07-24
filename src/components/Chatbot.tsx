@@ -924,6 +924,9 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                                 alt={img.title} 
                                 crossOrigin="anonymous" 
                                 className="w-full h-44 object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80";
+                                }}
                               />
                               <div className="p-4">
                                 <h3 className="font-bold text-xs uppercase tracking-wider text-[#0f172a] mb-1">{img.title}</h3>

@@ -66,177 +66,257 @@ Guidelines:
 export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
   const text = (sessionName + " " + conversationText).toLowerCase();
   
-  // 1. Moses, Exodus, Law, Sinai, Tabernacle
-  if (text.includes("moses") || text.includes("exodus") || text.includes("commandment") || text.includes("sinai") || text.includes("red sea") || text.includes("egypt") || text.includes("tabernacle") || text.includes("torah")) {
+  // 1. Holy Communion, Last Supper, Eucharist, Bread and Wine
+  if (text.includes("communion") || text.includes("last supper") || text.includes("eucharist") || text.includes("bread and wine") || text.includes("chalice") || text.includes("body and blood") || text.includes("passover")) {
+    return [
+      {
+        title: "The Mystical Cup & New Covenant",
+        caption: `Sacred chalice of wine symbolizing the blood of the New Covenant in Jesus Christ, central to the exegesis of "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "The Broken Bread of Life",
+        caption: `Unleavened bread representing Christ's sacrifice and table fellowship with the disciples, illuminating the theme of ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // 2. Baptism, Holy Waters, Jordan River, Regeneration
+  if (text.includes("baptis") || text.includes("jordan river") || text.includes("living water") || text.includes("cleansing") || text.includes("washing of water")) {
+    return [
+      {
+        title: "Sacred Waters of the Jordan River",
+        caption: `Serene flowing waters of the Jordan, commemorating the baptism of Jesus and the sacrament of spiritual rebirth in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Living Water & Divine Grace",
+        caption: `Cascading crystal waters testifying to the washing of regeneration and eternal life promised in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // 3. Beatitudes, Sermon on the Mount, Galilee Shoreline
+  if (text.includes("beatitude") || text.includes("sermon on the mount") || text.includes("blessed are") || text.includes("salt and light")) {
+    return [
+      {
+        title: "The Mount of Beatitudes & Galilean Shore",
+        caption: `Lush hills overlooking the Sea of Galilee where Jesus delivered the Sermon on the Mount, central to "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Light of the World & Divine Wisdom",
+        caption: `Morning sunbeams reflecting off Galilean waters, symbolizing the moral and spiritual kingdom teachings in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // 4. Moses, Exodus, Law, Sinai, Tabernacle, Torah
+  if (text.includes("moses") || text.includes("exodus") || text.includes("commandment") || text.includes("sinai") || text.includes("red sea") || text.includes("egypt") || text.includes("tabernacle") || text.includes("torah") || text.includes("ark of the covenant")) {
     return [
       {
         title: "Wilderness of Sinai & Covenant Mountain",
-        caption: "The rugged peaks of Mount Sinai, where Moses received the Ten Commandments and the Mosaic covenant.",
+        caption: `The rugged limestone peaks of Mount Sinai, where Moses received the Ten Commandments, supporting the study of "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
       },
       {
-        title: "Sacred Manuscripts of the Law",
-        caption: "Ancient scripture parchment containing the books of the Torah and Mosaic statutes.",
+        title: "Sacred Manuscripts of the Mosaic Law",
+        caption: `Illuminated Hebrew parchment scrolls containing the books of the Torah and Mosaic statutes in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 2. Paul, Epistles, Missionary Journeys, Romans, Corinthians, Galatians
-  if (text.includes("paul") || text.includes("epistle") || text.includes("roman") || text.includes("corinthian") || text.includes("galatian") || text.includes("ephesian") || text.includes("philippian") || text.includes("timothy") || text.includes("missionary") || text.includes("damascus")) {
+  // 5. Paul, Epistles, Missionary Journeys, Romans, Corinthians, Galatians
+  if (text.includes("paul") || text.includes("epistle") || text.includes("roman") || text.includes("corinthian") || text.includes("galatian") || text.includes("ephesian") || text.includes("philippian") || text.includes("colossian") || text.includes("timothy") || text.includes("missionary") || text.includes("damascus")) {
     return [
       {
         title: "Roman Roads & Missionary Journeys of Saint Paul",
-        caption: "Ancient Roman highways and Mediterranean sea routes traversed by the Apostle Paul during his evangelistic epistles.",
+        caption: `Ancient Roman stone highways and Mediterranean sea routes traversed by Saint Paul during his apostolic letters in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Apostolic Codex & Early Church Letters",
-        caption: "Classical papyrus epistolary scroll symbolizing the Pauline letters sent to early Christian communities.",
-        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+        caption: `Classical papyrus epistolary scroll symbolizing the Pauline letters sent to early Christian assemblies in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 3. David, Psalms, Worship, Songs, Harp, Solomon
-  if (text.includes("david") || text.includes("psalm") || text.includes("harp") || text.includes("worship") || text.includes("sing") || text.includes("solomon") || text.includes("samuel") || text.includes("zion")) {
+  // 6. David, Psalms, Worship, Music, Harp, Solomon, Zion
+  if (text.includes("david") || text.includes("psalm") || text.includes("harp") || text.includes("worship") || text.includes("sing") || text.includes("solomon") || text.includes("samuel") || text.includes("zion") || text.includes("praise")) {
     return [
       {
-        title: "City of David & Historic Zion",
-        caption: "Ancient stone citadel of Jerusalem, heart of the Davidic kingdom and royal psalmists.",
+        title: "City of David & Historic Zion Citadel",
+        caption: `Ancient stone citadel of Jerusalem, heart of the Davidic kingdom and royal psalmists in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Acoustic Praise & Lyrical Psalms",
-        caption: "Stringed melodies and songs of devotion reflecting the poetic heart of the Book of Psalms.",
+        caption: `Stringed melodies and songs of devotion reflecting the poetic heart of the Book of Psalms in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 4. Parables, Sower, Shepherd, Vineyard, Harvest, Teaching
+  // 7. Armor of God, Spiritual Warfare, Fortress, Shield
+  if (text.includes("armor of god") || text.includes("spiritual warfare") || text.includes("shield of faith") || text.includes("helmet of salvation") || text.includes("sword of the spirit") || text.includes("fortress")) {
+    return [
+      {
+        title: "Ancient Citadel & Shield of Faith",
+        caption: `Unshakable stone fortress symbolizing the divine shield of faith and spiritual protection described in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "The Sword of the Spirit & Divine Truth",
+        caption: `Radiant light on scripture parchment representing the sword of the Spirit, which is the word of God in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // 8. Parables, Sower, Shepherd, Vineyard, Harvest, Prodigal
   if (text.includes("parable") || text.includes("sower") || text.includes("shepherd") || text.includes("vineyard") || text.includes("harvest") || text.includes("wheat") || text.includes("prodigal") || text.includes("samaritan") || text.includes("mustard")) {
     return [
       {
         title: "The Good Shepherd & Pastoral Judean Hills",
-        caption: "Gentle pastoral landscapes of the Holy Land reflecting Jesus' parables of the Good Shepherd and lost sheep.",
+        caption: `Gentle pastoral landscapes of the Holy Land reflecting Jesus' parables of the Good Shepherd and lost sheep in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Golden Wheat Harvest & Parable Fields",
-        caption: "Fertile agricultural fields representing the Sower, the mustard seed, and the Kingdom of Heaven.",
+        caption: `Fertile agricultural fields representing the Sower, the mustard seed, and the Kingdom of Heaven in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 5. Cross, Crucifixion, Atonement, Passion, Grace, Salvation, Resurrection
+  // 9. Cross, Crucifixion, Atonement, Passion, Grace, Salvation, Resurrection, Tomb
   if (text.includes("cross") || text.includes("passion") || text.includes("calvary") || text.includes("golgotha") || text.includes("crucifixion") || text.includes("atonement") || text.includes("grace") || text.includes("salvation") || text.includes("resurrection") || text.includes("tomb")) {
     return [
       {
         title: "Mount Calvary & The Redeeming Cross",
-        caption: "Solemn silhouette of the cross at sunset, commemorating the ultimate sacrifice and divine grace.",
+        caption: `Solemn silhouette of the cross at sunset, commemorating the ultimate sacrifice and divine grace in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "The Empty Tomb & Resurrection Dawn",
-        caption: "Radiant morning light breaking into an ancient stone tomb, witnessing Christ's victory over death.",
+        caption: `Radiant morning light breaking into an ancient stone tomb, witnessing Christ's victory over death in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1518081461904-9d8f136351c2?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 6. Wisdom, Proverbs, Ecclesiastes, Job, Suffering
-  if (text.includes("wisdom") || text.includes("proverb") || text.includes("ecclesiastes") || text.includes("job") || text.includes("suffering") || text.includes("trial") || text.includes("patience") || text.includes("understanding")) {
+  // 10. Holy Spirit, Pentecost, Flames, Dove, Renewal
+  if (text.includes("holy spirit") || text.includes("pentecost") || text.includes("tongues of fire") || text.includes("comforter") || text.includes("anointing")) {
     return [
       {
-        title: "Solomonic Wisdom & Illuminated Study",
-        caption: "A quiet sanctuary of classical wisdom literature, pondering the fear of the Lord and true understanding.",
-        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+        title: "Heavenly Rays & Holy Spirit Presence",
+        caption: `Divine beams of light breaking through dark clouds, illustrating the outpouring of the Holy Spirit in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
       },
       {
-        title: "Quiet Reflection & Divine Sovereignty",
-        caption: "Ancient olive groves providing peaceful solace for theological reflection on human trials and divine majesty.",
+        title: "Sanctuary Fire & Spiritual Renewal",
+        caption: `Warm candlelight and divine illumination testifying to spiritual transformation and comfort in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 7. Prophets, Prophecy, Isaiah, Jeremiah, Ezekiel, Daniel, Revelation, End Times
+  // 11. Wisdom, Proverbs, Ecclesiastes, Job, Suffering, Trials
+  if (text.includes("wisdom") || text.includes("proverb") || text.includes("ecclesiastes") || text.includes("job") || text.includes("suffering") || text.includes("trial") || text.includes("patience") || text.includes("understanding")) {
+    return [
+      {
+        title: "Solomonic Wisdom & Illuminated Study",
+        caption: `A quiet sanctuary of classical wisdom literature, pondering the fear of the Lord and understanding in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Quiet Reflection & Divine Sovereignty",
+        caption: `Ancient olive groves providing peaceful solace for theological reflection on human trials in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // 12. Prophets, Prophecy, Isaiah, Jeremiah, Ezekiel, Daniel, Revelation, Patmos
   if (text.includes("prophet") || text.includes("prophecy") || text.includes("isaiah") || text.includes("jeremiah") || text.includes("ezekiel") || text.includes("daniel") || text.includes("revelation") || text.includes("vision") || text.includes("patmos") || text.includes("end times")) {
     return [
       {
         title: "Prophetic Watchtower & Heavenly Vision",
-        caption: "Solitary high peaks under dramatic skies, symbolizing the prophetic watchmen announcing messianic hope.",
+        caption: `Solitary high peaks under dramatic skies, symbolizing the prophetic watchmen announcing messianic hope in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Scrolls of Revelation & Apocalyptic Light",
-        caption: "Illuminated ancient codex containing prophetic apocalyptic visions and the New Jerusalem promise.",
+        caption: `Illuminated ancient codex containing prophetic apocalyptic visions and the New Jerusalem promise in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 8. Creation, Genesis, Adam, Eden, Noah, Nature, Cosmos
+  // 13. Creation, Genesis, Adam, Eden, Noah, Ark, Cosmos
   if (text.includes("creation") || text.includes("genesis") || text.includes("adam") || text.includes("eden") || text.includes("noah") || text.includes("ark") || text.includes("flood") || text.includes("nature") || text.includes("stars") || text.includes("cosmos")) {
     return [
       {
         title: "The Heavens Declare Creation's Glory",
-        caption: "The vast celestial expanse and star-filled cosmos celebrating Genesis creation.",
+        caption: `The vast celestial expanse and star-filled cosmos celebrating Genesis creation in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Living Waters of Paradise",
-        caption: "Pure cascading waters and lush flora symbolizing the pristine Garden of Eden and divine grace.",
+        caption: `Pure cascading waters and lush flora symbolizing the pristine Garden of Eden and divine grace in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 9. Jesus, Gospels, Beatitudes, Galilee, Disciples, Miracles
-  if (text.includes("jesus") || text.includes("gospel") || text.includes("christ") || text.includes("beatitudes") || text.includes("galilee") || text.includes("disciples") || text.includes("sermon") || text.includes("miracle")) {
+  // 14. Prayer, Fasting, Altar, Intercession
+  if (text.includes("prayer") || text.includes("fasting") || text.includes("sanctuary") || text.includes("altar") || text.includes("intercession") || text.includes("devotion")) {
+    return [
+      {
+        title: "Sanctuary of Intercession & Prayer",
+        caption: `Warm candlelight illuminating a quiet house of prayer during heartfelt communion with God in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Beam of Heavenly Light & Grace",
+        caption: `Luminous light breaking through dark clouds, representing divine answer to prayer and steadfast faith in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
+  // 15. Jesus, Gospels, Disciples, Miracles
+  if (text.includes("jesus") || text.includes("gospel") || text.includes("christ") || text.includes("galilee") || text.includes("disciples") || text.includes("miracle")) {
     return [
       {
         title: "Sea of Galilee at Sunrise",
-        caption: "Serene shoreline of Galilee where Jesus called His disciples and delivered the Sermon on the Mount.",
+        caption: `Serene shoreline of Galilee where Jesus called His disciples and performed divine miracles, central to "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Dawn of the Resurrection",
-        caption: "Radiant morning light entering an ancient stone sanctuary, testifying to Christ's resurrection victory.",
+        caption: `Radiant morning light entering an ancient stone sanctuary, testifying to Christ's gospel victory in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1518081461904-9d8f136351c2?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 10. Prayer, Faith, Holy Spirit, Pentecost, Sanctuary, Peace
-  if (text.includes("prayer") || text.includes("faith") || text.includes("sanctuary") || text.includes("spirit") || text.includes("peace") || text.includes("hope") || text.includes("love") || text.includes("forgiveness") || text.includes("pentecost")) {
-    return [
-      {
-        title: "Sanctuary of Intercession & Prayer",
-        caption: "Warm candlelight illuminating a quiet house of prayer during heartfelt communion with God.",
-        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
-      },
-      {
-        title: "Beam of Heavenly Light & Grace",
-        caption: "Luminous light breaking through dark clouds, representing divine answer to prayer and steadfast faith.",
-        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
-      }
-    ];
-  }
-
-  // 11. Jerusalem, Temple, Holy Land, Heritage
+  // 16. Jerusalem, Temple, Holy Land
   if (text.includes("jerusalem") || text.includes("temple") || text.includes("holy land") || text.includes("hebrew") || text.includes("israel")) {
     return [
       {
         title: "Historic Gates of Old Jerusalem",
-        caption: "Ancient limestone arches and battlements of Jerusalem, city of prophets and messianic promises.",
+        caption: `Ancient limestone arches and battlements of Jerusalem, city of prophets and messianic promises in "${sessionName}".`,
         imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Venerable Olive Grove of Gethsemane",
-        caption: "Ancient olive trees standing in quiet meditation near Jerusalem, rooted in biblical history.",
+        caption: `Ancient olive trees standing in quiet meditation near Jerusalem, rooted in biblical history for ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
       }
     ];
@@ -381,11 +461,11 @@ Produce a structured JSON response containing:
    Each item must have: "title", "author", "era" (e.g. "1st Century AD", "4th Century Patristic Era"), "summary" (brief synopsis of the work), and "relevance" (why it supports this chat theme).
 7. "youtubeVideos": An array of EXACTLY 2 to 3 curated educational or scholarly YouTube videos related to the theme (e.g. BibleProject series, Academic lectures, Documentary analyses).
    Each item must have: "title", "channel" (e.g. "The BibleProject", "Yale Divinity Courses"), "searchQuery" (search query string), "url" (valid YouTube search URL like "https://www.youtube.com/results?search_query=..."), "description" (why pilgrims should watch this).
-8. "images": An array of 2 curated thematic image descriptions with image URLs that are explicitly directly related to the theme of "${sessionName}".
-   Each item must have:
-   - "title": A descriptive title tailored directly to the theme "${sessionName}"
-   - "caption": A detailed caption explaining how this specific image relates to the chat session's topic
-   - "imageUrl": A high-quality Unsplash image URL matching the theme (e.g. "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80", "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80").
+8. "images": An array of EXACTLY 2 sacred imagery & historical artwork items tailored specifically to the saved chat session theme "${sessionName}".
+   Each item MUST contain:
+   - "title": A descriptive, majestic title for sacred artwork directly reflecting the specific subject matter, passage, or doctrine discussed in this chat session (e.g. "The Last Supper & Chalice of Grace", "Mount Sinai & The Decalogue", "The Sermon on the Mount & Kingdom Blessings", "The Parable of the Good Shepherd").
+   - "caption": A detailed 2-sentence explanation connecting this visual artwork directly to the specific scriptures, verses, or theological insights from this saved chat session.
+   - "imageUrl": A high-resolution Unsplash photo URL matching this theme (e.g. choose appropriate Unsplash URLs like "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80" for Communion/Bread&Wine, "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" for Baptism/Waters, "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80" for Sinai/Law, "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80" for Cross/Redemption, "https://images.unsplash.com/photo-1518081461904-9d8f136351c2?auto=format&fit=crop&w=800&q=80" for Resurrection/Tomb, "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80" for Jerusalem/Zion, "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80" for Scriptures/Codex).
 
 Return ONLY valid JSON matching this schema.`;
 
@@ -401,14 +481,19 @@ Return ONLY valid JSON matching this schema.`;
     if (text) {
       const parsed = JSON.parse(text);
       
-      // Ensure images are strictly paired with guaranteed working, verified thematic artwork URLs
+      // Ensure images are strictly paired with guaranteed working, verified thematic artwork URLs matching each image's title and topic
       const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
         ? parsed.images.map((img: any, idx: number) => {
-            const themeImg = themeSpecificImages[idx % themeSpecificImages.length];
+            const imgContext = `${img.title || ''} ${img.caption || ''} ${sessionName} ${conversationText}`;
+            const specificThemeImages = getThematicImagesForTopic(sessionName, imgContext);
+            const chosenThemeImg = specificThemeImages[idx % specificThemeImages.length] || themeSpecificImages[idx % themeSpecificImages.length];
+
             return {
-              title: (img.title && img.title.length > 3) ? img.title : themeImg.title,
-              caption: (img.caption && img.caption.length > 10) ? img.caption : themeImg.caption,
-              imageUrl: themeImg.imageUrl // Guarantees crisp, verified Unsplash image related to the theme
+              title: (img.title && img.title.length > 3) ? img.title : chosenThemeImg.title,
+              caption: (img.caption && img.caption.length > 10) ? img.caption : chosenThemeImg.caption,
+              imageUrl: (img.imageUrl && img.imageUrl.startsWith('https://images.unsplash.com'))
+                ? img.imageUrl
+                : chosenThemeImg.imageUrl
             };
           })
         : themeSpecificImages;
