@@ -55,7 +55,8 @@ import {
   Shield,
   Settings as SettingsIcon,
   Menu,
-  Globe
+  Globe,
+  History
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -122,6 +123,12 @@ export default function App() {
   });
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [hasInquiries, setHasInquiries] = useState<boolean | null>(null);
+  const [openChatbotSignal, setOpenChatbotSignal] = useState<{ open: boolean; view: 'chat' | 'sessions'; id: number }>({ open: false, view: 'chat', id: 0 });
+
+  const openSavedChatSessions = () => {
+    setOpenChatbotSignal({ open: true, view: 'sessions', id: Date.now() });
+    setShowMobileMenu(false);
+  };
 
   useEffect(() => {
     const checkInquiries = async () => {
@@ -571,6 +578,13 @@ export default function App() {
              <Users className="w-5 h-5" />
            </button>
            <button 
+             onClick={openSavedChatSessions} 
+             className="p-2 transition-colors text-text-primary/60 hover:text-accent"
+             title="Saved Chat Sessions"
+           >
+             <History className="w-5 h-5" />
+           </button>
+           <button 
              onClick={() => navigateToPage('reports', 'Reports Menu')} 
              className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-primary/60")}
              title="Reports"
@@ -656,6 +670,7 @@ export default function App() {
             { id: 'dashboard', label: 'Exegesis Library', icon: BookOpen },
             { id: 'inquiry', label: 'Seek the Word', icon: Search },
             { id: 'groups', label: 'My Study Groups', icon: Users },
+            { id: 'saved-chats', label: 'Saved Chat Sessions', icon: History, onClick: openSavedChatSessions },
             { id: 'reports', label: 'Reports Menu', icon: FileText },
             { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap },
             { id: 'settings', label: 'Sanctuary Settings', icon: SettingsIcon },
@@ -663,7 +678,7 @@ export default function App() {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => navigateToPage(item.id as Page, item.label)}
+              onClick={() => item.onClick ? item.onClick() : navigateToPage(item.id as Page, item.label)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-semibold",
                 currentPage === item.id 
@@ -805,7 +820,7 @@ export default function App() {
           onClose={() => setPremiumModal({ ...premiumModal, isOpen: false })} 
           featureName={premiumModal.feature} 
         />
-        <Chatbot userProfile={userProfile} />
+        <Chatbot userProfile={userProfile} openSignal={openChatbotSignal} />
       </main>
 
       {/* Mobile Bottom Nav */}
@@ -858,6 +873,13 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
+                  <button 
+                    onClick={openSavedChatSessions}
+                    className="flex flex-col items-center justify-center p-6 bg-accent/5 rounded-2xl border border-accent/20 gap-3 text-accent hover:bg-accent/10 transition-all col-span-2"
+                  >
+                    <History className="w-6 h-6 text-accent" />
+                    <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary">Saved Chat Sessions</span>
+                  </button>
                   <button 
                     onClick={() => navigateToPage('glossary', 'Lexicon Glossary')}
                     className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"

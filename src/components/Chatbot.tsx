@@ -13,11 +13,12 @@ interface Message {
 
 interface ChatbotProps {
   userProfile: UserProfile | null;
+  openSignal?: { open: boolean; view: 'chat' | 'sessions'; id: number };
 }
 
-export default function Chatbot({ userProfile }: ChatbotProps) {
+export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', text: "Greetings, pilgrim. I am here to help you reflect on your recent seekings and see how they apply to your life today. How can I assist your study?" }
   ]);
@@ -50,20 +51,21 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
   }, []);
 
   useEffect(() => {
-    if (!isPremium) return;
-
-    const timer = setTimeout(() => {
+    if (openSignal && openSignal.id > 0) {
       setIsVisible(true);
-    }, 30000); // 30 second delay
-
-    return () => clearTimeout(timer);
-  }, [isPremium]);
+      setIsOpen(openSignal.open);
+      if (openSignal.view) {
+        setView(openSignal.view);
+      }
+      fetchSessions().catch(err => console.error("Error in fetchSessions:", err));
+    }
+  }, [openSignal]);
 
   useEffect(() => {
-    if (isOpen && recentInquiries.length === 0) {
-      fetchRecentInquiries().catch(err => console.error("Error in fetchRecentInquiries:", err));
-    }
-    if (isOpen && isPremium) {
+    if (isOpen) {
+      if (recentInquiries.length === 0) {
+        fetchRecentInquiries().catch(err => console.error("Error in fetchRecentInquiries:", err));
+      }
       fetchSessions().catch(err => console.error("Error in fetchSessions:", err));
     }
   }, [isOpen]);
@@ -348,7 +350,7 @@ export default function Chatbot({ userProfile }: ChatbotProps) {
     }
   };
 
-  if (!isPremium || !isVisible) return null;
+  if (!isVisible) return null;
 
   return (
     <div className="fixed bottom-24 md:bottom-6 right-6 z-[100] flex flex-col items-end">
