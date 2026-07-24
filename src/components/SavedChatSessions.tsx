@@ -28,9 +28,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import PremiumOverlay from './PremiumOverlay';
+import { exportElementToPdf } from '../utils/pdfExporter';
 
 interface SavedChatSessionsProps {
   userProfile: UserProfile | null;
@@ -199,44 +198,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     setIsGeneratingPdf(true);
 
     try {
-      const container = pdfRef.current;
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdfWidth = canvas.width / 2;
-      const pdfHeight = canvas.height / 2;
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [pdfWidth, pdfHeight]
-      });
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-      // Map links for <a> tags
-      const links = container.querySelectorAll('a');
-      const containerRect = container.getBoundingClientRect();
-
-      links.forEach((link) => {
-        const linkRect = link.getBoundingClientRect();
-        const url = link.getAttribute('href');
-        if (url) {
-          const x = linkRect.left - containerRect.left;
-          const y = linkRect.top - containerRect.top;
-          const w = linkRect.width;
-          const h = linkRect.height;
-          pdf.link(x, y, w, h, { url });
-        }
-      });
-
       const cleanFileName = selectedSessionForExport.name.replace(/[^a-zA-Z0-9]/g, '_');
-      pdf.save(`XeJesUs-Literary-Work-${cleanFileName}.pdf`);
+      await exportElementToPdf(pdfRef.current, `XeJesUs-Literary-Work-${cleanFileName}`);
     } catch (err) {
       console.error("PDF generation failed:", err);
     } finally {

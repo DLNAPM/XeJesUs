@@ -3,9 +3,8 @@ import { getDbService, getAuthService, collection, query, where, orderBy, getDoc
 import { Inquiry } from '../types';
 import { FileText, Download, Printer, Loader2, ChevronRight, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import Markdown from 'react-markdown';
+import { exportElementToPdf } from '../utils/pdfExporter';
 
 export default function Reports() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -94,45 +93,8 @@ export default function Reports() {
     
     setIsGenerating(true);
     try {
-      const container = reportRef.current;
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdfWidth = canvas.width / 2;
-      const pdfHeight = canvas.height / 2;
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [pdfWidth, pdfHeight]
-      });
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-      // Manually add links for all <a> tags
-      const links = container.querySelectorAll('a');
-      const containerRect = container.getBoundingClientRect();
-
-      links.forEach((link) => {
-        const linkRect = link.getBoundingClientRect();
-        const url = link.getAttribute('href');
-        if (url) {
-          // Calculate coordinates relative to the container
-          const x = linkRect.left - containerRect.left;
-          const y = linkRect.top - containerRect.top;
-          const w = linkRect.width;
-          const h = linkRect.height;
-          
-          pdf.link(x, y, w, h, { url });
-        }
-      });
-      
-      pdf.save(`XeJesUs-Report-${selectedInquiry.scripture.replace(/\s+/g, '-')}.pdf`);
+      const cleanFileName = selectedInquiry.scripture.replace(/\s+/g, '-');
+      await exportElementToPdf(reportRef.current, `XeJesUs-Report-${cleanFileName}`);
     } catch (error) {
       console.error("PDF Generation failed:", error);
     } finally {
