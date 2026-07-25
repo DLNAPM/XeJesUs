@@ -79,12 +79,37 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     }
 
     try {
-      const q = query(
-        collection(db, 'chat_sessions'),
-        where('userId', '==', auth.currentUser.uid)
-      );
-      const snap = await getDocs(q);
-      const fetchedSessions = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession));
+      const fetchedSessions: ChatSession[] = [];
+
+      // 1. Fetch from user subcollection users/{uid}/chat_sessions
+      try {
+        const qSub = query(collection(db, 'users', auth.currentUser.uid, 'chat_sessions'));
+        const snapSub = await getDocs(qSub);
+        const subSessions = snapSub.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession));
+        fetchedSessions.push(...subSessions);
+      } catch (errSub) {
+        console.warn("Could not fetch user subcollection chat sessions:", errSub);
+      }
+
+      // 2. Fetch from root collection chat_sessions
+      try {
+        const qRoot = query(
+          collection(db, 'chat_sessions'),
+          where('userId', '==', auth.currentUser.uid)
+        );
+        const snapRoot = await getDocs(qRoot);
+        const rootSessions = snapRoot.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession));
+        
+        // Merge unique ones
+        const existingIds = new Set(fetchedSessions.map(s => s.id));
+        for (const r of rootSessions) {
+          if (!existingIds.has(r.id)) {
+            fetchedSessions.push(r);
+          }
+        }
+      } catch (errRoot) {
+        console.warn("Could not fetch root collection chat sessions:", errRoot);
+      }
       
       // Sort newest first
       fetchedSessions.sort((a, b) => {
@@ -106,10 +131,16 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
   };
 
   const deleteSession = async (sessionId: string) => {
+    const auth = getAuthService();
     const db = getDbService();
-    if (!db) return;
+    if (!db || !auth || !auth.currentUser) return;
     try {
-      await deleteDoc(doc(db, 'chat_sessions', sessionId));
+      try {
+        await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'chat_sessions', sessionId));
+      } catch (_) {}
+      try {
+        await deleteDoc(doc(db, 'chat_sessions', sessionId));
+      } catch (_) {}
       setSessions(prev => prev.filter(s => s.id !== sessionId));
     } catch (err) {
       handleFirestoreError(err, OperationType.DELETE, 'chat_sessions');

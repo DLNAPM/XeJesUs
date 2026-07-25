@@ -118,6 +118,24 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (resource.data.recipientEmail == request.auth.token.email || resource.data.senderId == request.auth.uid);
     }
 
+    // --- Root Chat Sessions ---
+    match /chat_sessions/{sessionId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidChatSession(incoming()) && incoming().userId == request.auth.uid && !isFrozen();
+      allow update: if ((isSignedIn() && existing().userId == request.auth.uid && incoming().userId == request.auth.uid && isValidChatSession(incoming()) && !isFrozen()) || isAdmin());
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+
+      function isValidChatSession(data) {
+        return data.keys().hasAll(['userId', 'name', 'messages', 'createdAt'])
+          && data.userId == request.auth.uid
+          && data.name is string && data.name.size() <= 200
+          && data.messages is list && data.messages.size() <= 100
+          && (data.createdAt == request.time || data.createdAt is timestamp)
+          && (!('updatedAt' in data.keys()) || data.updatedAt == request.time || data.updatedAt is timestamp);
+      }
+    }
+
     // --- Inquiries ---
     match /inquiries/{inquiryId} {
       allow get: if isSignedIn(); // Allow individual fetch if ID is known (shared)
