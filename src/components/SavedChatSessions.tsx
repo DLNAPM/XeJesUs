@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getAuthService, getDbService, collection, query, where, getDocs, deleteDoc, doc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { ChatSession, UserProfile, LiteraryWorkExport } from '../types';
-import { generateLiteraryWorkExport } from '../services/geminiService';
+import { generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
 import { 
   History, 
   FileText, 
@@ -533,23 +533,43 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                           a. Sacred Imagery & Historical Artwork
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {literaryWork.images.map((img, idx) => (
-                            <div key={idx} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-sm">
-                              <img 
-                                src={img.imageUrl} 
-                                alt={img.title} 
-                                crossOrigin="anonymous" 
-                                className="w-full h-44 object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80";
-                                }}
-                              />
-                              <div className="p-4">
-                                <h3 className="font-bold text-xs uppercase tracking-wider text-[#0f172a] mb-1">{img.title}</h3>
-                                <p className="text-xs text-[#64748b] italic leading-snug">{img.caption}</p>
+                          {literaryWork.images.map((img, idx) => {
+                            const sessionTitle = selectedSession?.sessionName || '';
+                            const specificThemeImages = getThematicImagesForTopic(sessionTitle, `${img.title || ''} ${img.caption || ''}`);
+                            const chosenImg = specificThemeImages[idx % specificThemeImages.length] || specificThemeImages[0];
+                            
+                            const displayTitle = (img.title && !img.title.toLowerCase().includes('communion') && !img.title.toLowerCase().includes('last supper') && !img.title.toLowerCase().includes('wine'))
+                              ? img.title
+                              : chosenImg.title;
+                              
+                            const displayCaption = (img.caption && img.caption.length > 10 && !img.caption.toLowerCase().includes('communion') && !img.caption.toLowerCase().includes('wine'))
+                              ? img.caption
+                              : chosenImg.caption;
+                              
+                            const displayUrl = (img.imageUrl && !img.imageUrl.includes('photo-1509021436468') && !img.imageUrl.includes('photo-1510812431401'))
+                              ? ((sessionTitle.toLowerCase().includes('judah') || sessionTitle.toLowerCase().includes('joseph') || sessionTitle.toLowerCase().includes('lion'))
+                                  ? chosenImg.imageUrl
+                                  : img.imageUrl)
+                              : chosenImg.imageUrl;
+
+                            return (
+                              <div key={idx} className="bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-sm">
+                                <img 
+                                  src={displayUrl} 
+                                  alt={displayTitle} 
+                                  crossOrigin="anonymous" 
+                                  className="w-full h-44 object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80";
+                                  }}
+                                />
+                                <div className="p-4">
+                                  <h3 className="font-bold text-xs uppercase tracking-wider text-[#0f172a] mb-1">{displayTitle}</h3>
+                                  <p className="text-xs text-[#64748b] italic leading-snug">{displayCaption}</p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </section>
                     )}

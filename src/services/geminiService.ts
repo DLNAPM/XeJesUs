@@ -66,6 +66,22 @@ Guidelines:
 export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
   const text = (sessionName + " " + conversationText).toLowerCase();
   
+  // 0. Judah, Joseph, Lion of Judah, Patriarchs, Genesis, Jacob, Egypt, Benjamin, Reconciliation, Brother
+  if (text.includes("judah") || text.includes("joseph") || text.includes("lion") || text.includes("patriarch") || text.includes("genesis") || text.includes("jacob") || text.includes("benjamin") || text.includes("pharaoh") || text.includes("reconciliation") || text.includes("intercession") || text.includes("plea")) {
+    return [
+      {
+        title: "Judah's Plea & Joseph's Reconciliation in Egypt",
+        caption: `Sacred portrayal of Judah's sacrificial intercession before Joseph, embodying brotherly devotion, messianic lineage, and royal mercy in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "The Scepter of Judah & Patriarchal Covenant",
+        caption: `Ancient illuminated manuscript depicting Jacob's blessing over the tribe of Judah and the promise of the royal scepter in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
   // 1. Holy Communion, Last Supper, Eucharist, Bread and Wine, Covenant Table
   if (text.includes("communion") || text.includes("last supper") || text.includes("eucharist") || text.includes("bread") || text.includes("wine") || text.includes("chalice") || text.includes("body and blood") || text.includes("passover") || text.includes("table of the lord") || text.includes("covenant meal")) {
     return [
@@ -221,7 +237,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
       {
         title: "Sanctuary Illumination & Spiritual Renewal",
         caption: `Warm candlelight and divine illumination testifying to spiritual transformation and comfort in ${sessionName}.`,
-        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
@@ -237,7 +253,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
       {
         title: "Quiet Reflection & Divine Sovereignty",
         caption: `Ancient olive groves providing peaceful solace for theological reflection on human trials in ${sessionName}.`,
-        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+        imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
@@ -280,7 +296,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
       {
         title: "Sanctuary of Intercession & Prayer",
         caption: `Warm candlelight illuminating a quiet house of prayer during heartfelt communion with God in "${sessionName}".`,
-        imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
       },
       {
         title: "Beam of Heavenly Light & Grace",
@@ -332,7 +348,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     {
       title: "Sanctuary of Study & Meditation",
       caption: `Peaceful environment reserved for spiritual contemplation and scholarly exegesis of ${sessionName}.`,
-      imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
+      imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
     }
   ];
 }
