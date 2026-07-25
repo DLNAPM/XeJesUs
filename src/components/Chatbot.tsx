@@ -918,7 +918,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {literaryWork.images.map((img, idx) => {
-                            const sessionTitle = currentSessionTitle || inquiry.topic || '';
+                            const sessionTitle = selectedSessionForExport?.name || currentSessionTitle || inquiry?.topic || '';
                             const specificThemeImages = getThematicImagesForTopic(sessionTitle, `${img.title || ''} ${img.caption || ''}`);
                             const chosenImg = specificThemeImages[idx % specificThemeImages.length] || specificThemeImages[0];
                             

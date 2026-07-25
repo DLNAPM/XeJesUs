@@ -565,7 +565,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {literaryWork.images.map((img, idx) => {
-                            const sessionTitle = selectedSession?.sessionName || '';
+                            const sessionTitle = selectedSessionForExport?.name || '';
                             const specificThemeImages = getThematicImagesForTopic(sessionTitle, `${img.title || ''} ${img.caption || ''}`);
                             const chosenImg = specificThemeImages[idx % specificThemeImages.length] || specificThemeImages[0];
                             
