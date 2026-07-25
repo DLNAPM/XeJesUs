@@ -66,24 +66,24 @@ Guidelines:
 export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
   const text = (sessionName + " " + conversationText).toLowerCase();
   
-  // 1. Holy Communion, Last Supper, Eucharist, Bread and Wine
-  if (text.includes("communion") || text.includes("last supper") || text.includes("eucharist") || text.includes("bread and wine") || text.includes("chalice") || text.includes("body and blood") || text.includes("passover")) {
+  // 1. Holy Communion, Last Supper, Eucharist, Bread and Wine, Covenant Table
+  if (text.includes("communion") || text.includes("last supper") || text.includes("eucharist") || text.includes("bread") || text.includes("wine") || text.includes("chalice") || text.includes("body and blood") || text.includes("passover") || text.includes("table of the lord") || text.includes("covenant meal")) {
     return [
       {
-        title: "The Mystical Cup & New Covenant",
-        caption: `Sacred chalice of wine symbolizing the blood of the New Covenant in Jesus Christ, central to the exegesis of "${sessionName}".`,
-        imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80"
+        title: "The Covenant Table & Golden Wheat Harvest",
+        caption: `Golden sheaves of grain representing the bread of life broken for humanity, reflecting the sacred communion theme of "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80"
       },
       {
-        title: "The Broken Bread of Life",
-        caption: `Unleavened bread representing Christ's sacrifice and table fellowship with the disciples, illuminating the theme of ${sessionName}.`,
-        imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80"
+        title: "Illuminated Manuscripts of the New Covenant",
+        caption: `Ancient sacred scriptures opened to the institution of the Lord's Supper, illuminating the theological depth of ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 2. Baptism, Holy Waters, Jordan River, Regeneration
-  if (text.includes("baptis") || text.includes("jordan river") || text.includes("living water") || text.includes("cleansing") || text.includes("washing of water")) {
+  // 2. Baptism, Holy Waters, Jordan River, Regeneration, Cleansing
+  if (text.includes("baptis") || text.includes("jordan river") || text.includes("living water") || text.includes("cleansing") || text.includes("washing") || text.includes("fountain")) {
     return [
       {
         title: "Sacred Waters of the Jordan River",
@@ -98,8 +98,8 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 3. Beatitudes, Sermon on the Mount, Galilee Shoreline
-  if (text.includes("beatitude") || text.includes("sermon on the mount") || text.includes("blessed are") || text.includes("salt and light")) {
+  // 3. Beatitudes, Sermon on the Mount, Galilee Shoreline, Kingdom
+  if (text.includes("beatitude") || text.includes("sermon on the mount") || text.includes("blessed are") || text.includes("salt and light") || text.includes("blessing")) {
     return [
       {
         title: "The Mount of Beatitudes & Galilean Shore",
@@ -114,8 +114,8 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 4. Moses, Exodus, Law, Sinai, Tabernacle, Torah
-  if (text.includes("moses") || text.includes("exodus") || text.includes("commandment") || text.includes("sinai") || text.includes("red sea") || text.includes("egypt") || text.includes("tabernacle") || text.includes("torah") || text.includes("ark of the covenant")) {
+  // 4. Moses, Exodus, Law, Sinai, Tabernacle, Torah, Decalogue
+  if (text.includes("moses") || text.includes("exodus") || text.includes("commandment") || text.includes("sinai") || text.includes("red sea") || text.includes("egypt") || text.includes("tabernacle") || text.includes("torah") || text.includes("ark of the covenant") || text.includes("wilderness")) {
     return [
       {
         title: "Wilderness of Sinai & Covenant Mountain",
@@ -123,15 +123,15 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
         imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
       },
       {
-        title: "Sacred Manuscripts of the Mosaic Law",
-        caption: `Illuminated Hebrew parchment scrolls containing the books of the Torah and Mosaic statutes in ${sessionName}.`,
+        title: "Sacred Manuscripts of the Law",
+        caption: `Illuminated ancient parchment scrolls containing the books of the Torah and Mosaic statutes in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 5. Paul, Epistles, Missionary Journeys, Romans, Corinthians, Galatians
-  if (text.includes("paul") || text.includes("epistle") || text.includes("roman") || text.includes("corinthian") || text.includes("galatian") || text.includes("ephesian") || text.includes("philippian") || text.includes("colossian") || text.includes("timothy") || text.includes("missionary") || text.includes("damascus")) {
+  // 5. Paul, Epistles, Missionary Journeys, Romans, Corinthians, Galatians, Ephesians, Philippians, Colossians, Timothy
+  if (text.includes("paul") || text.includes("epistle") || text.includes("roman") || text.includes("corinthian") || text.includes("galatian") || text.includes("ephesian") || text.includes("philippian") || text.includes("colossian") || text.includes("thessalonian") || text.includes("timothy") || text.includes("titus") || text.includes("missionary") || text.includes("damascus") || text.includes("apostle")) {
     return [
       {
         title: "Roman Roads & Missionary Journeys of Saint Paul",
@@ -139,15 +139,15 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
         imageUrl: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80"
       },
       {
-        title: "Apostolic Codex & Early Church Letters",
+        title: "Apostolic Codex & Early Church Epistles",
         caption: `Classical papyrus epistolary scroll symbolizing the Pauline letters sent to early Christian assemblies in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 6. David, Psalms, Worship, Music, Harp, Solomon, Zion
-  if (text.includes("david") || text.includes("psalm") || text.includes("harp") || text.includes("worship") || text.includes("sing") || text.includes("solomon") || text.includes("samuel") || text.includes("zion") || text.includes("praise")) {
+  // 6. David, Psalms, Worship, Music, Harp, Solomon, Zion, Praise
+  if (text.includes("david") || text.includes("psalm") || text.includes("harp") || text.includes("worship") || text.includes("sing") || text.includes("solomon") || text.includes("samuel") || text.includes("zion") || text.includes("praise") || text.includes("music")) {
     return [
       {
         title: "City of David & Historic Zion Citadel",
@@ -162,8 +162,8 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 7. Armor of God, Spiritual Warfare, Fortress, Shield
-  if (text.includes("armor of god") || text.includes("spiritual warfare") || text.includes("shield of faith") || text.includes("helmet of salvation") || text.includes("sword of the spirit") || text.includes("fortress")) {
+  // 7. Armor of God, Spiritual Warfare, Fortress, Shield, Defense
+  if (text.includes("armor of god") || text.includes("spiritual warfare") || text.includes("shield of faith") || text.includes("helmet of salvation") || text.includes("sword of the spirit") || text.includes("fortress") || text.includes("stronghold")) {
     return [
       {
         title: "Ancient Citadel & Shield of Faith",
@@ -178,8 +178,8 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 8. Parables, Sower, Shepherd, Vineyard, Harvest, Prodigal
-  if (text.includes("parable") || text.includes("sower") || text.includes("shepherd") || text.includes("vineyard") || text.includes("harvest") || text.includes("wheat") || text.includes("prodigal") || text.includes("samaritan") || text.includes("mustard")) {
+  // 8. Parables, Sower, Shepherd, Vineyard, Harvest, Prodigal, Samaritan
+  if (text.includes("parable") || text.includes("sower") || text.includes("shepherd") || text.includes("vineyard") || text.includes("harvest") || text.includes("wheat") || text.includes("prodigal") || text.includes("samaritan") || text.includes("mustard") || text.includes("sheep")) {
     return [
       {
         title: "The Good Shepherd & Pastoral Judean Hills",
@@ -195,7 +195,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
   }
 
   // 9. Cross, Crucifixion, Atonement, Passion, Grace, Salvation, Resurrection, Tomb
-  if (text.includes("cross") || text.includes("passion") || text.includes("calvary") || text.includes("golgotha") || text.includes("crucifixion") || text.includes("atonement") || text.includes("grace") || text.includes("salvation") || text.includes("resurrection") || text.includes("tomb")) {
+  if (text.includes("cross") || text.includes("passion") || text.includes("calvary") || text.includes("golgotha") || text.includes("crucifixion") || text.includes("atonement") || text.includes("grace") || text.includes("salvation") || text.includes("resurrection") || text.includes("tomb") || text.includes("easter")) {
     return [
       {
         title: "Mount Calvary & The Redeeming Cross",
@@ -210,23 +210,23 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 10. Holy Spirit, Pentecost, Flames, Dove, Renewal
-  if (text.includes("holy spirit") || text.includes("pentecost") || text.includes("tongues of fire") || text.includes("comforter") || text.includes("anointing")) {
+  // 10. Holy Spirit, Pentecost, Flames, Dove, Renewal, Anointing
+  if (text.includes("holy spirit") || text.includes("pentecost") || text.includes("tongues of fire") || text.includes("comforter") || text.includes("anointing") || text.includes("spirit")) {
     return [
       {
         title: "Heavenly Rays & Holy Spirit Presence",
         caption: `Divine beams of light breaking through dark clouds, illustrating the outpouring of the Holy Spirit in "${sessionName}".`,
-        imageUrl: "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80"
+        imageUrl: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80"
       },
       {
-        title: "Sanctuary Fire & Spiritual Renewal",
+        title: "Sanctuary Illumination & Spiritual Renewal",
         caption: `Warm candlelight and divine illumination testifying to spiritual transformation and comfort in ${sessionName}.`,
         imageUrl: "https://images.unsplash.com/photo-1509021436468-d5103e6071ee?auto=format&fit=crop&w=800&q=80"
       }
     ];
   }
 
-  // 11. Wisdom, Proverbs, Ecclesiastes, Job, Suffering, Trials
+  // 11. Wisdom, Proverbs, Ecclesiastes, Job, Suffering, Trials, Patience
   if (text.includes("wisdom") || text.includes("proverb") || text.includes("ecclesiastes") || text.includes("job") || text.includes("suffering") || text.includes("trial") || text.includes("patience") || text.includes("understanding")) {
     return [
       {
@@ -258,7 +258,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 13. Creation, Genesis, Adam, Eden, Noah, Ark, Cosmos
+  // 13. Creation, Genesis, Adam, Eden, Noah, Ark, Cosmos, Nature
   if (text.includes("creation") || text.includes("genesis") || text.includes("adam") || text.includes("eden") || text.includes("noah") || text.includes("ark") || text.includes("flood") || text.includes("nature") || text.includes("stars") || text.includes("cosmos")) {
     return [
       {
@@ -274,7 +274,7 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 14. Prayer, Fasting, Altar, Intercession
+  // 14. Prayer, Fasting, Altar, Intercession, Devotion
   if (text.includes("prayer") || text.includes("fasting") || text.includes("sanctuary") || text.includes("altar") || text.includes("intercession") || text.includes("devotion")) {
     return [
       {
@@ -290,8 +290,8 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 15. Jesus, Gospels, Disciples, Miracles
-  if (text.includes("jesus") || text.includes("gospel") || text.includes("christ") || text.includes("galilee") || text.includes("disciples") || text.includes("miracle")) {
+  // 15. Jesus, Gospels, Disciples, Miracles, Savior, Christ
+  if (text.includes("jesus") || text.includes("gospel") || text.includes("christ") || text.includes("galilee") || text.includes("disciples") || text.includes("miracle") || text.includes("savior")) {
     return [
       {
         title: "Sea of Galilee at Sunrise",
@@ -306,8 +306,8 @@ export function getThematicImagesForTopic(sessionName: string, conversationText:
     ];
   }
 
-  // 16. Jerusalem, Temple, Holy Land
-  if (text.includes("jerusalem") || text.includes("temple") || text.includes("holy land") || text.includes("hebrew") || text.includes("israel")) {
+  // 16. Jerusalem, Temple, Holy Land, Israel, Gethsemane
+  if (text.includes("jerusalem") || text.includes("temple") || text.includes("holy land") || text.includes("hebrew") || text.includes("israel") || text.includes("gethsemane")) {
     return [
       {
         title: "Historic Gates of Old Jerusalem",
@@ -463,9 +463,8 @@ Produce a structured JSON response containing:
    Each item must have: "title", "channel" (e.g. "The BibleProject", "Yale Divinity Courses"), "searchQuery" (search query string), "url" (valid YouTube search URL like "https://www.youtube.com/results?search_query=..."), "description" (why pilgrims should watch this).
 8. "images": An array of EXACTLY 2 sacred imagery & historical artwork items tailored specifically to the saved chat session theme "${sessionName}".
    Each item MUST contain:
-   - "title": A descriptive, majestic title for sacred artwork directly reflecting the specific subject matter, passage, or doctrine discussed in this chat session (e.g. "The Last Supper & Chalice of Grace", "Mount Sinai & The Decalogue", "The Sermon on the Mount & Kingdom Blessings", "The Parable of the Good Shepherd").
+   - "title": A descriptive, majestic title for sacred artwork directly reflecting the specific subject matter, passage, or doctrine discussed in this chat session (e.g. "The Covenant Table & Golden Harvest", "Mount Sinai & The Decalogue", "The Sermon on the Mount & Kingdom Blessings", "The Parable of the Good Shepherd").
    - "caption": A detailed 2-sentence explanation connecting this visual artwork directly to the specific scriptures, verses, or theological insights from this saved chat session.
-   - "imageUrl": A high-resolution Unsplash photo URL matching this theme (e.g. choose appropriate Unsplash URLs like "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=800&q=80" for Communion/Bread&Wine, "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" for Baptism/Waters, "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80" for Sinai/Law, "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=800&q=80" for Cross/Redemption, "https://images.unsplash.com/photo-1518081461904-9d8f136351c2?auto=format&fit=crop&w=800&q=80" for Resurrection/Tomb, "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80" for Jerusalem/Zion, "https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=800&q=80" for Scriptures/Codex).
 
 Return ONLY valid JSON matching this schema.`;
 
@@ -481,7 +480,7 @@ Return ONLY valid JSON matching this schema.`;
     if (text) {
       const parsed = JSON.parse(text);
       
-      // Ensure images are strictly paired with guaranteed working, verified thematic artwork URLs matching each image's title and topic
+      // Ensure images are strictly paired with guaranteed working, verified sacred artwork URLs matching each image's title and topic
       const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
         ? parsed.images.map((img: any, idx: number) => {
             const imgContext = `${img.title || ''} ${img.caption || ''} ${sessionName} ${conversationText}`;
@@ -491,9 +490,7 @@ Return ONLY valid JSON matching this schema.`;
             return {
               title: (img.title && img.title.length > 3) ? img.title : chosenThemeImg.title,
               caption: (img.caption && img.caption.length > 10) ? img.caption : chosenThemeImg.caption,
-              imageUrl: (img.imageUrl && img.imageUrl.startsWith('https://images.unsplash.com'))
-                ? img.imageUrl
-                : chosenThemeImg.imageUrl
+              imageUrl: chosenThemeImg.imageUrl // GUARANTEED sacred, reverent, vetted Unsplash artwork URL matching theme
             };
           })
         : themeSpecificImages;
