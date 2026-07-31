@@ -3,6 +3,7 @@ import { generateScholarTTS } from '../services/geminiService';
 
 let currentAudio: HTMLAudioElement | null = null;
 let currentUtterance: SpeechSynthesisUtterance | null = null;
+let activePlaybackId = 0;
 
 export function getBrowserVoices(): SpeechSynthesisVoice[] {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -12,6 +13,7 @@ export function getBrowserVoices(): SpeechSynthesisVoice[] {
 }
 
 export function stopScholarSpeech() {
+  activePlaybackId++;
   if (currentAudio) {
     try {
       currentAudio.pause();
@@ -111,6 +113,43 @@ function pcmToWav(pcmBase64: string, sampleRate = 24000): Blob {
   wavBytes.set(pcmBytes, 44);
 
   return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function splitTextIntoChunks(text: string, maxChunkLength = 280): string[] {
+  const clean = text
+    .replace(/\*+/g, '')
+    .replace(/#+/g, '')
+    .replace(/`+/g, '')
+    .replace(/_+/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!clean) return [];
+
+  if (clean.length <= maxChunkLength) {
+    return [clean];
+  }
+
+  // Split by sentence boundary
+  const sentences = clean.match(/[^.!?\n]+[.!?\n]+/g) || [clean];
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length > maxChunkLength && currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      currentChunk += sentence;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
 }
 
 function speakWithBrowserFallback(
@@ -234,6 +273,8 @@ export function speakWithScholarVoice(
 
   if (!text || !text.trim()) return;
 
+  const thisPlaybackId = activePlaybackId;
+
   const profile = options?.profile;
   const activeGender = options?.gender || profile?.activeScholarGender || 'male';
   
@@ -243,38 +284,97 @@ export function speakWithScholarVoice(
   const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
   const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
 
-  options?.onStart?.();
+  const chunks = splitTextIntoChunks(text, 280);
+  if (chunks.length === 0) return;
 
-  // Primary: High-fidelity natural Gemini AI Text-To-Speech
-  generateScholarTTS(text, personaName, genderToUse)
-    .then((pcmBase64) => {
+  let currentChunkIndex = 0;
+  let hasCalledStart = false;
+
+  // Pre-fetch cache for next chunk audio
+  let prefetchedNextAudio: { wavBlob: Blob; audioUrl: string } | null = null;
+  let prefetchingIndex = -1;
+
+  async function prefetchChunk(index: number) {
+    if (index >= chunks.length || prefetchingIndex === index) return;
+    prefetchingIndex = index;
+    try {
+      const pcmBase64 = await generateScholarTTS(chunks[index], personaName, genderToUse);
+      if (activePlaybackId !== thisPlaybackId) return;
       const wavBlob = pcmToWav(pcmBase64, 24000);
       const audioUrl = URL.createObjectURL(wavBlob);
+      prefetchedNextAudio = { wavBlob, audioUrl };
+    } catch (e) {
+      console.warn("Prefetch chunk error:", e);
+    }
+  }
+
+  async function playNextChunk() {
+    if (activePlaybackId !== thisPlaybackId) return;
+
+    if (currentChunkIndex >= chunks.length) {
+      options?.onEnd?.();
+      return;
+    }
+
+    const chunkText = chunks[currentChunkIndex];
+
+    try {
+      let wavBlob: Blob;
+      let audioUrl: string;
+
+      if (prefetchedNextAudio && prefetchingIndex === currentChunkIndex) {
+        wavBlob = prefetchedNextAudio.wavBlob;
+        audioUrl = prefetchedNextAudio.audioUrl;
+        prefetchedNextAudio = null;
+      } else {
+        const pcmBase64 = await generateScholarTTS(chunkText, personaName, genderToUse);
+        if (activePlaybackId !== thisPlaybackId) return;
+        wavBlob = pcmToWav(pcmBase64, 24000);
+        audioUrl = URL.createObjectURL(wavBlob);
+      }
+
+      if (activePlaybackId !== thisPlaybackId) {
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        return;
+      }
+
       const audio = new Audio(audioUrl);
       currentAudio = audio;
 
+      if (!hasCalledStart) {
+        hasCalledStart = true;
+        options?.onStart?.();
+      }
+
+      // Start prefetching the NEXT chunk immediately while current chunk plays!
+      prefetchChunk(currentChunkIndex + 1);
+
       audio.onended = () => {
+        if (activePlaybackId !== thisPlaybackId) return;
         currentAudio = null;
         URL.revokeObjectURL(audioUrl);
-        options?.onEnd?.();
+        currentChunkIndex++;
+        playNextChunk();
       };
 
       audio.onerror = (e) => {
-        console.warn(`Gemini TTS playback error for ${personaName}, trying browser fallback:`, e);
+        console.warn(`Audio playback error on chunk ${currentChunkIndex}, falling back to browser TTS:`, e);
         URL.revokeObjectURL(audioUrl);
         currentAudio = null;
-        speakWithBrowserFallback(text, personaName, genderToUse, options);
+        const remainingText = chunks.slice(currentChunkIndex).join(" ");
+        speakWithBrowserFallback(remainingText, personaName, genderToUse, options);
       };
 
-      audio.play().catch((err) => {
-        console.warn(`Audio autoplay blocked or failed for ${personaName}, trying browser fallback:`, err);
-        currentAudio = null;
-        speakWithBrowserFallback(text, personaName, genderToUse, options);
-      });
-    })
-    .catch((err) => {
-      console.warn(`Gemini TTS API error for ${personaName}, using browser synthesis fallback:`, err);
-      speakWithBrowserFallback(text, personaName, genderToUse, options);
-    });
+      await audio.play();
+
+    } catch (err) {
+      console.warn(`Gemini TTS API error on chunk ${currentChunkIndex}, using browser fallback:`, err);
+      if (activePlaybackId !== thisPlaybackId) return;
+      const remainingText = chunks.slice(currentChunkIndex).join(" ");
+      speakWithBrowserFallback(remainingText, personaName, genderToUse, options);
+    }
+  }
+
+  playNextChunk();
 }
 
