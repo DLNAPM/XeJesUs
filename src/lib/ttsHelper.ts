@@ -115,7 +115,7 @@ function pcmToWav(pcmBase64: string, sampleRate = 24000): Blob {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
-function splitTextIntoChunks(text: string, maxChunkLength = 280): string[] {
+function splitTextIntoChunks(text: string, firstChunkMax = 120, standardMax = 220): string[] {
   const clean = text
     .replace(/\*+/g, '')
     .replace(/#+/g, '')
@@ -127,19 +127,16 @@ function splitTextIntoChunks(text: string, maxChunkLength = 280): string[] {
 
   if (!clean) return [];
 
-  if (clean.length <= maxChunkLength) {
-    return [clean];
-  }
-
-  // Split by sentence boundary
   const sentences = clean.match(/[^.!?\n]+[.!?\n]+/g) || [clean];
   const chunks: string[] = [];
   let currentChunk = "";
+  let maxLen = firstChunkMax;
 
   for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > maxChunkLength && currentChunk.trim()) {
+    if ((currentChunk + sentence).length > maxLen && currentChunk.trim()) {
       chunks.push(currentChunk.trim());
       currentChunk = sentence;
+      maxLen = standardMax;
     } else {
       currentChunk += sentence;
     }
@@ -284,8 +281,17 @@ export function speakWithScholarVoice(
   const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
   const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
 
-  const chunks = splitTextIntoChunks(text, 280);
+  const chunks = splitTextIntoChunks(text, 120, 220);
   if (chunks.length === 0) return;
+
+  // Synchronously unlock Audio playback on iOS/iPadOS inside the user gesture event handler thread
+  const unlockedAudio = new Audio();
+  unlockedAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+  const silentPromise = unlockedAudio.play();
+  if (silentPromise !== undefined) {
+    silentPromise.catch(() => {});
+  }
+  currentAudio = unlockedAudio;
 
   let currentChunkIndex = 0;
   let hasCalledStart = false;
@@ -338,8 +344,14 @@ export function speakWithScholarVoice(
         return;
       }
 
-      const audio = new Audio(audioUrl);
-      currentAudio = audio;
+      let audio: HTMLAudioElement;
+      if (currentChunkIndex === 0 && unlockedAudio) {
+        unlockedAudio.src = audioUrl;
+        audio = unlockedAudio;
+      } else {
+        audio = new Audio(audioUrl);
+        currentAudio = audio;
+      }
 
       if (!hasCalledStart) {
         hasCalledStart = true;
