@@ -1,13 +1,41 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown } from 'lucide-react';
+import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
+import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
+
+const MALE_VOICE_PRESETS = [
+  { name: 'Joel Osteen', style: 'Warm, Inspirational & Encouraging' },
+  { name: 'Charles Spurgeon', style: 'Classic Prince of Preachers & Regal' },
+  { name: 'C.S. Lewis', style: 'Scholarly, Oxbridge & Intellectually Rich' },
+  { name: 'Martin Luther', style: 'Bold, Resonant & Reformational' },
+  { name: 'Tim Keller', style: 'Thoughtful, Exegetical & Urban' },
+  { name: 'Billy Graham', style: 'Evangelistic, Authoritative & Clear' },
+  { name: 'Custom', style: 'Enter your custom male scholar name' }
+];
+
+const FEMALE_VOICE_PRESETS = [
+  { name: 'Oprah Winfrey', style: 'Empathetic, Warm & Resonant' },
+  { name: 'Beth Moore', style: 'Passionate, Dynamic & Exegetical' },
+  { name: 'Joyce Meyer', style: 'Direct, Practical & Uplifting' },
+  { name: 'Priscilla Shirer', style: 'Faith-Filled, Energetic & Direct' },
+  { name: 'Kay Arthur', style: 'Inductive, Reverent & Methodical' },
+  { name: 'Corrie ten Boom', style: 'Gracious, Courageous & Wise' },
+  { name: 'Custom', style: 'Enter your custom female scholar name' }
+];
 
 export default function ProfileSettings() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bibleWebsite, setBibleWebsite] = useState('');
   const [theme, setTheme] = useState('modern');
+  const [maleScholarVoice, setMaleScholarVoice] = useState('Joel Osteen');
+  const [femaleScholarVoice, setFemaleScholarVoice] = useState('Oprah Winfrey');
+  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>('male');
+  const [customMaleVoice, setCustomMaleVoice] = useState('');
+  const [customFemaleVoice, setCustomFemaleVoice] = useState('');
+  const [testingVoice, setTestingVoice] = useState<'male' | 'female' | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -30,6 +58,30 @@ export default function ProfileSettings() {
           setProfile(data);
           setBibleWebsite(data.bibleWebsite || '');
           setTheme(data.theme || 'modern');
+
+          if (data.maleScholarVoice) {
+            const isPreset = MALE_VOICE_PRESETS.some(p => p.name === data.maleScholarVoice);
+            if (isPreset) {
+              setMaleScholarVoice(data.maleScholarVoice);
+            } else {
+              setMaleScholarVoice('Custom');
+              setCustomMaleVoice(data.maleScholarVoice);
+            }
+          }
+
+          if (data.femaleScholarVoice) {
+            const isPreset = FEMALE_VOICE_PRESETS.some(p => p.name === data.femaleScholarVoice);
+            if (isPreset) {
+              setFemaleScholarVoice(data.femaleScholarVoice);
+            } else {
+              setFemaleScholarVoice('Custom');
+              setCustomFemaleVoice(data.femaleScholarVoice);
+            }
+          }
+
+          if (data.activeScholarGender) {
+            setActiveScholarGender(data.activeScholarGender);
+          }
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
@@ -39,7 +91,43 @@ export default function ProfileSettings() {
     };
 
     fetchProfile().catch(err => console.error("Error in fetchProfile:", err));
+
+    return () => {
+      stopScholarSpeech();
+    };
   }, []);
+
+  const handleTestVoice = (gender: 'male' | 'female') => {
+    if (testingVoice === gender) {
+      stopScholarSpeech();
+      setTestingVoice(null);
+      return;
+    }
+
+    const effectiveMale = maleScholarVoice === 'Custom' ? customMaleVoice || 'Custom Male Scholar' : maleScholarVoice;
+    const effectiveFemale = femaleScholarVoice === 'Custom' ? customFemaleVoice || 'Custom Female Scholar' : femaleScholarVoice;
+
+    const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
+    const sampleText = gender === 'male'
+      ? `Greetings, pilgrim. I am your male scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`
+      : `Greetings, pilgrim. I am your female scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`;
+
+    speakWithScholarVoice(sampleText, {
+      gender,
+      profile: {
+        uid: profile?.uid || '',
+        email: profile?.email || '',
+        displayName: profile?.displayName || '',
+        photoURL: profile?.photoURL || '',
+        maleScholarVoice: effectiveMale,
+        femaleScholarVoice: effectiveFemale,
+        activeScholarGender
+      },
+      onStart: () => setTestingVoice(gender),
+      onEnd: () => setTestingVoice(null),
+      onError: () => setTestingVoice(null)
+    });
+  };
 
   const handleSave = async () => {
     const auth = getAuthService();
@@ -47,6 +135,9 @@ export default function ProfileSettings() {
     if (!auth || !auth.currentUser || !db) return;
 
     setSaving(true);
+    const finalMaleVoice = maleScholarVoice === 'Custom' ? (customMaleVoice.trim() || 'Custom Male Voice') : maleScholarVoice;
+    const finalFemaleVoice = femaleScholarVoice === 'Custom' ? (customFemaleVoice.trim() || 'Custom Female Voice') : femaleScholarVoice;
+
     try {
       await setDoc(doc(db, 'users', auth.currentUser.uid), {
         uid: auth.currentUser.uid,
@@ -54,7 +145,10 @@ export default function ProfileSettings() {
         displayName: auth.currentUser.displayName,
         photoURL: auth.currentUser.photoURL,
         bibleWebsite: bibleWebsite,
-        theme: theme
+        theme: theme,
+        maleScholarVoice: finalMaleVoice,
+        femaleScholarVoice: finalFemaleVoice,
+        activeScholarGender: activeScholarGender
       }, { merge: true });
       
       // Update theme in real-time
@@ -157,6 +251,183 @@ export default function ProfileSettings() {
                   </div>
                 </button>
               ))}
+            </div>
+          </section>
+
+          {/* Scholars Voices Section */}
+          <section className="space-y-8 pt-6 border-t border-ui-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+                <Mic className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-serif text-text-primary italic font-bold">Scholars Voices</h2>
+                <p className="text-xs text-text-secondary font-sans tracking-wide">Configure text-to-speech personas for spiritual narration</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-text-secondary leading-relaxed font-serif italic">
+              Set your preferred Male and Female scholar voices for text-to-speech audio exegesis. Choose a renowned preacher or scholar persona, or define your own custom scholar voice.
+            </p>
+
+            {/* Default / Active Gender Selector */}
+            <div className="p-5 bg-ui-sidebar/50 rounded-2xl border border-ui-border space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-sans font-bold uppercase tracking-[0.15em] text-accent flex items-center gap-2">
+                  <UserCheck className="w-4 h-4" /> Active Scholar Voice Preference
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { id: 'male', label: 'Male Scholar Voice', desc: 'Default to Male Persona' },
+                  { id: 'female', label: 'Female Scholar Voice', desc: 'Default to Female Persona' },
+                  { id: 'auto', label: 'Auto / Balanced', desc: 'Smart Voice Switch' }
+                ].map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setActiveScholarGender(g.id as 'male' | 'female' | 'auto')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      activeScholarGender === g.id
+                        ? 'bg-accent/10 border-accent text-accent font-bold shadow-sm'
+                        : 'bg-ui-card border-ui-border text-text-secondary hover:border-accent/40'
+                    }`}
+                  >
+                    <p className="text-xs font-bold uppercase tracking-tight">{g.label}</p>
+                    <p className="text-[10px] opacity-70 italic font-serif">{g.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Male Scholar Voice Selector */}
+            <div className="space-y-4 p-6 bg-bg-primary/40 rounded-2xl border border-ui-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                  <h3 className="text-sm font-sans font-bold uppercase tracking-wider text-text-primary">Male Scholar Voice</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTestVoice('male')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-sans font-bold tracking-wider uppercase transition-all border ${
+                    testingVoice === 'male'
+                      ? 'bg-red-500/10 border-red-500 text-red-500 animate-pulse'
+                      : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'
+                  }`}
+                >
+                  {testingVoice === 'male' ? (
+                    <>
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      <span>Stop Audition</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Test Male Voice</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {MALE_VOICE_PRESETS.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setMaleScholarVoice(p.name)}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      maleScholarVoice === p.name
+                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
+                        : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
+                      {maleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
+                    </div>
+                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                  </button>
+                ))}
+              </div>
+
+              {maleScholarVoice === 'Custom' && (
+                <div className="pt-2">
+                  <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-1">Custom Male Scholar Persona</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Joel Osteen, John Piper, Charles Stanley..."
+                    value={customMaleVoice}
+                    onChange={(e) => setCustomMaleVoice(e.target.value)}
+                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Female Scholar Voice Selector */}
+            <div className="space-y-4 p-6 bg-bg-primary/40 rounded-2xl border border-ui-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                  <h3 className="text-sm font-sans font-bold uppercase tracking-wider text-text-primary">Female Scholar Voice</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTestVoice('female')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-sans font-bold tracking-wider uppercase transition-all border ${
+                    testingVoice === 'female'
+                      ? 'bg-red-500/10 border-red-500 text-red-500 animate-pulse'
+                      : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'
+                  }`}
+                >
+                  {testingVoice === 'female' ? (
+                    <>
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      <span>Stop Audition</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>Test Female Voice</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {FEMALE_VOICE_PRESETS.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setFemaleScholarVoice(p.name)}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      femaleScholarVoice === p.name
+                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
+                        : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
+                      {femaleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
+                    </div>
+                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                  </button>
+                ))}
+              </div>
+
+              {femaleScholarVoice === 'Custom' && (
+                <div className="pt-2">
+                  <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-1">Custom Female Scholar Persona</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Oprah Winfrey, Lysa TerKeurst, Priscilla Shirer..."
+                    value={customFemaleVoice}
+                    onChange={(e) => setCustomFemaleVoice(e.target.value)}
+                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary"
+                  />
+                </div>
+              )}
             </div>
           </section>
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getAuthService, getDbService, collection, query, where, getDocs, deleteDoc, doc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { ChatSession, UserProfile, LiteraryWorkExport } from '../types';
 import { generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
+import { speakWithScholarVoice } from '../lib/ttsHelper';
 import { 
   History, 
   FileText, 
@@ -182,25 +183,21 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
     if (!fullScript.trim()) return;
 
-    const utterance = new SpeechSynthesisUtterance(fullScript);
-    utterance.rate = 0.95;
-
-    utterance.onstart = () => {
-      setSpeakingSessionId(session.id || null);
-      setIsPaused(false);
-    };
-
-    utterance.onend = () => {
-      setSpeakingSessionId(null);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = () => {
-      setSpeakingSessionId(null);
-      setIsPaused(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
+    speakWithScholarVoice(fullScript, {
+      profile: userProfile,
+      onStart: () => {
+        setSpeakingSessionId(session.id || null);
+        setIsPaused(false);
+      },
+      onEnd: () => {
+        setSpeakingSessionId(null);
+        setIsPaused(false);
+      },
+      onError: () => {
+        setSpeakingSessionId(null);
+        setIsPaused(false);
+      }
+    });
   };
 
   // Trigger Literary Work PDF Export

@@ -35,6 +35,7 @@ import { Inquiry, UserProfile, ChatSession, LiteraryWorkExport } from '../types'
 import { cn } from '../lib/utils';
 import PremiumOverlay from './PremiumOverlay';
 import { exportElementToPdf } from '../utils/pdfExporter';
+import { speakWithScholarVoice } from '../lib/ttsHelper';
 
 
 interface Message {
@@ -186,27 +187,22 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     if (!fullScript.trim()) return;
 
-    const utterance = new SpeechSynthesisUtterance(fullScript);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-
-    utterance.onstart = () => {
-      setSpeakingSessionId(session.id || null);
-      setIsPaused(false);
-    };
-
-    utterance.onend = () => {
-      setSpeakingSessionId(null);
-      setIsPaused(false);
-    };
-
-    utterance.onerror = (e) => {
-      console.error("Speech synthesis error:", e);
-      setSpeakingSessionId(null);
-      setIsPaused(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
+    speakWithScholarVoice(fullScript, {
+      profile: userProfile,
+      onStart: () => {
+        setSpeakingSessionId(session.id || null);
+        setIsPaused(false);
+      },
+      onEnd: () => {
+        setSpeakingSessionId(null);
+        setIsPaused(false);
+      },
+      onError: (e) => {
+        console.error("Speech synthesis error:", e);
+        setSpeakingSessionId(null);
+        setIsPaused(false);
+      }
+    });
   };
 
   const speakText = (text: string) => {
@@ -222,22 +218,18 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     stopSpeech();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.95;
-
-    utterance.onstart = () => {
-      setSpeakingMessageText(text);
-    };
-
-    utterance.onend = () => {
-      setSpeakingMessageText(null);
-    };
-
-    utterance.onerror = () => {
-      setSpeakingMessageText(null);
-    };
-
-    window.speechSynthesis.speak(utterance);
+    speakWithScholarVoice(text, {
+      profile: userProfile,
+      onStart: () => {
+        setSpeakingMessageText(text);
+      },
+      onEnd: () => {
+        setSpeakingMessageText(null);
+      },
+      onError: () => {
+        setSpeakingMessageText(null);
+      }
+    });
   };
 
   // Speech-to-Text Function (Voice Dictation)

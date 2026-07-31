@@ -9,6 +9,9 @@ export interface UserProfile {
   isFrozen?: boolean;
   theme?: 'modern' | 'midnight' | 'parchment';
   lastLoginAt?: any;
+  maleScholarVoice?: string;
+  femaleScholarVoice?: string;
+  activeScholarGender?: 'male' | 'female' | 'auto';
 }
 
 export interface Inquiry {
