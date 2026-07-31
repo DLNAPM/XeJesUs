@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { Inquiry, LiteraryWorkExport } from "../types";
 
 let aiInstance: GoogleGenAI | null = null;
@@ -15,6 +15,100 @@ function getAi() {
   
   aiInstance = new GoogleGenAI({ apiKey });
   return aiInstance;
+}
+
+export async function generateScholarTTS(
+  text: string,
+  personaName: string,
+  gender: 'male' | 'female'
+): Promise<string> {
+  const ai = getAi();
+  
+  // Clean text from markdown formatting (*, #, _, `, etc.)
+  const cleanText = text
+    .replace(/\*+/g, '')
+    .replace(/#+/g, '')
+    .replace(/`+/g, '')
+    .replace(/_+/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanText) return "";
+
+  // Select prebuilt voice and prompt style according to persona
+  let voiceName = gender === 'male' ? 'Charon' : 'Kore';
+  let promptStyle = `Speak clearly and reverently as ${personaName}:`;
+
+  const lowerPersona = personaName.toLowerCase();
+
+  if (gender === 'male') {
+    if (lowerPersona.includes('osteen')) {
+      voiceName = 'Puck';
+      promptStyle = 'Speak in a warm, encouraging, smiling, bright and optimistic tone as Joel Osteen:';
+    } else if (lowerPersona.includes('spurgeon')) {
+      voiceName = 'Charon';
+      promptStyle = 'Speak in a majestic, deep, resonant, 19th-century British prince of preachers voice as Charles Spurgeon:';
+    } else if (lowerPersona.includes('lewis')) {
+      voiceName = 'Fenrir';
+      promptStyle = 'Speak in an articulate, scholarly, warm Oxbridge professor cadence as C.S. Lewis:';
+    } else if (lowerPersona.includes('luther')) {
+      voiceName = 'Charon';
+      promptStyle = 'Speak in a bold, passionate, strong reformational voice as Martin Luther:';
+    } else if (lowerPersona.includes('keller')) {
+      voiceName = 'Fenrir';
+      promptStyle = 'Speak in a thoughtful, intellectually rich, warm urban pastor voice as Tim Keller:';
+    } else if (lowerPersona.includes('graham')) {
+      voiceName = 'Charon';
+      promptStyle = 'Speak with clear, authoritative, passionate evangelistic clarity as Billy Graham:';
+    } else {
+      voiceName = 'Fenrir';
+      promptStyle = `Speak in a distinctive, dignified male scholar voice as ${personaName}:`;
+    }
+  } else {
+    if (lowerPersona.includes('oprah') || lowerPersona.includes('winfrey')) {
+      voiceName = 'Kore';
+      promptStyle = 'Speak in a deeply empathetic, warm, resonant, expressive and rich tone as Oprah Winfrey:';
+    } else if (lowerPersona.includes('moore')) {
+      voiceName = 'Zephyr';
+      promptStyle = 'Speak in a passionate, energetic, warm exegetical Bible teacher voice as Beth Moore:';
+    } else if (lowerPersona.includes('meyer')) {
+      voiceName = 'Zephyr';
+      promptStyle = 'Speak in a direct, practical, confident, uplifting and energetic voice as Joyce Meyer:';
+    } else if (lowerPersona.includes('shirer')) {
+      voiceName = 'Zephyr';
+      promptStyle = 'Speak in a faith-filled, bold, inspiring, dynamic voice as Priscilla Shirer:';
+    } else if (lowerPersona.includes('arthur')) {
+      voiceName = 'Kore';
+      promptStyle = 'Speak in a reverent, methodical, gracious and inductive scholar voice as Kay Arthur:';
+    } else if (lowerPersona.includes('ten boom') || lowerPersona.includes('corrie')) {
+      voiceName = 'Kore';
+      promptStyle = 'Speak with gentle wisdom, courageous peace, and serene grace as Corrie ten Boom:';
+    } else {
+      voiceName = 'Kore';
+      promptStyle = `Speak in a distinctive, graceful female scholar voice as ${personaName}:`;
+    }
+  }
+
+  const response = await ai.models.generateContent({
+    model: "gemini-3.1-flash-tts-preview",
+    contents: [{ parts: [{ text: `${promptStyle}\n\n"${cleanText}"` }] }],
+    config: {
+      responseModalities: [Modality.AUDIO],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName }
+        }
+      }
+    }
+  });
+
+  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!base64Audio) {
+    throw new Error("No audio data returned from Gemini TTS");
+  }
+
+  return base64Audio;
 }
 
 export async function chatWithSanctuary(

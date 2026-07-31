@@ -35,7 +35,7 @@ import { Inquiry, UserProfile, ChatSession, LiteraryWorkExport } from '../types'
 import { cn } from '../lib/utils';
 import PremiumOverlay from './PremiumOverlay';
 import { exportElementToPdf } from '../utils/pdfExporter';
-import { speakWithScholarVoice } from '../lib/ttsHelper';
+import { speakWithScholarVoice, stopScholarSpeech, pauseScholarSpeech, resumeScholarSpeech } from '../lib/ttsHelper';
 
 
 interface Message {
@@ -153,26 +153,19 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
   // Text-To-Speech Functions
   const stopSpeech = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopScholarSpeech();
     setSpeakingSessionId(null);
     setSpeakingMessageText(null);
     setIsPaused(false);
   };
 
   const speakSession = (session: ChatSession) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert("Audible speech synthesis is not supported in your browser.");
-      return;
-    }
-
     if (speakingSessionId === session.id) {
       if (isPaused) {
-        window.speechSynthesis.resume();
+        resumeScholarSpeech();
         setIsPaused(false);
       } else {
-        window.speechSynthesis.pause();
+        pauseScholarSpeech();
         setIsPaused(true);
       }
       return;
@@ -206,11 +199,6 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
   };
 
   const speakText = (text: string) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert("Audible speech synthesis is not supported in your browser.");
-      return;
-    }
-
     if (speakingMessageText === text) {
       stopSpeech();
       return;

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getAuthService, getDbService, collection, query, where, getDocs, deleteDoc, doc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { ChatSession, UserProfile, LiteraryWorkExport } from '../types';
 import { generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
-import { speakWithScholarVoice } from '../lib/ttsHelper';
+import { speakWithScholarVoice, stopScholarSpeech, pauseScholarSpeech, resumeScholarSpeech } from '../lib/ttsHelper';
 import { 
   History, 
   FileText, 
@@ -150,25 +150,18 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
   // Text-To-Speech Functions
   const stopSpeech = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopScholarSpeech();
     setSpeakingSessionId(null);
     setIsPaused(false);
   };
 
   const speakSession = (session: ChatSession) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert("Audible speech synthesis is not supported in your browser.");
-      return;
-    }
-
     if (speakingSessionId === session.id) {
       if (isPaused) {
-        window.speechSynthesis.resume();
+        resumeScholarSpeech();
         setIsPaused(false);
       } else {
-        window.speechSynthesis.pause();
+        pauseScholarSpeech();
         setIsPaused(true);
       }
       return;
