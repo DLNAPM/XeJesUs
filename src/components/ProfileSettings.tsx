@@ -32,6 +32,7 @@ export default function ProfileSettings() {
   const [maleScholarVoice, setMaleScholarVoice] = useState('Joel Osteen');
   const [femaleScholarVoice, setFemaleScholarVoice] = useState('Oprah Winfrey');
   const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>('male');
+  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(true);
   const [customMaleVoice, setCustomMaleVoice] = useState('');
   const [customFemaleVoice, setCustomFemaleVoice] = useState('');
   const [testingVoice, setTestingVoice] = useState<'male' | 'female' | null>(null);
@@ -82,6 +83,10 @@ export default function ProfileSettings() {
           if (data.activeScholarGender) {
             setActiveScholarGender(data.activeScholarGender);
           }
+
+          if (data.scholarsVoicesEnabled !== undefined) {
+            setScholarsVoicesEnabled(data.scholarsVoicesEnabled);
+          }
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
@@ -121,7 +126,8 @@ export default function ProfileSettings() {
         photoURL: profile?.photoURL || '',
         maleScholarVoice: effectiveMale,
         femaleScholarVoice: effectiveFemale,
-        activeScholarGender
+        activeScholarGender,
+        scholarsVoicesEnabled
       },
       onStart: () => setTestingVoice(gender),
       onEnd: () => setTestingVoice(null),
@@ -148,7 +154,8 @@ export default function ProfileSettings() {
         theme: theme,
         maleScholarVoice: finalMaleVoice,
         femaleScholarVoice: finalFemaleVoice,
-        activeScholarGender: activeScholarGender
+        activeScholarGender: activeScholarGender,
+        scholarsVoicesEnabled: scholarsVoicesEnabled
       }, { merge: true });
       
       // Update theme in real-time
@@ -269,6 +276,47 @@ export default function ProfileSettings() {
             <p className="text-sm text-text-secondary leading-relaxed font-serif italic">
               Set your preferred Male and Female scholar voices for text-to-speech audio exegesis. Choose a renowned preacher or scholar persona, or define your own custom scholar voice.
             </p>
+
+            {/* Enable/Disable Scholar Voice Engine Toggle */}
+            <div className="p-5 bg-ui-sidebar/80 rounded-2xl border border-ui-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase ${
+                    scholarsVoicesEnabled
+                      ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30'
+                      : 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
+                  }`}>
+                    {scholarsVoicesEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <h3 className="text-sm font-sans font-bold text-text-primary">Scholar AI Voice Engine</h3>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {scholarsVoicesEnabled 
+                    ? 'Custom AI Scholar Personas are active for expressive, high-fidelity exegesis narration.'
+                    : 'Using default computer-robot browser speech synthesis for fast, zero-delay audio playback.'}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setScholarsVoicesEnabled(!scholarsVoicesEnabled)}
+                className={`px-5 py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm shrink-0 ${
+                  scholarsVoicesEnabled
+                    ? 'bg-accent text-bg-primary hover:bg-accent-hover'
+                    : 'bg-ui-card border border-ui-border text-text-primary hover:border-accent'
+                }`}
+              >
+                {scholarsVoicesEnabled ? (
+                  <>
+                    <Check className="w-4 h-4" /> Enabled
+                  </>
+                ) : (
+                  <>
+                    <Radio className="w-4 h-4" /> Disabled (Computer Robot Voice)
+                  </>
+                )}
+              </button>
+            </div>
 
             {/* Default / Active Gender Selector */}
             <div className="p-5 bg-ui-sidebar/50 rounded-2xl border border-ui-border space-y-3">

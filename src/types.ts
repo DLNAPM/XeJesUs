@@ -12,6 +12,7 @@ export interface UserProfile {
   maleScholarVoice?: string;
   femaleScholarVoice?: string;
   activeScholarGender?: 'male' | 'female' | 'auto';
+  scholarsVoicesEnabled?: boolean;
 }
 
 export interface Inquiry {

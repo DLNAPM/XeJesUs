@@ -270,19 +270,24 @@ export function speakWithScholarVoice(
 
   if (!text || !text.trim()) return;
 
-  const thisPlaybackId = activePlaybackId;
-
   const profile = options?.profile;
   const activeGender = options?.gender || profile?.activeScholarGender || 'male';
-  
   const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
 
   const maleVoiceName = profile?.maleScholarVoice || 'Joel Osteen';
   const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
   const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
 
-  const chunks = splitTextIntoChunks(text, 120, 220);
+  // If Scholars Voices preference is explicitly disabled by user, fallback immediately to computer-robot speech synthesis
+  if (profile?.scholarsVoicesEnabled === false) {
+    speakWithBrowserFallback(text, personaName, genderToUse, options);
+    return;
+  }
+
+  const chunks = splitTextIntoChunks(text, 100, 200);
   if (chunks.length === 0) return;
+
+  const thisPlaybackId = activePlaybackId;
 
   // Synchronously unlock Audio playback on iOS/iPadOS inside the user gesture event handler thread
   const unlockedAudio = new Audio();
@@ -296,23 +301,32 @@ export function speakWithScholarVoice(
   let currentChunkIndex = 0;
   let hasCalledStart = false;
 
-  // Pre-fetch cache for next chunk audio
-  let prefetchedNextAudio: { wavBlob: Blob; audioUrl: string } | null = null;
-  let prefetchingIndex = -1;
+  const chunkPromises = new Map<number, Promise<{ wavBlob: Blob; audioUrl: string } | null>>();
 
-  async function prefetchChunk(index: number) {
-    if (index >= chunks.length || prefetchingIndex === index) return;
-    prefetchingIndex = index;
-    try {
-      const pcmBase64 = await generateScholarTTS(chunks[index], personaName, genderToUse);
-      if (activePlaybackId !== thisPlaybackId) return;
-      const wavBlob = pcmToWav(pcmBase64, 24000);
-      const audioUrl = URL.createObjectURL(wavBlob);
-      prefetchedNextAudio = { wavBlob, audioUrl };
-    } catch (e) {
-      console.warn("Prefetch chunk error:", e);
+  function fetchChunk(index: number): Promise<{ wavBlob: Blob; audioUrl: string } | null> {
+    if (index >= chunks.length) return Promise.resolve(null);
+    if (!chunkPromises.has(index)) {
+      const promise = (async () => {
+        try {
+          const pcmBase64 = await generateScholarTTS(chunks[index], personaName, genderToUse);
+          if (activePlaybackId !== thisPlaybackId) return null;
+          const wavBlob = pcmToWav(pcmBase64, 24000);
+          const audioUrl = URL.createObjectURL(wavBlob);
+          return { wavBlob, audioUrl };
+        } catch (e) {
+          console.warn(`Error generating audio chunk ${index}:`, e);
+          return null;
+        }
+      })();
+      chunkPromises.set(index, promise);
     }
+    return chunkPromises.get(index)!;
   }
+
+  // Eagerly initiate parallel prefetching for the first 3 chunks immediately
+  fetchChunk(0);
+  fetchChunk(1);
+  fetchChunk(2);
 
   async function playNextChunk() {
     if (activePlaybackId !== thisPlaybackId) return;
@@ -322,34 +336,31 @@ export function speakWithScholarVoice(
       return;
     }
 
-    const chunkText = chunks[currentChunkIndex];
+    // Always keep pipeline 2 steps ahead
+    fetchChunk(currentChunkIndex + 1);
+    fetchChunk(currentChunkIndex + 2);
 
     try {
-      let wavBlob: Blob;
-      let audioUrl: string;
-
-      if (prefetchedNextAudio && prefetchingIndex === currentChunkIndex) {
-        wavBlob = prefetchedNextAudio.wavBlob;
-        audioUrl = prefetchedNextAudio.audioUrl;
-        prefetchedNextAudio = null;
-      } else {
-        const pcmBase64 = await generateScholarTTS(chunkText, personaName, genderToUse);
-        if (activePlaybackId !== thisPlaybackId) return;
-        wavBlob = pcmToWav(pcmBase64, 24000);
-        audioUrl = URL.createObjectURL(wavBlob);
-      }
+      const chunkData = await fetchChunk(currentChunkIndex);
 
       if (activePlaybackId !== thisPlaybackId) {
-        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        if (chunkData?.audioUrl) URL.revokeObjectURL(chunkData.audioUrl);
+        return;
+      }
+
+      if (!chunkData) {
+        // Fallback to browser TTS for remaining chunks if Gemini fails
+        const remainingText = chunks.slice(currentChunkIndex).join(" ");
+        speakWithBrowserFallback(remainingText, personaName, genderToUse, options);
         return;
       }
 
       let audio: HTMLAudioElement;
       if (currentChunkIndex === 0 && unlockedAudio) {
-        unlockedAudio.src = audioUrl;
+        unlockedAudio.src = chunkData.audioUrl;
         audio = unlockedAudio;
       } else {
-        audio = new Audio(audioUrl);
+        audio = new Audio(chunkData.audioUrl);
         currentAudio = audio;
       }
 
@@ -358,20 +369,17 @@ export function speakWithScholarVoice(
         options?.onStart?.();
       }
 
-      // Start prefetching the NEXT chunk immediately while current chunk plays!
-      prefetchChunk(currentChunkIndex + 1);
-
       audio.onended = () => {
         if (activePlaybackId !== thisPlaybackId) return;
         currentAudio = null;
-        URL.revokeObjectURL(audioUrl);
+        URL.revokeObjectURL(chunkData.audioUrl);
         currentChunkIndex++;
         playNextChunk();
       };
 
       audio.onerror = (e) => {
         console.warn(`Audio playback error on chunk ${currentChunkIndex}, falling back to browser TTS:`, e);
-        URL.revokeObjectURL(audioUrl);
+        URL.revokeObjectURL(chunkData.audioUrl);
         currentAudio = null;
         const remainingText = chunks.slice(currentChunkIndex).join(" ");
         speakWithBrowserFallback(remainingText, personaName, genderToUse, options);
