@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio } from 'lucide-react';
+import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
@@ -476,6 +476,106 @@ export default function ProfileSettings() {
                   />
                 </div>
               )}
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+                <Library className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-serif text-text-primary italic font-bold">Primary Foundational Sources</h2>
+                <p className="text-[10px] text-text-secondary/80 font-sans uppercase tracking-widest font-semibold mt-0.5">
+                  Academic & Spiritual Citations Framework
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-text-secondary mb-6 leading-relaxed font-serif italic">
+              XeJesUs synthesizes exegesis and answers from five core canonical, historical, and scholarly authorities to provide Pilgrims with grounded, reverent, and scholarly answers to their Seekings and Chat Questions:
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Source 1 */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source I</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Primary Canonical Scriptures</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                    Direct chapter & verse citations across Old & New Testament Canons (Genesis through Revelation).
+                  </p>
+                </div>
+              </div>
+
+              {/* Source 2 */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <Compass className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source II</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Original Linguistic Lexicons & Roots</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                    Original Hebrew, Aramaic, and Koine Greek word etymologies via Strong’s, BDB, and BDAG concordances.
+                  </p>
+                </div>
+              </div>
+
+              {/* Source 3 */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source III</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Patristic & Classical Exegesis</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                    Early Church Fathers (Augustine, Chrysostom) & classical commentators (Henry, Spurgeon, C.S. Lewis).
+                  </p>
+                </div>
+              </div>
+
+              {/* Source 4 */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source IV</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Historical & Archaeological Records</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                    Flavius Josephus histories, Levant geography, and Ancient Roman road & archaeological logs.
+                  </p>
+                </div>
+              </div>
+
+              {/* Source 5 */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 md:col-span-2 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 shrink-0">
+                  <Search className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source V</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Real-Time Web Grounding (Google Search)</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                    Live web grounding for evaluating contemporary news and modern world application while remaining anchored in Scripture.
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 

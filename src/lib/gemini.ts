@@ -29,10 +29,16 @@ export async function generateExegesis(scripture: string, queryText: string) {
     User Question: ${queryText}
     
     Provide a deep analytical analysis including historical context, grammar, and literary genre.
+    Always cite your sources clearly in your exegesis, including:
+    1. Primary Canonical Scripture citations (Book, Chapter, and Verse).
+    2. Original Hebrew/Greek lexical roots and Strong's concordance references in the grammar analysis.
+    3. Classical and Patristic commentary references (e.g., Augustine, John Chrysostom, Matthew Henry, Charles Spurgeon, C.S. Lewis, N.T. Wright).
+    4. Relevant historical/archaeological documentation in the historical context section.
+    
     For the geography section:
     - "location": The name of the specific place.
-    - "thenDesc": Description of the place in biblical/historical times.
-    - "nowDesc": Description of the place as it is today.
+    - "thenDesc": Description of the place in biblical/historical times with ancient textual citations.
+    - "nowDesc": Description of the place as it is today with modern geographical citations.
     - "thenImageUrl": Provide a short descriptive prompt for generating an image of a historical biblical map of this specific location.
     - "nowImageUrl": Provide a short descriptive prompt for generating a modern geographical or drone-shot image of this specific location.
   `;
