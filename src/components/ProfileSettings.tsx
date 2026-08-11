@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search } from 'lucide-react';
+import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
@@ -25,7 +25,11 @@ const FEMALE_VOICE_PRESETS = [
   { name: 'Custom', style: 'Enter your custom female scholar name' }
 ];
 
-export default function ProfileSettings() {
+interface ProfileSettingsProps {
+  onNavigatePage?: (page: 'privacy' | 'terms') => void;
+}
+
+export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bibleWebsite, setBibleWebsite] = useState('');
   const [theme, setTheme] = useState('modern');
@@ -613,6 +617,50 @@ export default function ProfileSettings() {
                   <p>• https://biblehub.com/text/</p>
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section className="p-6 bg-ui-sidebar/60 rounded-2xl border border-ui-border space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-serif text-text-primary italic font-bold">Sanctuary Covenants & Legal Pages</h2>
+                <p className="text-xs text-text-secondary italic">Read the full commitments regarding your privacy, data security, and platform terms of use.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => onNavigatePage?.('privacy')}
+                className="p-4 bg-ui-card rounded-xl border border-ui-border hover:border-accent flex items-center justify-between text-left transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-accent" />
+                  <div>
+                    <p className="text-xs font-sans font-bold text-text-primary uppercase tracking-wider">Privacy Policy</p>
+                    <p className="text-[10px] font-serif italic text-text-secondary">Confidentiality & data protection</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-accent group-hover:translate-x-1 transition-all" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigatePage?.('terms')}
+                className="p-4 bg-ui-card rounded-xl border border-ui-border hover:border-accent flex items-center justify-between text-left transition-all group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText className="w-5 h-5 text-accent" />
+                  <div>
+                    <p className="text-xs font-sans font-bold text-text-primary uppercase tracking-wider">Terms of Use</p>
+                    <p className="text-[10px] font-serif italic text-text-secondary">Pilgrim conduct & service rules</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-accent group-hover:translate-x-1 transition-all" />
+              </button>
             </div>
           </section>
 

@@ -78,6 +78,8 @@ import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
 import Chatbot from './components/Chatbot';
 import SavedChatSessions from './components/SavedChatSessions';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import TermsOfUsePage from './components/TermsOfUsePage';
 
 const safeSessionStorage = {
   getItem(key: string): string | null {
@@ -109,7 +111,7 @@ const safeLocalStorage = {
   }
 };
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin' | 'saved-chats';
+type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin' | 'saved-chats' | 'privacy' | 'terms';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -383,6 +385,22 @@ export default function App() {
   }
 
   if (!user) {
+    if (currentPage === 'privacy') {
+      return (
+        <div className="min-h-screen bg-bg-primary p-6 md:p-12 relative overflow-y-auto">
+          <PrivacyPolicyPage onBack={() => setCurrentPage('dashboard')} />
+        </div>
+      );
+    }
+
+    if (currentPage === 'terms') {
+      return (
+        <div className="min-h-screen bg-bg-primary p-6 md:p-12 relative overflow-y-auto">
+          <TermsOfUsePage onBack={() => setCurrentPage('dashboard')} />
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-bg-primary relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&q=80&w=2071')] bg-cover bg-center opacity-5"></div>
@@ -466,10 +484,19 @@ export default function App() {
           </div>
         </motion.div>
 
-        {/* Privacy Policy Footer */}
-        <div className="absolute bottom-8 left-0 right-0 text-center z-10 px-6">
-          <p className="text-xs font-sans font-bold text-natural-text/40 uppercase tracking-[0.2em] mb-2 leading-relaxed">
-            By using "XeJesUs", you agree to the terms outlined in this <button onClick={() => setShowPrivacy(true)} className="text-natural-accent hover:underline underline-offset-4 decoration-natural-accent/30">Privacy Policy</button>.
+        {/* Privacy Policy & Terms Footer */}
+        <div className="absolute bottom-6 left-0 right-0 text-center z-10 px-6 flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-3 text-xs font-sans font-bold text-text-secondary/70 uppercase tracking-[0.2em]">
+            <button onClick={() => setCurrentPage('privacy')} className="hover:text-accent hover:underline underline-offset-4 transition-colors">
+              Privacy Policy
+            </button>
+            <span className="opacity-30">•</span>
+            <button onClick={() => setCurrentPage('terms')} className="hover:text-accent hover:underline underline-offset-4 transition-colors">
+              Terms of Use
+            </button>
+          </div>
+          <p className="text-[10px] font-sans text-text-secondary/50 uppercase tracking-widest">
+            By using XeJesUs, you agree to our Sanctuary Covenants & Terms.
           </p>
         </div>
 
@@ -727,9 +754,14 @@ export default function App() {
               <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user?.email}</p>
             </div>
           </div>
+          <div className="flex items-center justify-center gap-2 pt-2 pb-1 text-[10px] font-sans font-bold text-text-secondary/70 uppercase tracking-wider">
+            <button onClick={() => setCurrentPage('privacy')} className="hover:text-accent transition-colors">Privacy Policy</button>
+            <span className="opacity-30">•</span>
+            <button onClick={() => setCurrentPage('terms')} className="hover:text-accent transition-colors">Terms of Use</button>
+          </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-text-secondary hover:text-accent transition-colors text-sm font-semibold"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-text-secondary hover:text-accent transition-colors text-sm font-semibold"
           >
             <LogOut className="w-5 h-5" />
             <span>Depart</span>
@@ -755,7 +787,9 @@ export default function App() {
             {currentPage === 'reports' && <Reports />}
             {currentPage === 'saved-chats' && <SavedChatSessions userProfile={userProfile} onSelectSession={() => setOpenChatbotSignal({ open: true, view: 'chat', id: Date.now() })} />}
             {currentPage === 'glossary' && <Glossary />}
-            {currentPage === 'settings' && <SettingsPage />}
+            {currentPage === 'settings' && <SettingsPage onNavigatePage={(page) => setCurrentPage(page)} />}
+            {currentPage === 'privacy' && <PrivacyPolicyPage onBack={() => setCurrentPage('dashboard')} />}
+            {currentPage === 'terms' && <TermsOfUsePage onBack={() => setCurrentPage('dashboard')} />}
             {currentPage === 'admin' && <AdminDashboard />}
             {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} isPremium={isPremium} />}
           </motion.div>
@@ -937,6 +971,12 @@ export default function App() {
                     <span className="text-xs font-sans font-bold uppercase tracking-[0.2em]">Admin Cabinet</span>
                   </button>
                 )}
+
+                <div className="flex items-center justify-center gap-3 py-2 mb-4 text-xs font-sans font-bold text-text-secondary/70 uppercase tracking-widest border-t border-ui-border/50 pt-4">
+                  <button onClick={() => navigateToPage('privacy', 'Privacy Policy')} className="hover:text-accent transition-colors">Privacy Policy</button>
+                  <span className="opacity-30">•</span>
+                  <button onClick={() => navigateToPage('terms', 'Terms of Use')} className="hover:text-accent transition-colors">Terms of Use</button>
+                </div>
 
                 <button 
                   onClick={handleLogout}
