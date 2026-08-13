@@ -77,3 +77,15 @@
 .btn-primary {
   @apply bg-accent text-bg-primary px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity;
 }
+
+::selection {
+  background-color: var(--accent);
+  color: var(--bg-primary);
+}
+
+.select-text {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+

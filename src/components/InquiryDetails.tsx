@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService, deleteDoc } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
 import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2 } from 'lucide-react';
@@ -96,13 +96,26 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   // Image Magnification State
   const [magnifiedImage, setMagnifiedImage] = useState<{ url: string, title: string, description: string } | null>(null);
   
-  // Glossary Selection State
+  // Glossary Selection State (Multi-Platform: iOS / iPadOS / macOS / Windows / Android)
   const [selectedText, setSelectedText] = useState('');
-  const [selectionPosition, setSelectionPosition] = useState<{ x: number, y: number } | null>(null);
+  const [selectionPosition, setSelectionPosition] = useState<{
+    x: number;
+    y: number;
+    top: number;
+    left: number;
+    placement: 'top' | 'bottom';
+  } | null>(null);
   const [isDefining, setIsDefining] = useState(false);
   const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
+  const [addedSuccess, setAddedSuccess] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [deleting, setDeleting] = useState(false);
+
+  const selectedTextRef = useRef('');
+  const isInteractingWithMenuRef = useRef(false);
+  const selectionTimeoutRef = useRef<any>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const studyContainerRef = useRef<HTMLDivElement>(null);
 
   const handleDeleteClick = async () => {
     if (!confirm('Are you sure you wish to remove this seeking from your library? This action cannot be undone.')) return;
@@ -119,38 +132,116 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     }
   };
 
-  const handleMouseUp = () => {
+  const updateSelectionFromDOM = useCallback(() => {
+    if (isInteractingWithMenuRef.current) return;
+
     const selection = window.getSelection();
-    const text = selection?.toString().trim();
-    
-    if (text && text.length > 1 && text.length < 50) {
-      const range = selection?.getRangeAt(0);
-      const rect = range?.getBoundingClientRect();
-      if (rect) {
-        setSelectedText(text);
-        setSelectionPosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + window.scrollY
-        });
-      }
-    } else {
-      if (!isDefining && !definitionResult) {
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      if (!isDefining && !definitionResult && !addedSuccess) {
         setSelectionPosition(null);
       }
+      return;
     }
-  };
+
+    const text = selection.toString().trim();
+    if (!text || text.length < 2 || text.length > 80) {
+      if (!isDefining && !definitionResult && !addedSuccess) {
+        setSelectionPosition(null);
+      }
+      return;
+    }
+
+    // Ensure the selection is within our study content area
+    const range = selection.getRangeAt(0);
+    const commonAncestor = range.commonAncestorContainer;
+    if (studyContainerRef.current && !studyContainerRef.current.contains(commonAncestor)) {
+      return;
+    }
+
+    const rect = range.getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0)) {
+      return;
+    }
+
+    selectedTextRef.current = text;
+    setSelectedText(text);
+
+    // Viewport-relative coordinate calculation (since menu uses fixed positioning)
+    const menuWidth = definitionResult ? 320 : 180;
+    const clampedX = Math.max(16, Math.min(window.innerWidth - menuWidth - 16, rect.left + rect.width / 2 - menuWidth / 2));
+    
+    // Check if there is enough room above the selection (at least 75px from top of viewport)
+    const placement: 'top' | 'bottom' = rect.top >= 75 ? 'top' : 'bottom';
+    const calculatedTop = placement === 'top'
+      ? Math.max(12, rect.top - 52)
+      : Math.min(window.innerHeight - 80, rect.bottom + 12);
+
+    setSelectionPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+      top: calculatedTop,
+      left: clampedX,
+      placement
+    });
+  }, [isDefining, definitionResult, addedSuccess]);
+
+  // Global listeners for Apple devices (iOS Safari touch selection, iPadOS, macOS Safari/Chrome)
+  useEffect(() => {
+    const handleSelectionEvent = () => {
+      if (selectionTimeoutRef.current) {
+        clearTimeout(selectionTimeoutRef.current);
+      }
+      // Debounce slightly to allow iOS/iPadOS selection handles to settle
+      selectionTimeoutRef.current = setTimeout(() => {
+        updateSelectionFromDOM();
+      }, 120);
+    };
+
+    const handleGlobalPointerDown = (e: MouseEvent | TouchEvent) => {
+      // If user interacts with our menu, do not clear
+      if (menuRef.current && menuRef.current.contains(e.target as Node)) {
+        isInteractingWithMenuRef.current = true;
+        return;
+      }
+      // If user clicks outside and not defining or displaying a result, dismiss
+      if (!isDefining && !definitionResult && !addedSuccess) {
+        isInteractingWithMenuRef.current = false;
+        setSelectionPosition(null);
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionEvent, { passive: true });
+    document.addEventListener('touchend', handleSelectionEvent, { passive: true });
+    document.addEventListener('mouseup', handleSelectionEvent, { passive: true });
+    document.addEventListener('keyup', handleSelectionEvent, { passive: true });
+    document.addEventListener('mousedown', handleGlobalPointerDown);
+    document.addEventListener('touchstart', handleGlobalPointerDown, { passive: true });
+
+    return () => {
+      if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
+      document.removeEventListener('selectionchange', handleSelectionEvent);
+      document.removeEventListener('touchend', handleSelectionEvent);
+      document.removeEventListener('mouseup', handleSelectionEvent);
+      document.removeEventListener('keyup', handleSelectionEvent);
+      document.removeEventListener('mousedown', handleGlobalPointerDown);
+      document.removeEventListener('touchstart', handleGlobalPointerDown);
+    };
+  }, [updateSelectionFromDOM, isDefining, definitionResult, addedSuccess]);
 
   const askForMeaning = async () => {
+    const targetText = selectedTextRef.current || selectedText;
+    if (!targetText) return;
+
     if (!isPremium) {
       setShowPremiumModal({ isOpen: true, feature: 'Lexicon Glossary' });
       return;
     }
-    if (!selectedText) return;
+    isInteractingWithMenuRef.current = true;
     setIsDefining(true);
     try {
       const context = `Biblical study of ${inquiry?.scripture}. Query: ${inquiry?.query}`;
-      const definition = await fetchDefinition(selectedText, context);
-      setDefinitionResult({ word: selectedText, definition });
+      const definition = await fetchDefinition(targetText, context);
+      setDefinitionResult({ word: targetText, definition });
     } catch (e) {
       console.error(e);
     } finally {
@@ -162,6 +253,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     if (!definitionResult) return;
     if (!auth || !auth.currentUser || !db) return;
 
+    isInteractingWithMenuRef.current = true;
     const path = `users/${auth.currentUser.uid}/glossary`;
     try {
       await addDoc(collection(db, path), {
@@ -170,11 +262,18 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         definition: definitionResult.definition,
         createdAt: serverTimestamp()
       });
-      setDefinitionResult(null);
-      setSelectionPosition(null);
-      setSelectedText('');
+      setAddedSuccess(true);
+      setTimeout(() => {
+        setAddedSuccess(false);
+        setDefinitionResult(null);
+        setSelectionPosition(null);
+        setSelectedText('');
+        selectedTextRef.current = '';
+        isInteractingWithMenuRef.current = false;
+      }, 1200);
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, path);
+      isInteractingWithMenuRef.current = false;
     }
   };
 
@@ -397,7 +496,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   if (!inquiry) return <div>Inquiry not found.</div>;
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div ref={studyContainerRef} className="max-w-5xl mx-auto select-text selection:bg-accent/20 selection:text-text-primary">
       <button 
         onClick={onBack}
         className="flex items-center gap-2 text-text-secondary hover:text-accent mb-8 group transition-colors"
@@ -550,7 +649,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         </div>
 
         {/* Right Column: Content Area */}
-        <div className="xl:col-span-2" onMouseUp={handleMouseUp}>
+        <div className="xl:col-span-2">
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
@@ -991,55 +1090,93 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         )}
       </AnimatePresence>
 
-      {/* Selection Floating Menu */}
+      {/* Selection Floating Menu (Multi-Platform: iPhone / iPad / Mac / PC) */}
       <AnimatePresence>
         {selectionPosition && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            ref={menuRef}
+            initial={{ opacity: 0, scale: 0.92, y: selectionPosition.placement === 'top' ? 6 : -6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            className="fixed z-[100] bg-text-primary text-bg-primary p-2 rounded-xl shadow-2xl border border-white/10 flex items-center gap-2"
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.15 }}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              isInteractingWithMenuRef.current = true;
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              isInteractingWithMenuRef.current = true;
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+              isInteractingWithMenuRef.current = true;
+            }}
+            className="fixed z-[9999] bg-text-primary text-bg-primary p-2 rounded-2xl shadow-2xl border border-white/20 select-none backdrop-blur-md"
             style={{ 
-              left: Math.min(window.innerWidth - 200, Math.max(20, selectionPosition.x - 100)),
-              top: selectionPosition.y - 60 
+              left: selectionPosition.left,
+              top: selectionPosition.top
             }}
           >
             {isDefining ? (
-              <div className="flex items-center gap-2 px-3 py-1">
+              <div className="flex items-center gap-2.5 px-4 py-2">
                 <Loader2 className="w-4 h-4 animate-spin text-accent" />
-                <span className="text-[10px] font-bold uppercase tracking-widest italic">Defining...</span>
+                <span className="text-xs font-serif italic text-accent font-bold">Unveiling meaning...</span>
+              </div>
+            ) : addedSuccess ? (
+              <div className="flex items-center gap-2 px-4 py-2 text-emerald-400">
+                <Check className="w-4 h-4" />
+                <span className="text-xs font-sans font-bold uppercase tracking-wider">Added to Lexicon</span>
               </div>
             ) : definitionResult ? (
-              <div className="flex flex-col gap-3 p-4 w-72 max-w-[90vw]">
-                <div className="flex justify-between items-start">
-                  <h4 className="text-sm font-serif italic font-bold text-accent">{definitionResult.word}</h4>
-                  <button onClick={() => { setDefinitionResult(null); setSelectionPosition(null); }} className="text-bg-primary/40 hover:text-bg-primary">
+              <div className="flex flex-col gap-3 p-3.5 w-72 sm:w-80 max-w-[90vw]">
+                <div className="flex justify-between items-start border-b border-white/10 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap className="w-4 h-4 text-accent" />
+                    <h4 className="text-sm font-serif italic font-bold text-accent capitalize">{definitionResult.word}</h4>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => { 
+                      setDefinitionResult(null); 
+                      setSelectionPosition(null);
+                      isInteractingWithMenuRef.current = false;
+                    }} 
+                    className="text-bg-primary/50 hover:text-bg-primary p-1 rounded transition-colors"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="max-h-40 overflow-y-auto pr-1.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded">
-                  <p className="text-xs font-serif leading-relaxed opacity-80 whitespace-pre-wrap">{definitionResult.definition}</p>
+                <div className="max-h-44 overflow-y-auto pr-1.5 [scrollbar-width:thin] text-xs font-serif leading-relaxed opacity-90 whitespace-pre-wrap">
+                  {definitionResult.definition}
                 </div>
                 <button 
+                  type="button"
                   onClick={addToGlossary}
-                  className="w-full bg-accent text-bg-primary py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+                  className="w-full bg-accent text-bg-primary hover:opacity-95 active:scale-[0.98] py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
                 >
-                  <GraduationCap className="w-3 h-3" />
+                  <GraduationCap className="w-3.5 h-3.5" />
                   Add to Lexicon
                 </button>
               </div>
             ) : (
               <button 
+                type="button"
                 onClick={askForMeaning}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 rounded-lg transition-colors group"
+                className="flex items-center gap-2 px-3.5 py-1.5 hover:bg-white/10 active:bg-white/20 rounded-xl transition-all group cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-accent group-hover:rotate-12 transition-transform" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Ask for Meaning</span>
+                <span className="text-xs font-sans font-bold uppercase tracking-wider text-accent">Ask for Meaning</span>
               </button>
             )}
             
-            {/* Arrow pointing down */}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-text-primary rotate-45 border-r border-b border-white/10" />
+            {/* Arrow pointing to selection */}
+            {selectionPosition.placement === 'top' ? (
+              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-text-primary rotate-45 border-r border-b border-white/20" />
+            ) : (
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-text-primary rotate-45 border-l border-t border-white/20" />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
