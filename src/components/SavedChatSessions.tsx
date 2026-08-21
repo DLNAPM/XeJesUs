@@ -2,7 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { getAuthService, getDbService, collection, query, where, getDocs, deleteDoc, doc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { ChatSession, UserProfile, LiteraryWorkExport } from '../types';
 import { generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
-import { speakWithScholarVoice, stopScholarSpeech, pauseScholarSpeech, resumeScholarSpeech } from '../lib/ttsHelper';
+import { 
+  speakWithScholarVoice, 
+  stopScholarSpeech, 
+  pauseScholarSpeech, 
+  resumeScholarSpeech, 
+  rewindScholarSpeech, 
+  fastForwardScholarSpeech, 
+  seekScholarSpeech, 
+  subscribeScholarSpeechProgress, 
+  ScholarSpeechState 
+} from '../lib/ttsHelper';
 import { 
   History, 
   FileText, 
@@ -26,7 +36,9 @@ import {
   Pause,
   Square,
   Crown,
-  ChevronRight
+  ChevronRight,
+  RotateCcw,
+  RotateCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PremiumOverlay from './PremiumOverlay';
@@ -45,6 +57,16 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
   // Audio Speech States
   const [speakingSessionId, setSpeakingSessionId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [speechState, setSpeechState] = useState<ScholarSpeechState>({
+    isPlaying: false,
+    isPaused: false,
+    currentTime: 0,
+    duration: 0,
+    percent: 0,
+    text: '',
+    currentChunkIndex: 0,
+    totalChunks: 0
+  });
 
   // Literary Work Export States
   const [selectedSessionForExport, setSelectedSessionForExport] = useState<ChatSession | null>(null);
@@ -64,12 +86,25 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    const unsubscribe = subscribeScholarSpeechProgress((state) => {
+      setSpeechState(state);
+      setIsPaused(state.isPaused);
+      if (!state.isPlaying && !state.isPaused) {
+        // Stopped or completed
+        setSpeakingSessionId((prev) => (state.percent >= 99 || (!state.isPlaying && !state.isPaused) ? null : prev));
       }
+    });
+    return () => {
+      unsubscribe();
     };
   }, []);
+
+  const formatAudioTime = (seconds: number) => {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const fetchSessions = async () => {
     const auth = getAuthService();
@@ -263,42 +298,121 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
       {/* Audio Player Toolbar (if active) */}
       {speakingSessionId && (
-        <div className="p-4 bg-accent/10 border border-accent/30 rounded-2xl flex items-center justify-between mb-8 text-sm">
-          <div className="flex items-center gap-3 min-w-0 pr-4">
-            <Volume2 className="w-5 h-5 text-accent animate-pulse flex-shrink-0" />
-            <span className="font-serif italic text-text-primary truncate">
-              Reading Audibly: <strong className="font-bold">{sessions.find(s => s.id === speakingSessionId)?.name || 'Saved Session'}</strong>
-            </span>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button 
-              type="button"
-              onClick={() => {
-                if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        <motion.div 
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 sm:p-5 bg-ui-card border-2 border-accent/40 rounded-3xl shadow-xl mb-8 backdrop-blur-md relative overflow-hidden"
+        >
+          {/* Accent top gradient bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent" />
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Left: Info */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center flex-shrink-0 border border-accent/30 shadow-inner">
+                <Volume2 className="w-5 h-5 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Sanctuary Audio Playback
+                  </span>
+                  <span className="text-[10px] text-text-secondary">
+                    • {userProfile?.activeScholarGender === 'female' ? (userProfile?.femaleScholarVoice || 'Female Scholar') : (userProfile?.maleScholarVoice || 'Male Scholar')}
+                  </span>
+                </div>
+                <h4 className="font-serif font-bold text-text-primary text-base truncate">
+                  {sessions.find(s => s.id === speakingSessionId)?.name || 'Saved Session'}
+                </h4>
+              </div>
+            </div>
+
+            {/* Center/Right: Controls (Rewind 10s, Play/Pause, Fast-Forward 10s, Stop) */}
+            <div className="flex items-center justify-between md:justify-end gap-2 flex-wrap sm:flex-nowrap">
+              {/* 10s Rewind Button */}
+              <button 
+                type="button"
+                onClick={() => rewindScholarSpeech(10)}
+                className="px-3 py-2 bg-ui-sidebar hover:bg-accent/20 active:scale-95 text-text-primary hover:text-accent border border-ui-border rounded-xl font-bold text-xs uppercase flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                title="Rewind 10 seconds"
+              >
+                <RotateCcw className="w-4 h-4 text-accent" />
+                <span className="font-sans font-bold text-[11px] tracking-tight">10s</span>
+              </button>
+
+              {/* Play / Pause Button */}
+              <button 
+                type="button"
+                onClick={() => {
                   if (isPaused) {
-                    window.speechSynthesis.resume();
+                    resumeScholarSpeech();
                     setIsPaused(false);
                   } else {
-                    window.speechSynthesis.pause();
+                    pauseScholarSpeech();
                     setIsPaused(true);
                   }
-                }
-              }}
-              className="px-3 py-1.5 bg-accent text-bg-primary rounded-xl font-bold text-xs uppercase flex items-center gap-1.5 hover:opacity-90 transition-opacity"
-            >
-              {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-              {isPaused ? 'Resume' : 'Pause'}
-            </button>
-            <button 
-              type="button"
-              onClick={stopSpeech}
-              className="p-2 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500/20 transition-colors"
-              title="Stop Reading"
-            >
-              <Square className="w-4 h-4" />
-            </button>
+                }}
+                className="px-4 py-2 bg-accent text-bg-primary rounded-xl font-bold text-xs uppercase flex items-center gap-2 hover:opacity-95 active:scale-95 transition-all shadow-md cursor-pointer"
+                title={isPaused ? "Resume Playback" : "Pause Playback"}
+              >
+                {isPaused ? <Play className="w-4 h-4 fill-current" /> : <Pause className="w-4 h-4 fill-current" />}
+                <span>{isPaused ? 'Resume' : 'Pause'}</span>
+              </button>
+
+              {/* 10s Fast-Forward Button */}
+              <button 
+                type="button"
+                onClick={() => fastForwardScholarSpeech(10)}
+                className="px-3 py-2 bg-ui-sidebar hover:bg-accent/20 active:scale-95 text-text-primary hover:text-accent border border-ui-border rounded-xl font-bold text-xs uppercase flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                title="Fast-forward 10 seconds"
+              >
+                <span className="font-sans font-bold text-[11px] tracking-tight">10s</span>
+                <RotateCw className="w-4 h-4 text-accent" />
+              </button>
+
+              {/* Stop Button */}
+              <button 
+                type="button"
+                onClick={stopSpeech}
+                className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all active:scale-95 border border-red-500/20 cursor-pointer"
+                title="Stop Audio Playback"
+              >
+                <Square className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
+
+          {/* Interactive Timeline Scrubber & Time */}
+          <div className="mt-4 pt-3 border-t border-ui-border/60 flex items-center gap-3">
+            <span className="text-[11px] font-mono font-medium text-text-secondary w-10 text-right shrink-0">
+              {formatAudioTime(speechState.currentTime)}
+            </span>
+
+            {/* Clickable Progress Slider / Scrubber */}
+            <div 
+              className="flex-1 h-2.5 bg-ui-sidebar hover:h-3 rounded-full overflow-hidden cursor-pointer relative transition-all border border-ui-border"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+                const targetTime = ratio * (speechState.duration || 1);
+                seekScholarSpeech(targetTime);
+              }}
+              title="Click or drag to jump to any part of the session"
+            >
+              <div 
+                className="h-full bg-accent transition-[width] duration-150 rounded-full relative"
+                style={{ width: `${Math.min(100, Math.max(0, speechState.percent))}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-bg-primary rounded-full shadow-sm" />
+              </div>
+            </div>
+
+            <span className="text-[11px] font-mono font-medium text-text-secondary w-10 shrink-0">
+              {formatAudioTime(speechState.duration)}
+            </span>
+          </div>
+        </motion.div>
       )}
 
       {/* Sessions Grid */}
