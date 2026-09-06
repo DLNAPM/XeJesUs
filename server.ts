@@ -31,8 +31,9 @@ async function startServer() {
 
   // Candidate models in priority order (only actively supported and responsive models)
   const CANDIDATE_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
     "gemini-3.1-flash-lite",
-    "gemini-3-flash-preview",
   ];
 
   // Helper for racing a model call against a timeout
@@ -243,7 +244,7 @@ Guidelines:
 
       for (const model of CANDIDATE_MODELS) {
         try {
-          const timeoutMs = model === "gemini-3.1-flash-lite" ? 6000 : 4000;
+          const timeoutMs = (model === "gemini-3.5-flash-lite" || model === "gemini-flash-lite-latest") ? 6000 : 4000;
           const response = await withTimeout(
             ai.models.generateContent({
               model,
