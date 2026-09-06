@@ -11,12 +11,23 @@ export async function generateExegesis(scripture: string, queryText: string) {
       body: JSON.stringify({ scripture, queryText }),
     });
 
+    const rawText = await res.text();
+
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || `Server returned status ${res.status}`);
+      let msg = `Server returned status ${res.status}`;
+      try {
+        const errObj = JSON.parse(rawText);
+        if (errObj.message) msg = errObj.message;
+        else if (errObj.error) msg = errObj.error;
+      } catch {}
+      throw new Error(msg);
     }
 
-    const data = await res.json();
+    if (!rawText || !rawText.trim()) {
+      throw new Error("Sanctuary service returned an empty response. Please try again.");
+    }
+
+    const data = JSON.parse(rawText);
     return data;
   } catch (error) {
     console.error("Generate Exegesis Error:", error);
@@ -32,11 +43,13 @@ export async function fetchDefinition(word: string, context: string): Promise<st
       body: JSON.stringify({ word, context }),
     });
 
+    const rawText = await res.text();
     if (!res.ok) {
       throw new Error(`Server returned status ${res.status}`);
     }
 
-    const data = await res.json();
+    if (!rawText || !rawText.trim()) return "";
+    const data = JSON.parse(rawText);
     return data.definition || "";
   } catch (error) {
     console.error("Fetch Definition Error:", error);
@@ -52,11 +65,12 @@ export async function searchScriptureBySubject(subject: string): Promise<{refere
       body: JSON.stringify({ subject }),
     });
 
-    if (!res.ok) {
+    const rawText = await res.text();
+    if (!res.ok || !rawText || !rawText.trim()) {
       return [];
     }
 
-    const data = await res.json();
+    const data = JSON.parse(rawText);
     return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Search Scripture Error:", error);

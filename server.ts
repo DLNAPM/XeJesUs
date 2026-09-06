@@ -29,13 +29,10 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Candidate models in priority order
+  // Candidate models in priority order (only actively supported and responsive models)
   const CANDIDATE_MODELS = [
-    "gemini-flash-latest",
-    "gemini-3.8-flash",
     "gemini-3.1-flash-lite",
     "gemini-3-flash-preview",
-    "gemini-3.1-pro-preview",
   ];
 
   // Helper for racing a model call against a timeout
@@ -246,6 +243,7 @@ Guidelines:
 
       for (const model of CANDIDATE_MODELS) {
         try {
+          const timeoutMs = model === "gemini-3.1-flash-lite" ? 6000 : 4000;
           const response = await withTimeout(
             ai.models.generateContent({
               model,
@@ -290,13 +288,18 @@ Guidelines:
                 },
               },
             }),
-            10000,
+            timeoutMs,
             `Exegesis on ${model}`
           );
 
           const text = response.text;
           if (text) {
-            data = JSON.parse(text.trim());
+            const cleanText = text
+              .replace(/^```json\s*/i, "")
+              .replace(/^```\s*/i, "")
+              .replace(/```\s*$/i, "")
+              .trim();
+            data = JSON.parse(cleanText);
             break;
           }
         } catch (err: any) {
