@@ -1,29 +1,10 @@
-import { GoogleGenAI, Modality } from "@google/genai";
 import { Inquiry, LiteraryWorkExport } from "../types";
-
-let aiInstance: GoogleGenAI | null = null;
-
-function getAi() {
-  if (aiInstance) return aiInstance;
-  
-  // Use both possible locations for the API key in a Vite environment
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process?.env?.GEMINI_API_KEY : '') || '';
-  
-  if (!apiKey) {
-    throw new Error("Gemini API key is missing. Please ensure GEMINI_API_KEY is configured in your project settings.");
-  }
-  
-  aiInstance = new GoogleGenAI({ apiKey });
-  return aiInstance;
-}
 
 export async function generateScholarTTS(
   text: string,
   personaName: string,
   gender: 'male' | 'female'
 ): Promise<string> {
-  const ai = getAi();
-  
   // Clean text from markdown formatting (*, #, _, `, etc.)
   const cleanText = text
     .replace(/\*+/g, '')
@@ -36,126 +17,57 @@ export async function generateScholarTTS(
 
   if (!cleanText) return "";
 
-  // Select prebuilt voice and prompt style according to persona
-  let voiceName = gender === 'male' ? 'Charon' : 'Kore';
-  let promptStyle = `Speak clearly and reverently as ${personaName}:`;
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: cleanText, personaName, gender }),
+    });
 
-  const lowerPersona = personaName.toLowerCase();
-
-  if (gender === 'male') {
-    if (lowerPersona.includes('osteen')) {
-      voiceName = 'Puck';
-      promptStyle = 'Speak in a warm, encouraging, smiling, bright and optimistic tone as Joel Osteen:';
-    } else if (lowerPersona.includes('spurgeon')) {
-      voiceName = 'Charon';
-      promptStyle = 'Speak in a majestic, deep, resonant, 19th-century British prince of preachers voice as Charles Spurgeon:';
-    } else if (lowerPersona.includes('lewis')) {
-      voiceName = 'Fenrir';
-      promptStyle = 'Speak in an articulate, scholarly, warm Oxbridge professor cadence as C.S. Lewis:';
-    } else if (lowerPersona.includes('luther')) {
-      voiceName = 'Charon';
-      promptStyle = 'Speak in a bold, passionate, strong reformational voice as Martin Luther:';
-    } else if (lowerPersona.includes('keller')) {
-      voiceName = 'Fenrir';
-      promptStyle = 'Speak in a thoughtful, intellectually rich, warm urban pastor voice as Tim Keller:';
-    } else if (lowerPersona.includes('graham')) {
-      voiceName = 'Charon';
-      promptStyle = 'Speak with clear, authoritative, passionate evangelistic clarity as Billy Graham:';
-    } else {
-      voiceName = 'Fenrir';
-      promptStyle = `Speak in a distinctive, dignified male scholar voice as ${personaName}:`;
-    }
-  } else {
-    if (lowerPersona.includes('oprah') || lowerPersona.includes('winfrey')) {
-      voiceName = 'Kore';
-      promptStyle = 'Speak in a deeply empathetic, warm, resonant, expressive and rich tone as Oprah Winfrey:';
-    } else if (lowerPersona.includes('moore')) {
-      voiceName = 'Zephyr';
-      promptStyle = 'Speak in a passionate, energetic, warm exegetical Bible teacher voice as Beth Moore:';
-    } else if (lowerPersona.includes('meyer')) {
-      voiceName = 'Zephyr';
-      promptStyle = 'Speak in a direct, practical, confident, uplifting and energetic voice as Joyce Meyer:';
-    } else if (lowerPersona.includes('shirer')) {
-      voiceName = 'Zephyr';
-      promptStyle = 'Speak in a faith-filled, bold, inspiring, dynamic voice as Priscilla Shirer:';
-    } else if (lowerPersona.includes('arthur')) {
-      voiceName = 'Kore';
-      promptStyle = 'Speak in a reverent, methodical, gracious and inductive scholar voice as Kay Arthur:';
-    } else if (lowerPersona.includes('ten boom') || lowerPersona.includes('corrie')) {
-      voiceName = 'Kore';
-      promptStyle = 'Speak with gentle wisdom, courageous peace, and serene grace as Corrie ten Boom:';
-    } else {
-      voiceName = 'Kore';
-      promptStyle = `Speak in a distinctive, graceful female scholar voice as ${personaName}:`;
-    }
-  }
-
-  const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-tts-preview",
-    contents: [{ parts: [{ text: `${promptStyle}\n\n"${cleanText}"` }] }],
-    config: {
-      responseModalities: [Modality.AUDIO],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName }
-        }
+    if (res.ok) {
+      const data = await res.json();
+      if (data.audioBase64) {
+        return data.audioBase64;
       }
     }
-  });
-
-  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!base64Audio) {
-    throw new Error("No audio data returned from Gemini TTS");
+  } catch (err) {
+    console.warn("Server TTS API call failed, falling back to browser speech synthesis:", err);
   }
 
-  return base64Audio;
+  return "";
 }
 
 export async function chatWithSanctuary(
   message: string, 
   history: { role: 'user' | 'model', text: string }[],
   recentInquiries: Inquiry[]
-) {
-  const ai = getAi();
-  const modelName = "gemini-3-flash-preview";
-  
-  const contextStrings = recentInquiries.map(inq => 
-    `Scripture: ${inq.scripture}\nQuery: ${inq.query}\nInterpretation: ${inq.interpretation}\nGod's Intent: ${inq.godIntent}`
-  ).join("\n\n---\n\n");
+): Promise<string> {
+  const sanitizedHistory = history
+    .filter(h => h && h.text)
+    .map(h => ({ role: h.role, text: h.text }));
 
-  const systemInstruction = `You are the "Sanctuary Scholar", a divine AI companion for the XeJesUs app. 
-Your goal is to help pilgrims find deeper insights into their recent biblical studies (seekings), connecting them to current events and personal growth.
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        history: sanitizedHistory,
+        recentInquiries: recentInquiries || []
+      })
+    });
 
-User's Recent Seekings Context:
-${contextStrings}
+    if (!res.ok) {
+      const errorJson = await res.json().catch(() => ({}));
+      throw new Error(errorJson.message || `Server responded with status ${res.status}`);
+    }
 
-Guidelines:
-1. Be encouraging, scholarly, and spiritually insightful.
-2. Always cite your sources clearly in your responses — including primary Scripture book/chapter/verse references, historical commentators/church fathers (e.g., Augustine, Chrysostom, Matthew Henry, Spurgeon, C.S. Lewis), original Hebrew/Greek lexical terms, and grounded search web sources.
-3. Use the provided Google Search tool to research current events or additional context if relevant to the user's questions.
-4. When asked about recent studies, refer to the provided context.
-5. Help the user apply these biblical truths to modern life and current worldly events.
-6. Keep the tone "XeJesUs" - blending traditional exegesis with modern application.
-7. If a user asks something completely unrelated to faith or their studies, gently guide them back to their spiritual journey.
-8. Keep responses relatively concise but profound, ensuring all biblical and historical claims carry citations.`;
-
-  const chat = ai.chats.create({
-    model: modelName,
-    config: {
-      systemInstruction,
-      tools: [{ googleSearch: {} }] // Adding Google Search Grounding
-    },
-    history: history.map(h => ({
-      role: h.role,
-      parts: [{ text: h.text }]
-    }))
-  });
-
-  const result = await chat.sendMessage({
-    message: message
-  });
-
-  return result.text;
+    const data = await res.json();
+    return data.text || "May grace, peace, and the light of Christ guide your study (John 14:27).";
+  } catch (err: any) {
+    console.error("Sanctuary Chat request error:", err);
+    throw err;
+  }
 }
 
 export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
@@ -551,72 +463,41 @@ export async function generateLiteraryWorkExport(
   };
 
   try {
-    const ai = getAi();
-    const modelName = "gemini-3-flash-preview";
-
-    const prompt = `You are a distinguished Biblical Scholar and Literary Historian for XeJesUs.
-Analyze the following saved chat session conversation and synthesize a comprehensive "Professional Literary Work" report.
-
-Session Title: ${sessionName}
-Conversation History:
-${conversationText}
-
-Produce a structured JSON response containing:
-1. "themeTitle": A grand, academic literary work title reflecting the core theological theme.
-2. "subtitle": A descriptive subtitle summarizing the historical and spiritual scope.
-3. "executiveSummary": A 2-3 paragraph executive summary of the conversation's core theological insights and takeaways.
-4. "thematicAnalysis": An in-depth literary and theological synthesis connecting the chat insights to classical Christian exegesis and modern life application.
-5. "familyTree": An array of 3 to 6 key Biblical/Historical figures, genealogical relationships, or spiritual lineages associated with this theme.
-   Each item must have: "generation" (e.g. "1st Generation", "Patriarchal Era", "Davidic Royalty"), "person" (e.g. "Abraham", "King David", "Apostle Paul"), "biblicalTitle" (e.g. "Father of Nations", "Royal Psalmist"), "significance" (description of role in this theme), and "keyScripture" (e.g. "Genesis 12:1-3").
-6. "scholarlyWorks": An array of EXACTLY 2 to 3 classical or academic literary works researched by biblical scholars (e.g. Josephus, Augustine, Chrysostom, Dead Sea Scrolls, Eusebius, C.S. Lewis, N.T. Wright).
-   Each item must have: "title", "author", "era" (e.g. "1st Century AD", "4th Century Patristic Era"), "summary" (brief synopsis of the work), and "relevance" (why it supports this chat theme).
-7. "youtubeVideos": An array of EXACTLY 2 to 3 curated educational or scholarly YouTube videos related to the theme (e.g. BibleProject series, Academic lectures, Documentary analyses).
-   Each item must have: "title", "channel" (e.g. "The BibleProject", "Yale Divinity Courses"), "searchQuery" (search query string), "url" (valid YouTube search URL like "https://www.youtube.com/results?search_query=..."), "description" (why pilgrims should watch this).
-8. "images": An array of EXACTLY 2 sacred imagery & historical artwork items tailored specifically to the saved chat session theme "${sessionName}".
-   Each item MUST contain:
-   - "title": A descriptive, majestic title for sacred artwork directly reflecting the specific subject matter, passage, or doctrine discussed in this chat session (e.g. "The Covenant Table & Golden Harvest", "Mount Sinai & The Decalogue", "The Sermon on the Mount & Kingdom Blessings", "The Parable of the Good Shepherd").
-   - "caption": A detailed 2-sentence explanation connecting this visual artwork directly to the specific scriptures, verses, or theological insights from this saved chat session.
-
-Return ONLY valid JSON matching this schema.`;
-
-    const response = await ai.models.generateContent({
-      model: modelName,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json"
-      }
+    const res = await fetch("/api/generate-literary-work", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionName, messages }),
     });
 
-    const text = response.text || "";
-    if (text) {
-      const parsed = JSON.parse(text);
-      
-      // Ensure images are strictly paired with guaranteed working, verified sacred artwork URLs matching each image's title and topic
-      const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
-        ? parsed.images.map((img: any, idx: number) => {
-            const imgContext = `${img.title || ''} ${img.caption || ''} ${sessionName} ${conversationText}`;
-            const specificThemeImages = getThematicImagesForTopic(sessionName, imgContext);
-            const chosenThemeImg = specificThemeImages[idx % specificThemeImages.length] || themeSpecificImages[idx % themeSpecificImages.length];
+    if (res.ok) {
+      const parsed = await res.json();
+      if (parsed && typeof parsed === 'object') {
+        const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
+          ? parsed.images.map((img: any, idx: number) => {
+              const imgContext = `${img.title || ''} ${img.caption || ''} ${sessionName} ${conversationText}`;
+              const specificThemeImages = getThematicImagesForTopic(sessionName, imgContext);
+              const chosenThemeImg = specificThemeImages[idx % specificThemeImages.length] || themeSpecificImages[idx % themeSpecificImages.length];
 
-            return {
-              title: (img.title && img.title.length > 3) ? img.title : chosenThemeImg.title,
-              caption: (img.caption && img.caption.length > 10) ? img.caption : chosenThemeImg.caption,
-              imageUrl: chosenThemeImg.imageUrl // GUARANTEED sacred, reverent, vetted Unsplash artwork URL matching theme
-            };
-          })
-        : themeSpecificImages;
+              return {
+                title: (img.title && img.title.length > 3) ? img.title : chosenThemeImg.title,
+                caption: (img.caption && img.caption.length > 10) ? img.caption : chosenThemeImg.caption,
+                imageUrl: chosenThemeImg.imageUrl
+              };
+            })
+          : themeSpecificImages;
 
-      return {
-        ...fallbackData,
-        ...parsed,
-        familyTree: Array.isArray(parsed.familyTree) && parsed.familyTree.length > 0 ? parsed.familyTree : fallbackData.familyTree,
-        scholarlyWorks: Array.isArray(parsed.scholarlyWorks) && parsed.scholarlyWorks.length > 0 ? parsed.scholarlyWorks : fallbackData.scholarlyWorks,
-        youtubeVideos: Array.isArray(parsed.youtubeVideos) && parsed.youtubeVideos.length > 0 ? parsed.youtubeVideos : fallbackData.youtubeVideos,
-        images: imagesWithFallback,
-      };
+        return {
+          ...fallbackData,
+          ...parsed,
+          familyTree: Array.isArray(parsed.familyTree) && parsed.familyTree.length > 0 ? parsed.familyTree : fallbackData.familyTree,
+          scholarlyWorks: Array.isArray(parsed.scholarlyWorks) && parsed.scholarlyWorks.length > 0 ? parsed.scholarlyWorks : fallbackData.scholarlyWorks,
+          youtubeVideos: Array.isArray(parsed.youtubeVideos) && parsed.youtubeVideos.length > 0 ? parsed.youtubeVideos : fallbackData.youtubeVideos,
+          images: imagesWithFallback,
+        };
+      }
     }
   } catch (err) {
-    console.warn("Failed to generate literary work from Gemini, using fallback data:", err);
+    console.warn("Failed to generate literary work from server API, using fallback data:", err);
   }
 
   return fallbackData;
