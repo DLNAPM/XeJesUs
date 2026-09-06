@@ -60,26 +60,41 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
     setError(null);
 
     try {
-      const exegesis = await generateExegesis(scripture, queryText);
+      const exegesis = await generateExegesis(scripture.trim(), queryText.trim());
       
       const inquiriesPath = 'inquiries';
       const docRef = await addDoc(collection(db, inquiriesPath), {
         userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email,
-        scripture,
-        query: queryText,
-        ...exegesis,
+        userEmail: auth.currentUser.email || "",
+        scripture: scripture.trim(),
+        query: queryText.trim(),
+        interpretation: String(exegesis?.interpretation || "No interpretation text returned."),
+        historicalContext: String(exegesis?.historicalContext || ""),
+        grammarAnalysis: String(exegesis?.grammarAnalysis || ""),
+        literaryGenre: String(exegesis?.literaryGenre || "Scriptural Exegesis"),
+        godIntent: String(exegesis?.godIntent || ""),
+        crossReferences: Array.isArray(exegesis?.crossReferences) ? exegesis.crossReferences : [],
+        geography: {
+          location: String(exegesis?.geography?.location || "Jerusalem"),
+          thenDesc: String(exegesis?.geography?.thenDesc || ""),
+          nowDesc: String(exegesis?.geography?.nowDesc || ""),
+          thenImageUrl: String(exegesis?.geography?.thenImageUrl || ""),
+          nowImageUrl: String(exegesis?.geography?.nowImageUrl || ""),
+        },
+        videoClipQuery: String(exegesis?.videoClipQuery || `${scripture.trim()} biblical exegesis`),
         createdAt: serverTimestamp()
       });
 
       onComplete(docRef.id);
     } catch (err: any) {
-      console.error(err);
-      setError("The Spirit was willing, but the connection was weak. Please try your inquiry again.");
-      if (err.message && err.message.startsWith('{')) {
-        // Already handled by firestore error handler? Maybe not gemini errors.
+      console.error("Exegesis submission error:", err);
+      const msg = err?.message || "";
+      if (msg.includes("503") || msg.includes("demand") || msg.includes("unavailable")) {
+        setError("The sanctuary scholarship service is experiencing high demand. Please press Retry to try again.");
+      } else if (msg.includes("permission") || msg.includes("PERMISSION_DENIED")) {
+        setError("Unable to save your inquiry to the sanctuary. Please verify your connection or sign-in state.");
       } else {
-        setError("An error occurred during interpretation. Please check your query or try later.");
+        setError(msg || "An error occurred during interpretation. Please check your query or try again.");
       }
     } finally {
       setLoading(false);
@@ -195,12 +210,21 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-red-500/10 border-l-4 border-red-500 text-red-500 text-sm italic font-serif"
+              className="p-4 bg-red-500/10 border-l-4 border-red-500 rounded-r-xl text-red-500 text-sm font-serif flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-bold">Interpretation Error:</span>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold">Interpretation Notice:</span>
+                </div>
+                <p className="italic">{error}</p>
               </div>
-              {error}
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e)}
+                className="self-start sm:self-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-sans text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors"
+              >
+                Retry Exegesis
+              </button>
             </motion.div>
           )}
 
