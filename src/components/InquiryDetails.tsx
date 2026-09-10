@@ -21,49 +21,16 @@ const TEST_INQUIRIES: Inquiry[] = [
     userId: 'guest',
     query: "Jesus wept.  Why was He crying? He knew He was going to Raise Lazarus.",
     scripture: "John 11:35",
-    interpretation: `The brevity of John 11:35—'Jesus wept' (ἐδάκρυσεν ὁ Ἰησοῦς)—belies one of the most profound Christological and theological revelations in all of Holy Scripture. When addressing your direct inquiry ('Why was He crying if He knew He was going to raise Lazarus?'), biblical exegesis across the 5 Primary Foundational Sources unveils three harmonious theological realities:
-
-1. **The Reality of Christ's Authentic Human Emotion and Empathy (Hypostatic Union)**:
-Jesus Christ is fully God and fully man. His tears were not theatrical or symbolic; they were the unfeigned overflow of a tender human heart. When Jesus observed Mary and Martha weeping (*klaiousan*), accompanied by the loud wailing of the Jewish mourners, He was deeply moved (*enebrimēsato tō pneumati*) and troubled (*etaraxen heauton*). St. Cyril of Alexandria observed in his *Commentary on John* that Christ permitted His human flesh to weep according to the law of human nature, showing that Christian sorrow over death is neither sinful nor a sign of weak faith.
-
-2. **Holy Indignation Against Sin and the Curse of Death**:
-The Greek verb used in verse 33 and 38 for 'deeply moved' (*embrimaomai*) carries the visceral sense of snorting with indignant wrath, akin to a war horse in battle. As B.B. Warfield demonstrated in his classic study *The Emotional Life of Our Lord*, Jesus wept not out of despair, but in holy indignation against Satan, sin, and the horrific ravages of death that had stolen His friend Lazarus and broken the hearts of His loved ones. Christ wept because death is an unnatural intruder into God's good creation—an enemy that He came to destroy at Calvary (1 Corinthians 15:26).
-
-3. **Patristic & Classical Commentary on Divine Empathy**:
-• **St. John Chrysostom** (*Homilies on the Gospel of John* 63): 'He wept to confirm His human nature... not to give way to excessive lamentation, but to teach us the limits of sorrow and to sanctify our tears.'
-• **St. Augustine** (*Tractates on the Gospel of John* 49): 'Christ wept; let man also weep, but let him weep as a Christian, knowing that Lazarus is not lost forever, but sleeping until the voice of the Master wakes him.'
-• **John Calvin** (*Commentary on John*): 'Christ did not come with iron eyes or a stone heart. He voluntarily clothed Himself in human affection so that we might confidently run to Him in all our tribulations.'
-
-4. **Pastoral and Contemporary Discipleship Application**:
-Christ's tears teach believers that divine omniscience does not extinguish covenant empathy. You do not serve a distant cosmic architect, but an approachable High Priest who has been tempted in all things as we are, yet without sin (Hebrews 4:15). Even when God is about to turn your mourning into dancing, He honors and shares your tears in the valley.`,
-    historicalContext: `Authored by the Apostle John circa AD 85–95, likely from Ephesus, addressing both Jewish believers and Greco-Roman converts navigating early Gnostic heresies that denied Christ's true physical humanity (Docetism).
-
-1. **First-Century Jewish Mourning Customs in Bethany**:
-In Second Temple Judea, mourning (*avelut*) was a deeply structured, communal, and highly vocal ritual. Upon death, because of the Levant climate and ritual purity laws, bodies were washed, anointed with spices, wrapped in linen, and entombed on the very same day. This was followed by the *shiva* (seven days of intense communal weeping) where friends and relatives gathered from neighboring Jerusalem (less than two miles away, John 11:18). Hired mourners and flute players (attested by Flavius Josephus, *The Jewish War* 3.9.5, and Mishnah *Ketubot* 4:4) engaged in ritual lamentation (*klauthmos*).
-
-2. **The Significance of the 'Four Days' (John 11:17, 39)**:
-Martha's blunt objection in verse 39—'Lord, by this time there is a stench, for he has been dead four days' (*tetartaios gar estin*)—is crucial historical-cultural context. Jewish rabbinic tradition preserved in the Jerusalem Talmud (*Yevamot* 16:3) held the folk belief that a person's soul hovered near the corpse for three days seeking re-entry, but on the fourth day, as the face changed color and corruption set in, the soul departed permanently. By arriving deliberately on the fourth day, Jesus eliminated any possibility of a medical misdiagnosis or resuscitated swoon. The miracle was undeniably supernatural and irrevocable.
-
-3. **Sociopolitical Setting & Sanhedrin Conspiracy**:
-Bethany was located just 15 stadia (approximately 1.8 miles) east of Jerusalem on the eastern slopes of the Mount of Olives. This miracle occurred under the shadow of the Jerusalem religious hierarchy. Flavius Josephus (*Antiquities* 18.2.2) and the Gospel accounts record that Caiaphas and the ruling Sadducean elite were hypersensitive to messianic excitement that could provoke Roman military intervention. The raising of Lazarus became the immediate catalyst for the Sanhedrin's formal plot to execute Jesus (John 11:47–53).`,
-    grammarAnalysis: `Key Greek terminology via BDAG (Bauer-Danker-Arndt-Gingrich) and Strong's Concordance:
-• **ἐδάκρυσεν** (*edakrysen*, Strong's G1145, BDAG p. 210): Aorist active indicative of *dakryō* ('to shed tears, weep quietly'). Distinct from the loud, wailing lamentation of the crowd (*eklaisen*, from *klaiō*, G2799), *edakrysen* denotes dignified, heartfelt, silent weeping.
-• **ἐνεβριμήσατο** (*enebrimēsato*, Strong's G1690, BDAG p. 322): Aorist middle indicative of *embrimaomai* (from *en* + *brimē*, 'to snort with rage like a warhorse'). In Hellenistic Greek and the Septuagint, it indicates holy indignation, deep agitation of spirit, and righteous confrontation against evil, suffering, and death.
-• **ἐτάραξεν ἑαυτόν** (*etaraxen heauton*, Strong's G5015 / G1438): Aorist active indicative with reflexive pronoun ('He troubled Himself'). Christ was not passively overcome by involuntary grief; He actively, sovereignly yielded His human emotional faculties to enter into the sorrow of His people.
-• **τεταρταῖος** (*tetartaios*, Strong's G5066): Ordinal adjective meaning 'four days in the grave', indicating complete biological decomposition according to ancient Near Eastern forensic understanding.`,
-    literaryGenre: `Gospel Miracle & Resurrection Narrative (Signs of the Messiah)`,
-    godIntent: `God intended this passage to reveal that divine sovereignty and foreknowledge do not negate holy empathy and authentic covenant sorrow. By recording the shortest yet emotionally deepest verse in Scripture, the Holy Spirit demonstrates that God Incarnate entered fully into the tragedy of human mortality. God sovereignly intended to display Christ as the true 'Man of Sorrows' (Isaiah 53:3), revealing the Father's tender heart toward His fallen creation. Furthermore, God intended Christ's tears to stand as an everlasting rebuke to stoic detachment and fatalism: Jesus wept not out of helplessness, but to exhibit holy outrage against death as the ultimate enemy (1 Corinthians 15:26), immediately before demonstrating His sovereign authority as the Resurrection and the Life (John 11:25). For the pilgrim, God intends you to know that in every season of grief, your Savior does not stand aloof in cold judgment, but weeps alongside you with infinite compassion while preparing your eternal resurrection.`,
-    crossReferences: [
-      "Isaiah 53:3 - He is despised and rejected by men, a Man of sorrows and acquainted with grief.",
-      "Hebrews 4:15 - For we do not have a High Priest who cannot sympathize with our weaknesses, but was in all points tempted as we are, yet without sin.",
-      "Luke 19:41 - Now as He drew near, He saw the city and wept over it.",
-      "1 Corinthians 15:26 - The last enemy that will be destroyed is death.",
-      "Revelation 21:4 - And God will wipe away every tear from their eyes; there shall be no more death, nor sorrow, nor crying."
-    ],
+    interpretation: "Jesus' tears were not from despair over Lazarus' death, but a profound demonstration of His fully human nature and empathy. Even though He knew the victory was imminent, He shared in the grief of Martha, Mary, and the community. It highlights that divinity does not detach God from human sorrow.",
+    historicalContext: "In 1st century Jewish culture, mourning was a communal and vocal event. Jesus entering this space and weeping identified Him as the 'Man of Sorrows' (Isaiah 53).",
+    grammarAnalysis: "The Greek word used is 'edakrysen', which implies a quiet shedding of tears, different from the 'eklaisen' (loud wailing) used to describe the crowd.",
+    literaryGenre: "Gospel Narrative - Historical Account with deep theological underpinnings.",
+    godIntent: "To manifest the compassion of the Father. Even when God knows the end from the beginning, He is deeply moved by our present pain.",
+    crossReferences: ["Isaiah 53:3", "Hebrews 4:15", "Luke 19:41"],
     geography: {
-      location: "Bethany (al-Eizariya)",
-      thenDesc: "A small Judean village situated 15 stadia (1.8 miles) east of Jerusalem on the eastern slope of the Mount of Olives.",
-      nowDesc: "Modern-day al-Eizariya in the West Bank, Palestinian territories, site of the ancient rock-cut Tomb of Lazarus.",
+      location: "Bethany",
+      thenDesc: "A small village on the eastern slope of the Mount of Olives, near Jerusalem.",
+      nowDesc: "Known as al-Eizariya in the West Bank, home to the Tomb of Lazarus.",
     },
     createdAt: { toDate: () => new Date(Date.now() - 3600000) }
   },
@@ -73,49 +40,16 @@ Bethany was located just 15 stadia (approximately 1.8 miles) east of Jerusalem o
     userEmail: 'scholar@sanctuary.org',
     query: "Jesus wept.  Why was He crying? He knew He was going to Raise Lazarus.",
     scripture: "John 11:35",
-    interpretation: `The brevity of John 11:35—'Jesus wept' (ἐδάκρυσεν ὁ Ἰησοῦς)—belies one of the most profound Christological and theological revelations in all of Holy Scripture. When addressing your direct inquiry ('Why was He crying if He knew He was going to raise Lazarus?'), biblical exegesis across the 5 Primary Foundational Sources unveils three harmonious theological realities:
-
-1. **The Reality of Christ's Authentic Human Emotion and Empathy (Hypostatic Union)**:
-Jesus Christ is fully God and fully man. His tears were not theatrical or symbolic; they were the unfeigned overflow of a tender human heart. When Jesus observed Mary and Martha weeping (*klaiousan*), accompanied by the loud wailing of the Jewish mourners, He was deeply moved (*enebrimēsato tō pneumati*) and troubled (*etaraxen heauton*). St. Cyril of Alexandria observed in his *Commentary on John* that Christ permitted His human flesh to weep according to the law of human nature, showing that Christian sorrow over death is neither sinful nor a sign of weak faith.
-
-2. **Holy Indignation Against Sin and the Curse of Death**:
-The Greek verb used in verse 33 and 38 for 'deeply moved' (*embrimaomai*) carries the visceral sense of snorting with indignant wrath, akin to a war horse in battle. As B.B. Warfield demonstrated in his classic study *The Emotional Life of Our Lord*, Jesus wept not out of despair, but in holy indignation against Satan, sin, and the horrific ravages of death that had stolen His friend Lazarus and broken the hearts of His loved ones. Christ wept because death is an unnatural intruder into God's good creation—an enemy that He came to destroy at Calvary (1 Corinthians 15:26).
-
-3. **Patristic & Classical Commentary on Divine Empathy**:
-• **St. John Chrysostom** (*Homilies on the Gospel of John* 63): 'He wept to confirm His human nature... not to give way to excessive lamentation, but to teach us the limits of sorrow and to sanctify our tears.'
-• **St. Augustine** (*Tractates on the Gospel of John* 49): 'Christ wept; let man also weep, but let him weep as a Christian, knowing that Lazarus is not lost forever, but sleeping until the voice of the Master wakes him.'
-• **John Calvin** (*Commentary on John*): 'Christ did not come with iron eyes or a stone heart. He voluntarily clothed Himself in human affection so that we might confidently run to Him in all our tribulations.'
-
-4. **Pastoral and Contemporary Discipleship Application**:
-Christ's tears teach believers that divine omniscience does not extinguish covenant empathy. You do not serve a distant cosmic architect, but an approachable High Priest who has been tempted in all things as we are, yet without sin (Hebrews 4:15). Even when God is about to turn your mourning into dancing, He honors and shares your tears in the valley.`,
-    historicalContext: `Authored by the Apostle John circa AD 85–95, likely from Ephesus, addressing both Jewish believers and Greco-Roman converts navigating early Gnostic heresies that denied Christ's true physical humanity (Docetism).
-
-1. **First-Century Jewish Mourning Customs in Bethany**:
-In Second Temple Judea, mourning (*avelut*) was a deeply structured, communal, and highly vocal ritual. Upon death, because of the Levant climate and ritual purity laws, bodies were washed, anointed with spices, wrapped in linen, and entombed on the very same day. This was followed by the *shiva* (seven days of intense communal weeping) where friends and relatives gathered from neighboring Jerusalem (less than two miles away, John 11:18). Hired mourners and flute players (attested by Flavius Josephus, *The Jewish War* 3.9.5, and Mishnah *Ketubot* 4:4) engaged in ritual lamentation (*klauthmos*).
-
-2. **The Significance of the 'Four Days' (John 11:17, 39)**:
-Martha's blunt objection in verse 39—'Lord, by this time there is a stench, for he has been dead four days' (*tetartaios gar estin*)—is crucial historical-cultural context. Jewish rabbinic tradition preserved in the Jerusalem Talmud (*Yevamot* 16:3) held the folk belief that a person's soul hovered near the corpse for three days seeking re-entry, but on the fourth day, as the face changed color and corruption set in, the soul departed permanently. By arriving deliberately on the fourth day, Jesus eliminated any possibility of a medical misdiagnosis or resuscitated swoon. The miracle was undeniably supernatural and irrevocable.
-
-3. **Sociopolitical Setting & Sanhedrin Conspiracy**:
-Bethany was located just 15 stadia (approximately 1.8 miles) east of Jerusalem on the eastern slopes of the Mount of Olives. This miracle occurred under the shadow of the Jerusalem religious hierarchy. Flavius Josephus (*Antiquities* 18.2.2) and the Gospel accounts record that Caiaphas and the ruling Sadducean elite were hypersensitive to messianic excitement that could provoke Roman military intervention. The raising of Lazarus became the immediate catalyst for the Sanhedrin's formal plot to execute Jesus (John 11:47–53).`,
-    grammarAnalysis: `Key Greek terminology via BDAG (Bauer-Danker-Arndt-Gingrich) and Strong's Concordance:
-• **ἐδάκρυσεν** (*edakrysen*, Strong's G1145, BDAG p. 210): Aorist active indicative of *dakryō* ('to shed tears, weep quietly'). Distinct from the loud, wailing lamentation of the crowd (*eklaisen*, from *klaiō*, G2799), *edakrysen* denotes dignified, heartfelt, silent weeping.
-• **ἐνεβριμήσατο** (*enebrimēsato*, Strong's G1690, BDAG p. 322): Aorist middle indicative of *embrimaomai* (from *en* + *brimē*, 'to snort with rage like a warhorse'). In Hellenistic Greek and the Septuagint, it indicates holy indignation, deep agitation of spirit, and righteous confrontation against evil, suffering, and death.
-• **ἐτάραξεν ἑαυτόν** (*etaraxen heauton*, Strong's G5015 / G1438): Aorist active indicative with reflexive pronoun ('He troubled Himself'). Christ was not passively overcome by involuntary grief; He actively, sovereignly yielded His human emotional faculties to enter into the sorrow of His people.
-• **τεταρταῖος** (*tetartaios*, Strong's G5066): Ordinal adjective meaning 'four days in the grave', indicating complete biological decomposition according to ancient Near Eastern forensic understanding.`,
-    literaryGenre: `Gospel Miracle & Resurrection Narrative (Signs of the Messiah)`,
-    godIntent: `God intended this passage to reveal that divine sovereignty and foreknowledge do not negate holy empathy and authentic covenant sorrow. By recording the shortest yet emotionally deepest verse in Scripture, the Holy Spirit demonstrates that God Incarnate entered fully into the tragedy of human mortality. God sovereignly intended to display Christ as the true 'Man of Sorrows' (Isaiah 53:3), revealing the Father's tender heart toward His fallen creation. Furthermore, God intended Christ's tears to stand as an everlasting rebuke to stoic detachment and fatalism: Jesus wept not out of helplessness, but to exhibit holy outrage against death as the ultimate enemy (1 Corinthians 15:26), immediately before demonstrating His sovereign authority as the Resurrection and the Life (John 11:25). For the pilgrim, God intends you to know that in every season of grief, your Savior does not stand aloof in cold judgment, but weeps alongside you with infinite compassion while preparing your eternal resurrection.`,
-    crossReferences: [
-      "Isaiah 53:3 - He is despised and rejected by men, a Man of sorrows and acquainted with grief.",
-      "Hebrews 4:15 - For we do not have a High Priest who cannot sympathize with our weaknesses, but was in all points tempted as we are, yet without sin.",
-      "Luke 19:41 - Now as He drew near, He saw the city and wept over it.",
-      "1 Corinthians 15:26 - The last enemy that will be destroyed is death.",
-      "Revelation 21:4 - And God will wipe away every tear from their eyes; there shall be no more death, nor sorrow, nor crying."
-    ],
+    interpretation: "Jesus' tears were not from despair over Lazarus' death, but a profound demonstration of His fully human nature and empathy. Even though He knew the victory was imminent, He shared in the grief of Martha, Mary, and the community. It highlights that divinity does not detach God from human sorrow.",
+    historicalContext: "In 1st century Jewish culture, mourning was a communal and vocal event. Jesus entering this space and weeping identified Him as the 'Man of Sorrows' (Isaiah 53).",
+    grammarAnalysis: "The Greek word used is 'edakrysen', which implies a quiet shedding of tears, different from the 'eklaisen' (loud wailing) used to describe the crowd.",
+    literaryGenre: "Gospel Narrative - Historical Account with deep theological underpinnings.",
+    godIntent: "To manifest the compassion of the Father. Even when God knows the end from the beginning, He is deeply moved by our present pain.",
+    crossReferences: ["Isaiah 53:3", "Hebrews 4:15", "Luke 19:41"],
     geography: {
-      location: "Bethany (al-Eizariya)",
-      thenDesc: "A small Judean village situated 15 stadia (1.8 miles) east of Jerusalem on the eastern slope of the Mount of Olives.",
-      nowDesc: "Modern-day al-Eizariya in the West Bank, Palestinian territories, site of the ancient rock-cut Tomb of Lazarus.",
+      location: "Bethany",
+      thenDesc: "A small village on the eastern slope of the Mount of Olives, near Jerusalem.",
+      nowDesc: "Known as al-Eizariya in the West Bank, home to the Tomb of Lazarus.",
     },
     createdAt: { toDate: () => new Date(Date.now() - 3600000) }
   },
@@ -124,37 +58,14 @@ Bethany was located just 15 stadia (approximately 1.8 miles) east of Jerusalem o
     userId: 'guest',
     query: "The significance of the 153 fish in Peter's net.",
     scripture: "John 21:11",
-    interpretation: `In John 21:11, Simon Peter went up and dragged the net to land, full of large fish, one hundred and fifty-three; and although there were so many, the net was not broken. Addressing your inquiry:
-
-1. **Eyewitness Authenticity and the Miraculous Harvest**:
-The exact count of 153 large fish (*hekaton pentēkonta triōn*) stands as an undeniable hallmark of authentic eyewitness testimony (Richard Bauckham, *Jesus and the Eyewitnesses*). Professional Galilean fishermen, upon receiving an astonishing catch after a futile night of fishing, naturally sorted and tallied the catch before bringing it to market. This literal historical fact anchors the miracle in tangible reality.
-
-2. **Theological Symbolism in Patristic Exegesis**:
-• **St. Jerome**: Observed in ancient natural history that zoologists of the Greco-Roman world counted 153 distinct species of fish in the sea, symbolizing that the Gospel net gathers all peoples, nations, and languages without exception.
-• **St. Augustine** (*Tractates on the Gospel of John* 122): Explored the biblical arithmetic where 10 (the Law) + 7 (the Grace/Spirit) = 17; the triangular sum of 1 through 17 equals 153, representing all saints redeemed through law and grace.
-• **St. Cyril of Alexandria**: Saw 100 representing the fullness of the Gentiles, 50 representing the remnant of Israel, and 3 representing the Holy Trinity.
-
-3. **The Unbroken Net (*oukeschisthē to diktyon*)**:
-Contrasting with Luke 5:6 where their nets were breaking prior to Christ's resurrection, here in John 21:11 the net does not tear despite the massive haul. This highlights the post-resurrection preservation and unity of the apostolic Church: Christ's sovereign power preserves every elect believer.
-
-4. **Contemporary Discipleship Application**:
-When believers labor in human self-reliance, the nets remain empty. But when disciples obey the command of the Resurrected Lord ('Cast the net on the right side of the boat'), the harvest is overwhelmingly abundant, proving that God sovereignly provides for all who follow Him.`,
-    historicalContext: `Written in the late first century. The Sea of Galilee (Lake of Gennesaret or Sea of Tiberias) was a thriving commercial fishing hub under Roman-Herodian administrative oversight. Caesar Augustus and Herod Antipas heavily taxed fishermen through imperial tax syndicates (*publicani*). Simon Peter, Andrew, James, and John operated a shared fishing partnership (*koinōnoi*, Luke 5:10). Fishing at night with trammel nets was the standard ancient technique. The dawn encounter with Christ over burning coals (*anthrakian*) directly healed Peter's threefold denial (which had occurred over another coal fire in John 18:18).`,
-    grammarAnalysis: `Key Greek terminology via BDAG and Strong's:
-• **ἑλκύσας** (*helkysas*, Strong's G1670): Aorist active participle of *helkō* ('to draw, drag with physical exertion'). Used also in John 6:44 ('No one can come to Me unless the Father who sent Me draws him').
-• **οὐκ ἐσχίσθη** (*ouk eschisthē*, Strong's G4977): Negative particle with aorist passive indicative of *schizō* ('was not torn, rent, or divided'). Root of English 'schism'; theological emblem of the undivided unity of the Church.
-• **ἰχθύων μεγάλων** (*ichthyōn megalōn*, Strong's G2486 / G3173): Genitive plural of 'large, prime-quality fish', signifying not small discard bait, but valuable market fish.`,
-    literaryGenre: `Post-Resurrection Epilogue & Apostolic Re-Commissioning Narrative`,
-    godIntent: `God intended this passage to commission the post-resurrection Church for a worldwide harvest, reassuring His apostles that when they cast the net in obedience to Christ's voice, not a single soul appointed for salvation will be lost, and the covenant unity of the Church will not be broken.`,
-    crossReferences: [
-      "Luke 5:4-11 - When He had stopped speaking, He said to Simon, 'Launch out into the deep and let down your nets for a catch.'",
-      "Matthew 4:19 - Then He said to them, 'Follow Me, and I will make you fishers of men.'",
-      "Ezekiel 47:9-10 - Fishermen will stand by it from En Gedi to En Eglaim; they will be places for spreading their nets.",
-      "John 6:44 - No one can come to Me unless the Father who sent Me draws him; and I will raise him up at the last day.",
-      "John 10:28-29 - And I give them eternal life, and they shall never perish; neither shall anyone snatch them out of My hand."
-    ],
+    interpretation: "While many symbolic interpretations exist (representing all known nations or tribes), the primary meaning is the abundance found in obedience to Christ. It marks the transition from 'fishermen' to 'fishers of men'.",
+    historicalContext: "Fishing on the Sea of Galilee was a major industry. Such a specific count suggests an eyewitness account of a literal miracle.",
+    grammarAnalysis: "The specificity of the number 'hekaton pentēkonta triōn' emphasizes the overwhelming nature of the haul.",
+    literaryGenre: "Post-Resurrection Appearance Narrative.",
+    godIntent: "To show that following Jesus' command leads to a harvest beyond human calculation.",
+    crossReferences: ["Luke 5:4-11", "Matthew 4:19", "Ezekiel 47:10"],
     geography: {
-      location: "Sea of Galilee (Lake Tiberias)",
+      location: "Sea of Galilee",
       thenDesc: "The primary freshwater source in Roman Palestine, surrounded by fishing villages like Capernaum.",
       nowDesc: "Also known as Lake Tiberias, it remains Israel's largest freshwater lake.",
     },
@@ -597,7 +508,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       {/* Mobile & Notebook Ribbon of consolidated buttons at the top of the page */}
       <div className="xl:hidden grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-8">
         {[
-          { id: 'faith', label: "Jesus' Intentions for Us", icon: Sparkles, emoji: '✨' },
+          { id: 'faith', label: "God's Intent", icon: Sparkles, emoji: '✨' },
           { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
           { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
           { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
@@ -674,7 +585,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
           <div className="hidden xl:flex flex-col gap-2">
             {[
-              { id: 'faith', label: "Jesus' Intentions for Us", icon: Sparkles, emoji: '✨' },
+              { id: 'faith', label: 'God\'s Intent', icon: Sparkles, emoji: '✨' },
               { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
               { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
               { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
@@ -740,32 +651,13 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         {/* Right Column: Content Area */}
         <div className="xl:col-span-2">
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
-            {/* XeJesUs Standard Banner */}
-            <div className="mb-8 p-4 bg-ui-sidebar/50 rounded-2xl border border-ui-border flex items-start sm:items-center gap-3 shadow-sm">
-              <div className="w-8 h-8 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
-                <Sparkles className="w-4 h-4 text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] mb-0.5">The XeJesUs Standard</div>
-                <p className="font-serif italic text-xs text-text-secondary leading-snug">
-                  <strong className="text-text-primary font-semibold">Exegesis</strong> ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (<span className="text-accent/80 font-medium">eisegesis</span>)) to discover Jesus' true intentions for Us today.
-                </p>
-              </div>
-            </div>
-
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-sans font-bold text-accent uppercase tracking-[0.3em]">
-                      <Sparkles className="w-4 h-4 text-accent" />
-                      <span>Jesus' True Intentions for Us Today (Divine Covenant Purpose)</span>
-                    </div>
-                    <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-2xl md:text-3xl leading-relaxed text-text-primary shadow-inner">
-                      "{inquiry.godIntent}"
-                    </div>
+                  <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-3xl leading-relaxed text-text-primary shadow-inner">
+                    "{inquiry.godIntent}"
                   </div>
                   <div className="prose prose-invert max-w-none">
-                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Exegetical Deep-Dive: Leading Out the Truth of Jesus</h3>
+                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Detailed Interpretation</h3>
                     <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-text-secondary">
                       <Markdown>{inquiry.interpretation}</Markdown>
                     </div>
@@ -813,10 +705,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
              {activeTab === 'academic' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                   <section>
-                    <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-accent" />
-                      <span>The Meaning of the Scriptures at the Time When They Were Written (Historical Context)</span>
-                    </h3>
+                    <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
                     <div className="text-xl leading-relaxed text-text-secondary font-serif space-y-4">
                        <Markdown>{inquiry.historicalContext}</Markdown>
                     </div>

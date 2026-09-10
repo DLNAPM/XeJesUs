@@ -6,16 +6,13 @@ import DivineUpdates from './DivineUpdates';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
-import { UserProfile } from '../types';
-
 type SettingsTab = 'profile' | 'updates';
 
 interface SettingsProps {
   onNavigatePage?: (page: 'privacy' | 'terms') => void;
-  onProfileUpdated?: (updated: Partial<UserProfile>) => void;
 }
 
-export default function Settings({ onNavigatePage, onProfileUpdated }: SettingsProps) {
+export default function Settings({ onNavigatePage }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
   const tabs = [
@@ -77,12 +74,7 @@ export default function Settings({ onNavigatePage, onProfileUpdated }: SettingsP
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'profile' && (
-                <ProfileSettings 
-                  onNavigatePage={onNavigatePage} 
-                  onProfileUpdated={onProfileUpdated} 
-                />
-              )}
+              {activeTab === 'profile' && <ProfileSettings onNavigatePage={onNavigatePage} />}
               {activeTab === 'updates' && <DivineUpdates />}
             </motion.div>
           </AnimatePresence>

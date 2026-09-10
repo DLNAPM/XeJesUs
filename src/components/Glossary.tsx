@@ -8,32 +8,7 @@ interface GlossaryEntry {
   word: string;
   definition: string;
   createdAt: any;
-  isFoundational?: boolean;
 }
-
-const FOUNDATIONAL_TERMS: GlossaryEntry[] = [
-  {
-    id: 'core-xejesus',
-    word: 'XeJesUs',
-    definition: 'The divine synthesis of Exegesis ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one\'s own biases (eisegesis)) and the name of Our Savior, Jesus Christ. Our purpose is to travel through the text to discover Jesus\' true intentions for Us today.',
-    createdAt: null,
-    isFoundational: true
-  },
-  {
-    id: 'core-exegesis',
-    word: 'Exegesis (ἐξήγησις)',
-    definition: 'Literally "leading out." The objective, scholarly, and grammatical-historical extraction of the original author\'s intended meaning from the biblical text, specifically prioritizing the role and person of Jesus Christ.',
-    createdAt: null,
-    isFoundational: true
-  },
-  {
-    id: 'core-eisegesis',
-    word: 'Eisegesis (εἰσήγησις)',
-    definition: 'Literally "reading into." The erroneous, biased imposition of one\'s modern assumptions, cultural prejudices, or subjective presuppositions onto the biblical text. Strictly prohibited in biblical scholarship.',
-    createdAt: null,
-    isFoundational: true
-  }
-];
 
 export default function Glossary() {
   const [entries, setEntries] = useState<GlossaryEntry[]>([]);
@@ -72,24 +47,12 @@ export default function Glossary() {
     fetchEntries().catch(err => console.error("Error in fetchEntries:", err));
   }, []);
 
-  const combinedEntries = useMemo(() => {
-    // Merge foundational entries and user entries, deduplicating by lowercased word
-    const map = new Map<string, GlossaryEntry>();
-    FOUNDATIONAL_TERMS.forEach(term => {
-      map.set(term.word.toLowerCase(), term);
-    });
-    entries.forEach(entry => {
-      map.set((entry.word || '').toLowerCase(), entry);
-    });
-    return Array.from(map.values());
-  }, [entries]);
-
   const filteredEntries = useMemo(() => {
-    return combinedEntries.filter(e => 
+    return entries.filter(e => 
       String(e.word || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       String(e.definition || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [combinedEntries, searchTerm]);
+  }, [entries, searchTerm]);
 
   const groupedEntries = useMemo(() => {
     const groups: { [key: string]: GlossaryEntry[] } = {};
@@ -249,24 +212,13 @@ export default function Glossary() {
                     className="p-6 bg-ui-card border border-ui-border rounded-2xl shadow-sm group hover:shadow-md transition-all"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2.5">
-                        <h3 className="text-xl font-serif text-text-primary italic font-bold">{entry.word}</h3>
-                        {entry.isFoundational && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-sans font-bold uppercase tracking-widest text-accent bg-accent/10 px-2 py-0.5 rounded-md border border-accent/20">
-                            <Sparkles className="w-3 h-3" />
-                            Foundational
-                          </span>
-                        )}
-                      </div>
-                      {!entry.isFoundational && (
-                        <button 
-                          onClick={() => entry.id && handleDelete(entry.id)}
-                          className="opacity-0 group-hover:opacity-100 p-2 text-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
-                          title="Delete term"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <h3 className="text-xl font-serif text-text-primary italic font-bold">{entry.word}</h3>
+                      <button 
+                        onClick={() => entry.id && handleDelete(entry.id)}
+                        className="opacity-0 group-hover:opacity-100 p-2 text-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     <p className="text-text-secondary leading-relaxed font-serif text-base italic leading-relaxed">
                       {entry.definition}

@@ -35,151 +35,12 @@ interface ActiveSession {
   progressInterval?: any;
   options?: {
     gender?: 'male' | 'female' | 'auto';
-    personaName?: string;
     profile?: UserProfile | null;
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (err: any) => void;
     onProgress?: (state: ScholarSpeechState) => void;
   };
-}
-
-export function clearScholarAudioCache() {
-  clientAudioCache.forEach((entry) => {
-    if (entry?.audioUrl) {
-      try {
-        URL.revokeObjectURL(entry.audioUrl);
-      } catch (_) {}
-    }
-  });
-  clientAudioCache.clear();
-}
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('scholar-profile-updated', () => {
-    clearScholarAudioCache();
-  });
-}
-
-export function getEffectiveScholarVoiceInfo(profile?: UserProfile | null): {
-  personaName: string;
-  gender: 'male' | 'female';
-  maleScholarVoice: string;
-  femaleScholarVoice: string;
-  activeScholarGender: 'male' | 'female' | 'auto';
-  scholarsVoicesEnabled: boolean;
-} {
-  const p: any = profile ? { ...profile } : {};
-  let parsed: any = null;
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
-      if (stored) {
-        parsed = JSON.parse(stored);
-      }
-    } catch (_) {}
-  }
-
-  const activeGender: 'male' | 'female' | 'auto' = 
-    p?.activeScholarGender || parsed?.activeScholarGender || 'male';
-
-  const maleVoiceName = p?.maleScholarVoice || parsed?.maleScholarVoice || 'Joel Osteen';
-  const femaleVoiceName = p?.femaleScholarVoice || parsed?.femaleScholarVoice || 'Oprah Winfrey';
-
-  let genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
-  let personaName = genderToUse === 'female' ? femaleVoiceName : maleVoiceName;
-
-  // Auto-align gender based on preset catalog if persona is recognized
-  const lowerPersona = (personaName || '').toLowerCase();
-  if (
-    lowerPersona.includes('oprah') || 
-    lowerPersona.includes('moore') || 
-    lowerPersona.includes('meyer') || 
-    lowerPersona.includes('shirer') || 
-    lowerPersona.includes('arthur') || 
-    lowerPersona.includes('ten boom') || 
-    lowerPersona.includes('corrie')
-  ) {
-    genderToUse = 'female';
-  } else if (
-    lowerPersona.includes('osteen') || 
-    lowerPersona.includes('spurgeon') || 
-    lowerPersona.includes('lewis') || 
-    lowerPersona.includes('luther') || 
-    lowerPersona.includes('keller') || 
-    lowerPersona.includes('graham')
-  ) {
-    genderToUse = 'male';
-  }
-
-  const scholarsVoicesEnabled = p?.scholarsVoicesEnabled !== undefined
-    ? p.scholarsVoicesEnabled
-    : (parsed?.scholarsVoicesEnabled !== undefined ? parsed.scholarsVoicesEnabled : true);
-
-  return {
-    personaName,
-    gender: genderToUse,
-    maleScholarVoice: maleVoiceName,
-    femaleScholarVoice: femaleVoiceName,
-    activeScholarGender: activeGender,
-    scholarsVoicesEnabled,
-  };
-}
-
-export interface ScholarVoiceOption {
-  name: string;
-  style: string;
-  gender: 'male' | 'female';
-}
-
-export const SCHOLAR_MALE_VOICES: ScholarVoiceOption[] = [
-  { name: 'Joel Osteen', style: 'Warm, Inspirational & Encouraging', gender: 'male' },
-  { name: 'Charles Spurgeon', style: 'Classic Prince of Preachers & Regal', gender: 'male' },
-  { name: 'C.S. Lewis', style: 'Scholarly, Oxbridge & Intellectually Rich', gender: 'male' },
-  { name: 'Martin Luther', style: 'Bold, Resonant & Reformational', gender: 'male' },
-  { name: 'Tim Keller', style: 'Thoughtful, Exegetical & Urban', gender: 'male' },
-  { name: 'Billy Graham', style: 'Evangelistic, Authoritative & Clear', gender: 'male' }
-];
-
-export const SCHOLAR_FEMALE_VOICES: ScholarVoiceOption[] = [
-  { name: 'Oprah Winfrey', style: 'Empathetic, Warm & Resonant', gender: 'female' },
-  { name: 'Beth Moore', style: 'Passionate, Dynamic & Exegetical', gender: 'female' },
-  { name: 'Joyce Meyer', style: 'Direct, Practical & Uplifting', gender: 'female' },
-  { name: 'Priscilla Shirer', style: 'Faith-Filled, Energetic & Direct', gender: 'female' },
-  { name: 'Kay Arthur', style: 'Inductive, Reverent & Methodical', gender: 'female' },
-  { name: 'Corrie ten Boom', style: 'Gracious, Courageous & Wise', gender: 'female' }
-];
-
-export const ALL_SCHOLAR_VOICES: ScholarVoiceOption[] = [
-  ...SCHOLAR_MALE_VOICES,
-  ...SCHOLAR_FEMALE_VOICES
-];
-
-export function saveAndApplyScholarVoice(
-  voiceName: string,
-  gender: 'male' | 'female',
-  profile?: UserProfile | null
-): {
-  maleScholarVoice: string;
-  femaleScholarVoice: string;
-  activeScholarGender: 'male' | 'female';
-  scholarsVoicesEnabled: boolean;
-} {
-  const current = getEffectiveScholarVoiceInfo(profile);
-  const payload = {
-    maleScholarVoice: gender === 'male' ? voiceName : current.maleScholarVoice,
-    femaleScholarVoice: gender === 'female' ? voiceName : current.femaleScholarVoice,
-    activeScholarGender: gender,
-    scholarsVoicesEnabled: true
-  };
-
-  try {
-    localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify(payload));
-    clearScholarAudioCache();
-    window.dispatchEvent(new CustomEvent('scholar-profile-updated', { detail: payload }));
-  } catch (_) {}
-
-  return payload;
 }
 
 let activeSession: ActiveSession | null = null;
@@ -483,60 +344,30 @@ function pcmToWav(pcmBase64: string, sampleRate = 24000): Blob {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
-// In-memory client-side audio cache for repeated chunks and instant previews
-const clientAudioCache = new Map<string, { wavBlob: Blob; audioUrl: string; duration: number }>();
-
-function splitTextIntoChunks(text: string, firstChunkMax = 350, standardMax = 450): string[] {
+function splitTextIntoChunks(text: string, firstChunkMax = 120, standardMax = 220): string[] {
   const clean = text
-    .replace(/&amp;/gi, ' and ')
-    .replace(/&lt;/gi, ' less than ')
-    .replace(/&gt;/gi, ' greater than ')
-    .replace(/&quot;/gi, '')
-    .replace(/&apos;/gi, '')
-    .replace(/&#39;/gi, '')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&/g, ' and ')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/[<>]/g, ' ')
     .replace(/\*+/g, '')
     .replace(/#+/g, '')
     .replace(/`+/g, '')
     .replace(/_+/g, '')
     .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-    .replace(/["“”«»]/g, '')
-    .replace(/['‘’]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
   if (!clean) return [];
 
-  // Match sentences or clauses
-  const rawSentences = clean.match(/[^.!?\n]+[.!?\n]+/g) || [clean];
-  const atomicParts: string[] = [];
-
-  // If any sentence is excessively long, split by comma or semicolon
-  for (const s of rawSentences) {
-    if (s.length > standardMax) {
-      const subClauses = s.match(/[^,;:]+[,;:]?/g) || [s];
-      for (const sub of subClauses) {
-        if (sub.trim()) atomicParts.push(sub.trim());
-      }
-    } else {
-      if (s.trim()) atomicParts.push(s.trim());
-    }
-  }
-
+  const sentences = clean.match(/[^.!?\n]+[.!?\n]+/g) || [clean];
   const chunks: string[] = [];
   let currentChunk = "";
   let maxLen = firstChunkMax;
 
-  for (const part of atomicParts) {
-    if ((currentChunk + " " + part).trim().length > maxLen && currentChunk.trim()) {
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length > maxLen && currentChunk.trim()) {
       chunks.push(currentChunk.trim());
-      currentChunk = part;
+      currentChunk = sentence;
       maxLen = standardMax;
     } else {
-      currentChunk = currentChunk ? `${currentChunk} ${part}` : part;
+      currentChunk += sentence;
     }
   }
 
@@ -545,15 +376,6 @@ function splitTextIntoChunks(text: string, firstChunkMax = 350, standardMax = 45
   }
 
   return chunks;
-}
-
-// Cache for loaded browser synthesis voices
-let cachedBrowserVoices: SpeechSynthesisVoice[] = [];
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-  cachedBrowserVoices = window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = () => {
-    cachedBrowserVoices = window.speechSynthesis.getVoices();
-  };
 }
 
 function speakWithBrowserFallback(
@@ -583,82 +405,65 @@ function speakWithBrowserFallback(
   const utterance = new SpeechSynthesisUtterance(cleanText);
   currentUtterance = utterance;
 
-  let voices = cachedBrowserVoices;
-  if (!voices || voices.length === 0) {
-    voices = window.speechSynthesis.getVoices();
-    cachedBrowserVoices = voices;
-  }
-
-  const lowerName = (personaName || "").toLowerCase();
+  const voices = window.speechSynthesis.getVoices();
+  const lowerName = personaName.toLowerCase();
 
   // Distinct pitch & rate profiles for each scholar persona in browser fallback
   if (gender === 'male') {
     if (lowerName.includes('osteen')) {
-      utterance.pitch = 1.15;
-      utterance.rate = 1.05;
+      utterance.pitch = 1.08;
+      utterance.rate = 1.02;
     } else if (lowerName.includes('spurgeon')) {
-      utterance.pitch = 0.65;
-      utterance.rate = 0.85;
+      utterance.pitch = 0.72;
+      utterance.rate = 0.88;
     } else if (lowerName.includes('lewis')) {
-      utterance.pitch = 0.82;
-      utterance.rate = 0.90;
+      utterance.pitch = 0.85;
+      utterance.rate = 0.92;
     } else if (lowerName.includes('luther')) {
-      utterance.pitch = 0.62;
+      utterance.pitch = 0.68;
       utterance.rate = 0.95;
     } else if (lowerName.includes('keller')) {
       utterance.pitch = 0.88;
-      utterance.rate = 0.92;
+      utterance.rate = 0.95;
     } else if (lowerName.includes('graham')) {
-      utterance.pitch = 0.98;
-      utterance.rate = 1.02;
+      utterance.pitch = 0.80;
+      utterance.rate = 1.0;
     } else {
       utterance.pitch = 0.85;
       utterance.rate = 0.95;
     }
 
-    // Try finding specific distinct voice candidates based on persona
-    let maleVoice: SpeechSynthesisVoice | undefined;
-    if (lowerName.includes('spurgeon') || lowerName.includes('lewis')) {
-      // Prefer British / UK voices if available
-      maleVoice = voices.find(v => /en[-_]gb|british|george|oliver|uk/i.test(v.lang || v.name));
-    }
-    if (!maleVoice) {
-      maleVoice = voices.find(v => /male|david|george|james|daniel|alex|mark|google us english|en-us/i.test(v.name));
-    }
+    const maleVoice = voices.find(v => 
+      /male|david|george|james|daniel|alex|google us english|en-us/i.test(v.name)
+    );
     if (maleVoice) utterance.voice = maleVoice;
   } else {
     if (lowerName.includes('oprah') || lowerName.includes('winfrey')) {
-      utterance.pitch = 0.95;
-      utterance.rate = 0.90;
+      utterance.pitch = 0.92;
+      utterance.rate = 0.92;
     } else if (lowerName.includes('moore')) {
-      utterance.pitch = 1.25;
+      utterance.pitch = 1.18;
       utterance.rate = 1.05;
     } else if (lowerName.includes('meyer')) {
-      utterance.pitch = 1.12;
+      utterance.pitch = 1.10;
       utterance.rate = 1.02;
     } else if (lowerName.includes('shirer')) {
-      utterance.pitch = 1.15;
+      utterance.pitch = 1.12;
       utterance.rate = 1.0;
     } else if (lowerName.includes('arthur')) {
-      utterance.pitch = 0.98;
-      utterance.rate = 0.86;
+      utterance.pitch = 1.0;
+      utterance.rate = 0.88;
     } else if (lowerName.includes('ten boom') || lowerName.includes('corrie')) {
       utterance.pitch = 1.02;
-      utterance.rate = 0.82;
+      utterance.rate = 0.85;
     } else {
       utterance.pitch = 1.05;
       utterance.rate = 0.95;
     }
 
-    let femaleVoice: SpeechSynthesisVoice | undefined;
-    if (lowerName.includes('ten boom') || lowerName.includes('arthur')) {
-      femaleVoice = voices.find(v => /en[-_]gb|fiona|moira|karen/i.test(v.name) || /en[-_]gb/i.test(v.lang));
-    }
-    if (!femaleVoice) {
-      femaleVoice = voices.find(v => 
-        /female|zira|samantha|karen|victoria|fiona|google us english female|en-us.*female/i.test(v.name)
-      );
-    }
+    const femaleVoice = voices.find(v => 
+      /female|zira|samantha|karen|victoria|fiona|google us english female/i.test(v.name)
+    );
     if (femaleVoice) utterance.voice = femaleVoice;
   }
 
@@ -699,36 +504,15 @@ function fetchSessionChunk(session: ActiveSession, index: number): Promise<{ wav
   if (index >= session.chunks.length) return Promise.resolve(null);
   if (!session.chunkPromises.has(index)) {
     const thisPlaybackId = session.playbackId;
-    const chunkText = session.chunks[index];
-    const cacheKey = `${session.personaName}::${session.gender}::${chunkText.trim()}`;
-
-    // Check client-side audio cache first
-    if (clientAudioCache.has(cacheKey)) {
-      const cached = clientAudioCache.get(cacheKey)!;
-      session.chunkDurations[index] = cached.duration;
-      return Promise.resolve(cached);
-    }
-
     const promise = (async () => {
       try {
-        let pcmBase64 = await generateScholarTTS(chunkText, session.personaName, session.gender);
+        const pcmBase64 = await generateScholarTTS(session.chunks[index], session.personaName, session.gender);
         if (activePlaybackId !== thisPlaybackId) return null;
-        if (!pcmBase64) {
-          // Retry once with a brief 200ms delay to prevent momentary network hiccup from dropping to browser robot fallback
-          await new Promise(r => setTimeout(r, 200));
-          if (activePlaybackId !== thisPlaybackId) return null;
-          pcmBase64 = await generateScholarTTS(chunkText, session.personaName, session.gender);
-        }
-        if (!pcmBase64) return null;
-
         const wavBlob = pcmToWav(pcmBase64, 24000);
         const duration = Math.max(0.5, (wavBlob.size - 44) / 48000);
         const audioUrl = URL.createObjectURL(wavBlob);
         session.chunkDurations[index] = duration;
-
-        const entry = { wavBlob, audioUrl, duration };
-        clientAudioCache.set(cacheKey, entry);
-        return entry;
+        return { wavBlob, audioUrl, duration };
       } catch (e) {
         console.warn(`Error generating audio chunk ${index}:`, e);
         return null;
@@ -751,10 +535,9 @@ async function playScholarChunk(index: number, startTime = 0) {
     return;
   }
 
-  // Pre-fetch ONLY the next chunk in background while this one plays (prevents burst rate-limits)
-  if (index + 1 < session.chunks.length) {
-    fetchSessionChunk(session, index + 1);
-  }
+  // Pre-fetch next 2 chunks in parallel
+  fetchSessionChunk(session, index + 1);
+  fetchSessionChunk(session, index + 2);
 
   // Stop previous audio
   if (currentAudio) {
@@ -769,6 +552,7 @@ async function playScholarChunk(index: number, startTime = 0) {
     const chunkData = await fetchSessionChunk(session, index);
 
     if (activePlaybackId !== session.playbackId) {
+      if (chunkData?.audioUrl) URL.revokeObjectURL(chunkData.audioUrl);
       return;
     }
 
@@ -829,7 +613,6 @@ export function speakWithScholarVoice(
   text: string,
   options?: {
     gender?: 'male' | 'female' | 'auto';
-    personaName?: string;
     profile?: UserProfile | null;
     onStart?: () => void;
     onEnd?: () => void;
@@ -841,16 +624,15 @@ export function speakWithScholarVoice(
 
   if (!text || !text.trim()) return;
 
-  const voiceInfo = getEffectiveScholarVoiceInfo(options?.profile);
-  const activeGender = options?.gender && options.gender !== 'auto' 
-    ? options.gender 
-    : voiceInfo.gender;
+  const profile = options?.profile;
+  const activeGender = options?.gender || profile?.activeScholarGender || 'male';
   const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
 
-  const defaultVoice = genderToUse === 'male' ? voiceInfo.maleScholarVoice : voiceInfo.femaleScholarVoice;
-  const personaName = options?.personaName || defaultVoice;
+  const maleVoiceName = profile?.maleScholarVoice || 'Joel Osteen';
+  const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
+  const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
 
-  const chunks = splitTextIntoChunks(text, 250, 500);
+  const chunks = splitTextIntoChunks(text, 100, 200);
   if (chunks.length === 0) return;
 
   const thisPlaybackId = activePlaybackId;
@@ -872,7 +654,7 @@ export function speakWithScholarVoice(
     rawText: text,
     personaName,
     gender: genderToUse,
-    isBrowserFallback: voiceInfo.scholarsVoicesEnabled === false,
+    isBrowserFallback: profile?.scholarsVoicesEnabled === false,
     chunks,
     chunkDurations: initialDurations,
     chunkPromises: new Map(),
@@ -899,70 +681,10 @@ export function speakWithScholarVoice(
     return;
   }
 
-  // Pre-fetch ONLY the initial chunk to play immediately
+  // Pre-fetch initial chunks immediately
   fetchSessionChunk(session, 0);
+  fetchSessionChunk(session, 1);
+  fetchSessionChunk(session, 2);
 
   playScholarChunk(0, 0);
-}
-
-/**
- * Returns the high-fidelity sample audio URL for a given scholar persona
- */
-export function getScholarSampleUrl(personaName: string, gender: 'male' | 'female'): string {
-  const p = (personaName || '').toLowerCase();
-  if (gender === 'male') {
-    if (p.includes('osteen')) return '/audio/voices/joel_osteen.mp3';
-    if (p.includes('spurgeon')) return '/audio/voices/charles_spurgeon.mp3';
-    if (p.includes('lewis')) return '/audio/voices/cs_lewis.mp3';
-    if (p.includes('luther')) return '/audio/voices/martin_luther.mp3';
-    if (p.includes('keller')) return '/audio/voices/tim_keller.mp3';
-    if (p.includes('graham')) return '/audio/voices/billy_graham.mp3';
-    return '/audio/voices/custom_male.mp3';
-  } else {
-    if (p.includes('oprah') || p.includes('winfrey')) return '/audio/voices/oprah_winfrey.mp3';
-    if (p.includes('moore')) return '/audio/voices/beth_moore.mp3';
-    if (p.includes('meyer')) return '/audio/voices/joyce_meyer.mp3';
-    if (p.includes('shirer')) return '/audio/voices/priscilla_shirer.mp3';
-    if (p.includes('arthur')) return '/audio/voices/kay_arthur.mp3';
-    if (p.includes('ten boom') || p.includes('corrie')) return '/audio/voices/corrie_ten_boom.mp3';
-    return '/audio/voices/custom_female.mp3';
-  }
-}
-
-/**
- * Directly plays the studio audition audio file for any scholar persona
- */
-export function playScholarVoiceSample(
-  personaName: string,
-  gender: 'male' | 'female',
-  options?: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (err?: any) => void;
-  }
-) {
-  stopScholarSpeech();
-  const url = getScholarSampleUrl(personaName, gender);
-  const audio = new Audio(url);
-  currentAudio = audio;
-
-  audio.onplay = () => {
-    options?.onStart?.();
-  };
-
-  audio.onended = () => {
-    currentAudio = null;
-    options?.onEnd?.();
-  };
-
-  audio.onerror = (e) => {
-    console.warn(`Audio sample error for ${personaName}:`, e);
-    currentAudio = null;
-    options?.onError?.(e);
-  };
-
-  audio.play().catch((err) => {
-    console.warn(`Could not autoplay sample for ${personaName}:`, err);
-    options?.onError?.(err);
-  });
 }

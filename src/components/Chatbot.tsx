@@ -29,8 +29,7 @@ import {
   GitBranch,
   Image as ImageIcon,
   RotateCcw,
-  RotateCw,
-  ChevronDown
+  RotateCw
 } from 'lucide-react';
 import { getAuthService, getDbService, collection, query, where, orderBy, limit, getDocs, setDoc, doc, serverTimestamp, deleteDoc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { chatWithSanctuary, generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
@@ -47,11 +46,8 @@ import {
   fastForwardScholarSpeech, 
   seekScholarSpeech, 
   subscribeScholarSpeechProgress, 
-  ScholarSpeechState,
-  getEffectiveScholarVoiceInfo,
-  saveAndApplyScholarVoice
+  ScholarSpeechState 
 } from '../lib/ttsHelper';
-import ScholarVoiceDropdown from './ScholarVoiceDropdown';
 
 
 interface Message {
@@ -108,27 +104,6 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     return () => {
       unsubscribe();
     };
-  }, []);
-
-  const [, setVoiceSyncKey] = useState(0);
-  const [voiceDropdownSessionId, setVoiceDropdownSessionId] = useState<string | null>(null);
-  const [voiceDropdownAnchorEl, setVoiceDropdownAnchorEl] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const onSync = () => setVoiceSyncKey((k) => k + 1);
-    window.addEventListener('scholar-profile-updated', onSync);
-    return () => window.removeEventListener('scholar-profile-updated', onSync);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('[data-voice-dropdown]')) {
-        setVoiceDropdownSessionId(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const formatAudioTime = (seconds: number) => {
@@ -227,11 +202,8 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     setIsPaused(false);
   };
 
-  const speakSession = (
-    session: ChatSession,
-    overrideVoice?: { personaName: string; gender: 'male' | 'female' }
-  ) => {
-    if (!overrideVoice && speakingSessionId === session.id) {
+  const speakSession = (session: ChatSession) => {
+    if (speakingSessionId === session.id) {
       if (isPaused) {
         resumeScholarSpeech();
         setIsPaused(false);
@@ -251,13 +223,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     if (!fullScript.trim()) return;
 
-    const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = overrideVoice?.personaName || voiceInfo.personaName;
-    const sessionGender = overrideVoice?.gender || voiceInfo.gender;
-
     speakWithScholarVoice(fullScript, {
-      personaName: sessionVoice,
-      gender: sessionGender,
       profile: userProfile,
       onStart: () => {
         setSpeakingSessionId(session.id || null);
@@ -275,31 +241,6 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     });
   };
 
-  const handleSelectScholarVoiceAndPlay = async (
-    session: ChatSession,
-    voiceName: string,
-    gender: 'male' | 'female'
-  ) => {
-    saveAndApplyScholarVoice(voiceName, gender, userProfile);
-    try {
-      const auth = getAuthService();
-      const db = getDbService();
-      if (auth?.currentUser && db) {
-        const payload = {
-          maleScholarVoice: gender === 'male' ? voiceName : (userProfile?.maleScholarVoice || 'Joel Osteen'),
-          femaleScholarVoice: gender === 'female' ? voiceName : (userProfile?.femaleScholarVoice || 'Oprah Winfrey'),
-          activeScholarGender: gender,
-          scholarsVoicesEnabled: true
-        };
-        await setDoc(doc(db, 'users', auth.currentUser.uid), payload, { merge: true });
-      }
-    } catch (err) {
-      console.warn("Could not sync voice to Firestore:", err);
-    }
-    setVoiceDropdownSessionId(null);
-    speakSession(session, { personaName: voiceName, gender });
-  };
-
   const speakText = (text: string) => {
     if (speakingMessageText === text) {
       stopSpeech();
@@ -308,11 +249,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     stopSpeech();
 
-    const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
-
     speakWithScholarVoice(text, {
-      personaName: voiceInfo.personaName,
-      gender: voiceInfo.gender,
       profile: userProfile,
       onStart: () => {
         setSpeakingMessageText(text);
@@ -399,13 +336,10 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     const path = `users/${auth.currentUser.uid}/chat_sessions/${sessionId}`;
 
     try {
-      const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
       const sessionData: Partial<ChatSession> = {
         userId: auth.currentUser.uid,
         name: sessionName || `Study ${new Date().toLocaleDateString()}`,
         messages: messages,
-        scholarVoice: voiceInfo.personaName,
-        scholarGender: voiceInfo.gender,
         createdAt: currentSessionId ? undefined : serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -505,18 +439,9 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
         recentInquiries
       );
       setMessages(prev => [...prev, { role: 'model', text: response || "I'm sorry, I couldn't find an answer. Let's try reflecting on a different verse." }]);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Chatbot error:", error);
-      const serverMsg = error?.message;
-      let errorText = "Grace and peace to you, pilgrim. The sanctuary connection briefly wavered. Please ask your question again, and let us continue our study of God's Word.";
-      if (serverMsg) {
-        if (serverMsg.includes("demand") || serverMsg.includes("503")) {
-          errorText = "The Sanctuary Scholar is currently experiencing high demand. Please ask your question again in a moment.";
-        } else if (serverMsg.length > 5 && !serverMsg.includes("status 500") && !serverMsg.includes("Failed to fetch") && !serverMsg.includes("Empty response") && !serverMsg.includes("gateway")) {
-          errorText = serverMsg;
-        }
-      }
-      setMessages(prev => [...prev, { role: 'model', text: errorText }]);
+      setMessages(prev => [...prev, { role: 'model', text: "Forgive me, the connection to the sanctuary was interrupted. Please try again." }]);
     } finally {
       setIsLoading(false);
     }
@@ -577,71 +502,6 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
-              {/* Active Scholar Voice Player Bar */}
-              <AnimatePresence>
-                {(speechState.isPlaying || speechState.isPaused) && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="bg-accent/10 border-b border-accent/20 px-3.5 py-2 flex items-center justify-between gap-2 text-xs shrink-0 z-20"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
-                      <div className="truncate">
-                        <span className="font-bold text-accent font-sans uppercase tracking-wider text-[11px]">
-                          {getEffectiveScholarVoiceInfo(userProfile).personaName}
-                        </span>
-                        <span className="text-[10px] text-text-secondary ml-1.5 font-mono">
-                          {formatAudioTime(speechState.currentTime)} / {formatAudioTime(speechState.duration)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => rewindScholarSpeech(10)}
-                        title="Rewind 10s"
-                        className="p-1 hover:bg-accent/20 rounded-md text-accent transition-colors"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (speechState.isPaused) {
-                            resumeScholarSpeech();
-                          } else {
-                            pauseScholarSpeech();
-                          }
-                        }}
-                        title={speechState.isPaused ? "Resume" : "Pause"}
-                        className="p-1 bg-accent text-bg-primary rounded-md hover:opacity-90 transition-opacity"
-                      >
-                        {speechState.isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => fastForwardScholarSpeech(10)}
-                        title="Fast Forward 10s"
-                        className="p-1 hover:bg-accent/20 rounded-md text-accent transition-colors"
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => stopScholarSpeech()}
-                        title="Stop Speech"
-                        className="p-1 hover:bg-red-500/20 rounded-md text-red-500 transition-colors ml-0.5"
-                      >
-                        <Square className="w-3.5 h-3.5 fill-current" />
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {view === 'chat' ? (
                 <>
                   {/* Messages */}
@@ -750,43 +610,6 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                       >
                         <Save className="w-3 h-3" />
                         Save Transcript
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (speakingMessageText === '__FULL_CONVERSATION__') {
-                            stopSpeech();
-                          } else {
-                            const fullText = messages
-                              .map(m => `${m.role === 'model' ? 'Sanctuary Scholar: ' : 'Pilgrim: '} ${m.text}`)
-                              .join('. ');
-                            stopSpeech();
-                            const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
-                            speakWithScholarVoice(fullText, {
-                              personaName: voiceInfo.personaName,
-                              gender: voiceInfo.gender,
-                              profile: userProfile,
-                              onStart: () => setSpeakingMessageText('__FULL_CONVERSATION__'),
-                              onEnd: () => setSpeakingMessageText(null),
-                              onError: () => setSpeakingMessageText(null),
-                            });
-                          }
-                        }}
-                        disabled={messages.length === 0}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider hover:bg-accent/20 transition-all disabled:opacity-30"
-                        title="Listen to full dialogue with current Scholar voice"
-                      >
-                        {speakingMessageText === '__FULL_CONVERSATION__' ? (
-                          <>
-                            <VolumeX className="w-3 h-3 text-red-500 animate-pulse" />
-                            <span>Stop Audio</span>
-                          </>
-                        ) : (
-                          <>
-                            <Volume2 className="w-3 h-3" />
-                            <span>Listen to Chat</span>
-                          </>
-                        )}
                       </button>
                       <button 
                         onClick={startNewChat}
@@ -950,10 +773,9 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                       <div 
                         key={session.id}
                         className={cn(
-                          "group p-3 rounded-2xl border border-ui-border bg-ui-card hover:border-accent transition-all cursor-pointer flex items-center justify-between gap-2 relative",
+                          "group p-3 rounded-2xl border border-ui-border bg-ui-card hover:border-accent transition-all cursor-pointer flex items-center justify-between gap-2",
                           currentSessionId === session.id && "border-accent ring-1 ring-accent/20",
-                          speakingSessionId === session.id && "border-accent bg-accent/5 ring-1 ring-accent/30",
-                          voiceDropdownSessionId === session.id && "z-30"
+                          speakingSessionId === session.id && "border-accent bg-accent/5 ring-1 ring-accent/30"
                         )}
                         onClick={() => loadSession(session)}
                       >
@@ -979,92 +801,33 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                         </div>
                         
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          {/* Read Audibly Button & AI Voices Dropdown */}
-                          <div className="relative inline-block" data-voice-dropdown="true">
-                            <div className="flex items-center gap-0.5">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (speakingSessionId === session.id) {
-                                    if (isPaused) {
-                                      resumeScholarSpeech();
-                                      setIsPaused(false);
-                                    } else {
-                                      pauseScholarSpeech();
-                                      setIsPaused(true);
-                                    }
-                                  } else {
-                                    speakSession(session);
-                                  }
-                                }}
-                                className={cn(
-                                  "px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer",
-                                  speakingSessionId === session.id
-                                    ? "bg-accent text-bg-primary shadow-sm"
-                                    : "bg-accent/10 text-accent hover:bg-accent/20"
-                                )}
-                                title={
-                                  speakingSessionId === session.id 
-                                    ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") 
-                                    : "Press to listen to this session"
-                                }
-                              >
-                                {speakingSessionId === session.id ? (
-                                  <>
-                                    <VolumeX className="w-3.5 h-3.5 animate-pulse" />
-                                    <span className="text-[10px] uppercase tracking-wider">{isPaused ? 'Paused' : 'Stop'}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Volume2 className="w-3.5 h-3.5" />
-                                    <span className="text-[10px] uppercase tracking-wider">Listen</span>
-                                  </>
-                                )}
-                              </button>
-
-                              {/* Dedicated Scholar Voice Dropdown Trigger Button */}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setVoiceDropdownAnchorEl(e.currentTarget);
-                                  setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-0.5 border",
-                                  voiceDropdownSessionId === session.id
-                                    ? "bg-accent text-bg-primary border-accent"
-                                    : "bg-accent/10 text-accent hover:bg-accent/20 border-accent/20"
-                                )}
-                                title="Change Sanctuary Scholar Voice"
-                              >
-                                <Mic className="w-3 h-3" />
-                                <ChevronDown className={`w-3 h-3 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
-                              </button>
-                            </div>
-
-                            <AnimatePresence>
-                              {voiceDropdownSessionId === session.id && (
-                                <ScholarVoiceDropdown
-                                  anchorEl={voiceDropdownAnchorEl}
-                                  currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
-                                  currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
-                                  onSelectVoice={(voiceName, gender) => {
-                                    handleSelectScholarVoiceAndPlay(session, voiceName, gender);
-                                  }}
-                                  onQuickPlay={() => {
-                                    setVoiceDropdownSessionId(null);
-                                    speakSession(session);
-                                  }}
-                                  onClose={() => setVoiceDropdownSessionId(null)}
-                                  align="right"
-                                  title="Sanctuary Scholar Voices"
-                                  subtitle={`Session: "${session.name}"`}
-                                />
-                              )}
-                            </AnimatePresence>
-                          </div>
+                          {/* Read Audibly Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              speakSession(session);
+                            }}
+                            className={cn(
+                              "px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all",
+                              speakingSessionId === session.id
+                                ? "bg-accent text-bg-primary shadow-sm"
+                                : "bg-accent/10 text-accent hover:bg-accent/20"
+                            )}
+                            title={speakingSessionId === session.id ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") : "Read Session Audibly"}
+                          >
+                            {speakingSessionId === session.id ? (
+                              <>
+                                <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                                <span className="text-[10px] uppercase tracking-wider">{isPaused ? 'Paused' : 'Stop'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3.5 h-3.5" />
+                                <span className="text-[10px] uppercase tracking-wider">Listen</span>
+                              </>
+                            )}
+                          </button>
 
                           {/* Export PDF Button */}
                           <button

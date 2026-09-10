@@ -3,7 +3,7 @@ import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError
 import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
-import { speakWithScholarVoice, stopScholarSpeech, playScholarVoiceSample, clearScholarAudioCache } from '../lib/ttsHelper';
+import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
 
 const MALE_VOICE_PRESETS = [
   { name: 'Joel Osteen', style: 'Warm, Inspirational & Encouraging' },
@@ -27,57 +27,19 @@ const FEMALE_VOICE_PRESETS = [
 
 interface ProfileSettingsProps {
   onNavigatePage?: (page: 'privacy' | 'terms') => void;
-  onProfileUpdated?: (updated: Partial<UserProfile>) => void;
 }
 
-export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: ProfileSettingsProps) {
+export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bibleWebsite, setBibleWebsite] = useState('');
   const [theme, setTheme] = useState('modern');
-  const [maleScholarVoice, setMaleScholarVoice] = useState(() => {
-    try {
-      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
-      if (stored) {
-        const p = JSON.parse(stored);
-        if (p?.maleScholarVoice) return p.maleScholarVoice;
-      }
-    } catch (_) {}
-    return 'Joel Osteen';
-  });
-  const [femaleScholarVoice, setFemaleScholarVoice] = useState(() => {
-    try {
-      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
-      if (stored) {
-        const p = JSON.parse(stored);
-        if (p?.femaleScholarVoice) return p.femaleScholarVoice;
-      }
-    } catch (_) {}
-    return 'Oprah Winfrey';
-  });
-  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>(() => {
-    try {
-      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
-      if (stored) {
-        const p = JSON.parse(stored);
-        if (p?.activeScholarGender) return p.activeScholarGender;
-      }
-    } catch (_) {}
-    return 'male';
-  });
-  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(() => {
-    try {
-      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
-      if (stored) {
-        const p = JSON.parse(stored);
-        if (p?.scholarsVoicesEnabled !== undefined) return p.scholarsVoicesEnabled;
-      }
-    } catch (_) {}
-    return true;
-  });
+  const [maleScholarVoice, setMaleScholarVoice] = useState('Joel Osteen');
+  const [femaleScholarVoice, setFemaleScholarVoice] = useState('Oprah Winfrey');
+  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>('male');
+  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(true);
   const [customMaleVoice, setCustomMaleVoice] = useState('');
   const [customFemaleVoice, setCustomFemaleVoice] = useState('');
   const [testingVoice, setTestingVoice] = useState<'male' | 'female' | null>(null);
-  const [activeAuditionPersona, setActiveAuditionPersona] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -129,21 +91,6 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
           if (data.scholarsVoicesEnabled !== undefined) {
             setScholarsVoicesEnabled(data.scholarsVoicesEnabled);
           }
-
-          // Cache to localStorage for instant client-wide access without clobbering with defaults
-          try {
-            const currentStored = localStorage.getItem('xejesus_user_scholar_voice_profile');
-            const parsedStored = currentStored ? JSON.parse(currentStored) : {};
-            const voicePayload = {
-              maleScholarVoice: data.maleScholarVoice || parsedStored.maleScholarVoice || 'Joel Osteen',
-              femaleScholarVoice: data.femaleScholarVoice || parsedStored.femaleScholarVoice || 'Oprah Winfrey',
-              activeScholarGender: data.activeScholarGender || parsedStored.activeScholarGender || 'male',
-              scholarsVoicesEnabled: data.scholarsVoicesEnabled !== undefined ? data.scholarsVoicesEnabled : (parsedStored.scholarsVoicesEnabled ?? true)
-            };
-            localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify(voicePayload));
-          } catch (_) {}
-
-          onProfileUpdated?.(data);
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
@@ -159,159 +106,72 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
     };
   }, []);
 
-  const applyAndSaveVoiceSelection = (updates: {
-    maleScholarVoice?: string;
-    femaleScholarVoice?: string;
-    activeScholarGender?: 'male' | 'female' | 'auto';
-    scholarsVoicesEnabled?: boolean;
-    customMaleVoice?: string;
-    customFemaleVoice?: string;
-  }) => {
-    const nextMale = updates.maleScholarVoice !== undefined ? updates.maleScholarVoice : maleScholarVoice;
-    const nextFemale = updates.femaleScholarVoice !== undefined ? updates.femaleScholarVoice : femaleScholarVoice;
-    const nextGender = updates.activeScholarGender !== undefined ? updates.activeScholarGender : activeScholarGender;
-    const nextEnabled = updates.scholarsVoicesEnabled !== undefined ? updates.scholarsVoicesEnabled : scholarsVoicesEnabled;
-    const cMale = updates.customMaleVoice !== undefined ? updates.customMaleVoice : customMaleVoice;
-    const cFemale = updates.customFemaleVoice !== undefined ? updates.customFemaleVoice : customFemaleVoice;
-
-    const finalMale = nextMale === 'Custom' ? (cMale.trim() || 'Custom Male Voice') : nextMale;
-    const finalFemale = nextFemale === 'Custom' ? (cFemale.trim() || 'Custom Female Voice') : nextFemale;
-
-    const payload = {
-      maleScholarVoice: finalMale,
-      femaleScholarVoice: finalFemale,
-      activeScholarGender: nextGender,
-      scholarsVoicesEnabled: nextEnabled
-    };
-
-    try {
-      localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify(payload));
-      clearScholarAudioCache();
-      window.dispatchEvent(new CustomEvent('scholar-profile-updated', { detail: payload }));
-    } catch (_) {}
-
-    // Auto-sync in background to Firestore for authenticated users
-    try {
-      const auth = getAuthService();
-      const db = getDbService();
-      if (auth?.currentUser && db) {
-        setDoc(doc(db, 'users', auth.currentUser.uid), payload, { merge: true }).catch(() => {});
-      }
-    } catch (_) {}
-
-    onProfileUpdated?.(payload);
-  };
-
-  const handleAuditionPersona = (personaName: string, gender: 'male' | 'female') => {
-    if (activeAuditionPersona === personaName) {
-      stopScholarSpeech();
-      setActiveAuditionPersona(null);
-      setTestingVoice(null);
-      return;
-    }
-
-    if (gender === 'male') {
-      setMaleScholarVoice(personaName);
-      applyAndSaveVoiceSelection({ maleScholarVoice: personaName, activeScholarGender: 'male' });
-    } else {
-      setFemaleScholarVoice(personaName);
-      applyAndSaveVoiceSelection({ femaleScholarVoice: personaName, activeScholarGender: 'female' });
-    }
-
-    playScholarVoiceSample(personaName, gender, {
-      onStart: () => {
-        setActiveAuditionPersona(personaName);
-        setTestingVoice(gender);
-      },
-      onEnd: () => {
-        setActiveAuditionPersona(null);
-        setTestingVoice(null);
-      },
-      onError: () => {
-        setActiveAuditionPersona(null);
-        setTestingVoice(null);
-      }
-    });
-  };
-
   const handleTestVoice = (gender: 'male' | 'female') => {
     if (testingVoice === gender) {
       stopScholarSpeech();
-      setActiveAuditionPersona(null);
       setTestingVoice(null);
       return;
     }
 
-    const effectiveMale = maleScholarVoice === 'Custom' ? customMaleVoice || 'Custom Male' : maleScholarVoice;
-    const effectiveFemale = femaleScholarVoice === 'Custom' ? customFemaleVoice || 'Custom Female' : femaleScholarVoice;
-    const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
+    const effectiveMale = maleScholarVoice === 'Custom' ? customMaleVoice || 'Custom Male Scholar' : maleScholarVoice;
+    const effectiveFemale = femaleScholarVoice === 'Custom' ? customFemaleVoice || 'Custom Female Scholar' : femaleScholarVoice;
 
-    handleAuditionPersona(personaName, gender);
+    const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
+    const sampleText = gender === 'male'
+      ? `Greetings, pilgrim. I am your male scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`
+      : `Greetings, pilgrim. I am your female scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`;
+
+    speakWithScholarVoice(sampleText, {
+      gender,
+      profile: {
+        uid: profile?.uid || '',
+        email: profile?.email || '',
+        displayName: profile?.displayName || '',
+        photoURL: profile?.photoURL || '',
+        maleScholarVoice: effectiveMale,
+        femaleScholarVoice: effectiveFemale,
+        activeScholarGender,
+        scholarsVoicesEnabled
+      },
+      onStart: () => setTestingVoice(gender),
+      onEnd: () => setTestingVoice(null),
+      onError: () => setTestingVoice(null)
+    });
   };
 
   const handleSave = async () => {
+    const auth = getAuthService();
+    const db = getDbService();
+    if (!auth || !auth.currentUser || !db) return;
+
     setSaving(true);
     const finalMaleVoice = maleScholarVoice === 'Custom' ? (customMaleVoice.trim() || 'Custom Male Voice') : maleScholarVoice;
     const finalFemaleVoice = femaleScholarVoice === 'Custom' ? (customFemaleVoice.trim() || 'Custom Female Voice') : femaleScholarVoice;
 
-    // 1. Immediately cache to localStorage & notify system listeners
     try {
-      localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify({
-        maleScholarVoice: finalMaleVoice,
-        femaleScholarVoice: finalFemaleVoice,
-        activeScholarGender: activeScholarGender,
-        scholarsVoicesEnabled: scholarsVoicesEnabled
-      }));
-      window.dispatchEvent(new CustomEvent('scholar-profile-updated', { 
-        detail: {
-          maleScholarVoice: finalMaleVoice,
-          femaleScholarVoice: finalFemaleVoice,
-          activeScholarGender: activeScholarGender,
-          scholarsVoicesEnabled: scholarsVoicesEnabled
-        } 
-      }));
-    } catch (_) {}
-
-    // Update theme in real-time
-    document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
-
-    const auth = getAuthService();
-    const db = getDbService();
-
-    if (auth?.currentUser && db) {
-      const updatedData = {
+      await setDoc(doc(db, 'users', auth.currentUser.uid), {
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
         displayName: auth.currentUser.displayName,
         photoURL: auth.currentUser.photoURL,
         bibleWebsite: bibleWebsite,
-        theme: theme as 'modern' | 'midnight' | 'parchment',
+        theme: theme,
         maleScholarVoice: finalMaleVoice,
         femaleScholarVoice: finalFemaleVoice,
         activeScholarGender: activeScholarGender,
         scholarsVoicesEnabled: scholarsVoicesEnabled
-      };
+      }, { merge: true });
+      
+      // Update theme in real-time
+      document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
 
-      try {
-        await setDoc(doc(db, 'users', auth.currentUser.uid), updatedData, { merge: true });
-        onProfileUpdated?.(updatedData);
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
-      }
-    } else {
-      onProfileUpdated?.({
-        maleScholarVoice: finalMaleVoice,
-        femaleScholarVoice: finalFemaleVoice,
-        activeScholarGender: activeScholarGender,
-        scholarsVoicesEnabled: scholarsVoicesEnabled,
-        bibleWebsite,
-        theme: theme as any
-      } as any);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
   };
 
   if (loading) {
@@ -443,11 +303,7 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
 
               <button
                 type="button"
-                onClick={() => {
-                  const next = !scholarsVoicesEnabled;
-                  setScholarsVoicesEnabled(next);
-                  applyAndSaveVoiceSelection({ scholarsVoicesEnabled: next });
-                }}
+                onClick={() => setScholarsVoicesEnabled(!scholarsVoicesEnabled)}
                 className={`px-5 py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm shrink-0 ${
                   scholarsVoicesEnabled
                     ? 'bg-accent text-bg-primary hover:bg-accent-hover'
@@ -482,11 +338,7 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
                   <button
                     key={g.id}
                     type="button"
-                    onClick={() => {
-                      const gid = g.id as 'male' | 'female' | 'auto';
-                      setActiveScholarGender(gid);
-                      applyAndSaveVoiceSelection({ activeScholarGender: gid });
-                    }}
+                    onClick={() => setActiveScholarGender(g.id as 'male' | 'female' | 'auto')}
                     className={`p-3 rounded-xl border text-left transition-all ${
                       activeScholarGender === g.id
                         ? 'bg-accent/10 border-accent text-accent font-bold shadow-sm'
@@ -531,50 +383,24 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {MALE_VOICE_PRESETS.map((p) => {
-                  const isSelected = maleScholarVoice === p.name;
-                  const isAuditioning = activeAuditionPersona === p.name;
-
-                  return (
-                    <div
-                      key={p.name}
-                      onClick={() => {
-                        setMaleScholarVoice(p.name);
-                        applyAndSaveVoiceSelection({ maleScholarVoice: p.name, activeScholarGender: 'male' });
-                      }}
-                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                        isSelected
-                          ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
-                          : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
-                        <div className="flex items-center gap-1.5">
-                          {p.name !== 'Custom' && (
-                            <button
-                              type="button"
-                              title={`Audition ${p.name}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAuditionPersona(p.name, 'male');
-                              }}
-                              className={`p-1 rounded-lg border transition-all ${
-                                isAuditioning
-                                  ? 'bg-red-500/20 border-red-500 text-red-500 animate-pulse'
-                                  : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'
-                              }`}
-                            >
-                              {isAuditioning ? <Square className="w-3 h-3 fill-current" /> : <Volume2 className="w-3 h-3" />}
-                            </button>
-                          )}
-                          {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                {MALE_VOICE_PRESETS.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setMaleScholarVoice(p.name)}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      maleScholarVoice === p.name
+                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
+                        : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
+                      {maleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
                     </div>
-                  );
-                })}
+                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                  </button>
+                ))}
               </div>
 
               {maleScholarVoice === 'Custom' && (
@@ -584,11 +410,7 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
                     type="text"
                     placeholder="e.g. Joel Osteen, John Piper, Charles Stanley..."
                     value={customMaleVoice}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCustomMaleVoice(val);
-                      applyAndSaveVoiceSelection({ customMaleVoice: val, maleScholarVoice: 'Custom', activeScholarGender: 'male' });
-                    }}
+                    onChange={(e) => setCustomMaleVoice(e.target.value)}
                     className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary"
                   />
                 </div>
@@ -626,50 +448,24 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {FEMALE_VOICE_PRESETS.map((p) => {
-                  const isSelected = femaleScholarVoice === p.name;
-                  const isAuditioning = activeAuditionPersona === p.name;
-
-                  return (
-                    <div
-                      key={p.name}
-                      onClick={() => {
-                        setFemaleScholarVoice(p.name);
-                        applyAndSaveVoiceSelection({ femaleScholarVoice: p.name, activeScholarGender: 'female' });
-                      }}
-                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
-                        isSelected
-                          ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
-                          : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
-                        <div className="flex items-center gap-1.5">
-                          {p.name !== 'Custom' && (
-                            <button
-                              type="button"
-                              title={`Audition ${p.name}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAuditionPersona(p.name, 'female');
-                              }}
-                              className={`p-1 rounded-lg border transition-all ${
-                                isAuditioning
-                                  ? 'bg-red-500/20 border-red-500 text-red-500 animate-pulse'
-                                  : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'
-                              }`}
-                            >
-                              {isAuditioning ? <Square className="w-3 h-3 fill-current" /> : <Volume2 className="w-3 h-3" />}
-                            </button>
-                          )}
-                          {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                {FEMALE_VOICE_PRESETS.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => setFemaleScholarVoice(p.name)}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                      femaleScholarVoice === p.name
+                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
+                        : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
+                      {femaleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
                     </div>
-                  );
-                })}
+                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                  </button>
+                ))}
               </div>
 
               {femaleScholarVoice === 'Custom' && (
@@ -679,11 +475,7 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
                     type="text"
                     placeholder="e.g. Oprah Winfrey, Lysa TerKeurst, Priscilla Shirer..."
                     value={customFemaleVoice}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCustomFemaleVoice(val);
-                      applyAndSaveVoiceSelection({ customFemaleVoice: val, femaleScholarVoice: 'Custom', activeScholarGender: 'female' });
-                    }}
+                    onChange={(e) => setCustomFemaleVoice(e.target.value)}
                     className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary"
                   />
                 </div>

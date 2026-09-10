@@ -60,41 +60,26 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
     setError(null);
 
     try {
-      const exegesis = await generateExegesis(scripture.trim(), queryText.trim());
+      const exegesis = await generateExegesis(scripture, queryText);
       
       const inquiriesPath = 'inquiries';
       const docRef = await addDoc(collection(db, inquiriesPath), {
         userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email || "",
-        scripture: scripture.trim(),
-        query: queryText.trim(),
-        interpretation: String(exegesis?.interpretation || "No interpretation text returned."),
-        historicalContext: String(exegesis?.historicalContext || ""),
-        grammarAnalysis: String(exegesis?.grammarAnalysis || ""),
-        literaryGenre: String(exegesis?.literaryGenre || "Scriptural Exegesis"),
-        godIntent: String(exegesis?.godIntent || ""),
-        crossReferences: Array.isArray(exegesis?.crossReferences) ? exegesis.crossReferences : [],
-        geography: {
-          location: String(exegesis?.geography?.location || "Jerusalem"),
-          thenDesc: String(exegesis?.geography?.thenDesc || ""),
-          nowDesc: String(exegesis?.geography?.nowDesc || ""),
-          thenImageUrl: String(exegesis?.geography?.thenImageUrl || ""),
-          nowImageUrl: String(exegesis?.geography?.nowImageUrl || ""),
-        },
-        videoClipQuery: String(exegesis?.videoClipQuery || `${scripture.trim()} biblical exegesis`),
+        userEmail: auth.currentUser.email,
+        scripture,
+        query: queryText,
+        ...exegesis,
         createdAt: serverTimestamp()
       });
 
       onComplete(docRef.id);
     } catch (err: any) {
-      console.error("Exegesis submission error:", err);
-      const msg = err?.message || "";
-      if (msg.includes("503") || msg.includes("demand") || msg.includes("unavailable") || msg.includes("Empty response") || msg.includes("empty")) {
-        setError("The sanctuary scholarship service is experiencing high demand. Please press Retry to complete your exegesis.");
-      } else if (msg.includes("permission") || msg.includes("PERMISSION_DENIED")) {
-        setError("Unable to save your inquiry to the sanctuary. Please verify your connection or sign-in state.");
+      console.error(err);
+      setError("The Spirit was willing, but the connection was weak. Please try your inquiry again.");
+      if (err.message && err.message.startsWith('{')) {
+        // Already handled by firestore error handler? Maybe not gemini errors.
       } else {
-        setError(msg || "The sanctuary scholarship service encountered a momentary delay. Please press Retry to complete your exegesis.");
+        setError("An error occurred during interpretation. Please check your query or try later.");
       }
     } finally {
       setLoading(false);
@@ -103,22 +88,11 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
 
   return (
     <div className="max-w-3xl mx-auto">
-      <header className="mb-8 text-center">
-        <h1 className="text-4xl font-serif text-text-primary mb-3">Seek the Word</h1>
-        <p className="text-text-secondary italic max-w-lg mx-auto text-sm mb-5">
+      <header className="mb-12 text-center">
+        <h1 className="text-4xl font-serif text-text-primary mb-4">Seek the Word</h1>
+        <p className="text-text-secondary italic max-w-lg mx-auto">
           "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you."
         </p>
-        
-        {/* XeJesUs Foundational Exegesis Banner */}
-        <div className="p-4 bg-ui-card/90 border border-ui-border rounded-2xl text-left max-w-2xl mx-auto shadow-sm">
-          <div className="flex items-center gap-2 text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] mb-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-accent" />
-            <span>The XeJesUs Standard of Exegesis</span>
-          </div>
-          <p className="font-serif italic text-xs sm:text-sm text-text-secondary leading-relaxed">
-            <strong className="text-text-primary font-semibold">Exegesis</strong> ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (<span className="text-accent/90 font-medium">eisegesis</span>)) to discover Jesus' true intentions for Us today.
-          </p>
-        </div>
       </header>
 
       <div className="bg-ui-card p-8 md:p-12 rounded-3xl shadow-xl border border-ui-border relative overflow-hidden">
@@ -209,7 +183,7 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
           <div>
             <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Your Seeking</label>
             <textarea
-              placeholder="What do you seek to understand about this passage? (e.g., How does this passage lead out the original meaning rather than human bias? How does it reveal the role and person of Jesus? What are Jesus' true intentions for Us today?)"
+              placeholder="What do you seek to understand about this passage?"
               className="w-full bg-bg-primary/50 border border-ui-border rounded-xl px-6 py-4 font-serif text-lg focus:outline-none focus:border-accent focus:bg-ui-card transition-all shadow-inner min-h-[150px] text-text-primary"
               value={queryText}
               onChange={(e) => setQueryText(e.target.value)}
@@ -221,21 +195,12 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-red-500/10 border-l-4 border-red-500 rounded-r-xl text-red-500 text-sm font-serif flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 bg-red-500/10 border-l-4 border-red-500 text-red-500 text-sm italic font-serif"
             >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-bold">Interpretation Notice:</span>
-                </div>
-                <p className="italic">{error}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-bold">Interpretation Error:</span>
               </div>
-              <button
-                type="button"
-                onClick={(e) => handleSubmit(e)}
-                className="self-start sm:self-auto px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-sans text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors"
-              >
-                Retry Exegesis
-              </button>
+              {error}
             </motion.div>
           )}
 

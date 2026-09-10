@@ -28,8 +28,7 @@ import {
   where,
   serverTimestamp,
   signInAnonymously,
-  updateDoc,
-  onSnapshot
+  updateDoc
 } from './lib/firebase';
 import { 
   Home, 
@@ -193,17 +192,6 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
   }, [theme]);
 
-  useEffect(() => {
-    const handleVoiceProfileUpdate = (e: any) => {
-      const detail = e.detail;
-      if (detail) {
-        setUserProfile((prev) => (prev ? { ...prev, ...detail } : (detail as UserProfile)));
-      }
-    };
-    window.addEventListener('scholar-profile-updated', handleVoiceProfileUpdate);
-    return () => window.removeEventListener('scholar-profile-updated', handleVoiceProfileUpdate);
-  }, []);
-
   const toggleTheme = () => {
     setTheme(prev => {
       if (prev === 'modern') return 'midnight';
@@ -310,50 +298,13 @@ export default function App() {
         } catch (e) {
           console.error("Critical error in auth handler", e);
         }
-
-        // Real-time listener for user profile updates
-        try {
-          const db = getDbService();
-          if (db) {
-            const unsubProfile = onSnapshot(doc(db, 'users', u.uid), (docSnap) => {
-              if (docSnap.exists()) {
-                const liveData = docSnap.data() as UserProfile;
-                setUserProfile(liveData);
-                if (liveData.theme) {
-                  setTheme(liveData.theme);
-                }
-              }
-            }, (err) => {
-              console.warn("User profile snapshot listener warning:", err);
-            });
-            // Attach to window or cleanup if needed
-          }
-        } catch (_) {}
       } else {
         setUserProfile(null);
       }
       setUser(u);
       setLoading(false);
     });
-
-    // Listen for immediate scholar voice profile events across the app
-    const handleVoiceProfileUpdated = (e: any) => {
-      if (e?.detail) {
-        setUserProfile(prev => prev ? { ...prev, ...e.detail } : ({
-          uid: 'temp',
-          email: '',
-          displayName: 'Pilgrim',
-          photoURL: '',
-          ...e.detail
-        } as UserProfile));
-      }
-    };
-    window.addEventListener('scholar-profile-updated', handleVoiceProfileUpdated);
-
-    return () => {
-      unsubscribe();
-      window.removeEventListener('scholar-profile-updated', handleVoiceProfileUpdated);
-    };
+    return unsubscribe;
   }, []);
 
   const handleLogin = async () => {
@@ -836,12 +787,7 @@ export default function App() {
             {currentPage === 'reports' && <Reports />}
             {currentPage === 'saved-chats' && <SavedChatSessions userProfile={userProfile} onSelectSession={() => setOpenChatbotSignal({ open: true, view: 'chat', id: Date.now() })} />}
             {currentPage === 'glossary' && <Glossary />}
-            {currentPage === 'settings' && (
-              <SettingsPage 
-                onNavigatePage={(page) => setCurrentPage(page)} 
-                onProfileUpdated={(updated) => setUserProfile(prev => prev ? { ...prev, ...updated } : (updated as UserProfile))}
-              />
-            )}
+            {currentPage === 'settings' && <SettingsPage onNavigatePage={(page) => setCurrentPage(page)} />}
             {currentPage === 'privacy' && <PrivacyPolicyPage onBack={() => setCurrentPage('dashboard')} />}
             {currentPage === 'terms' && <TermsOfUsePage onBack={() => setCurrentPage('dashboard')} />}
             {currentPage === 'admin' && <AdminDashboard />}
