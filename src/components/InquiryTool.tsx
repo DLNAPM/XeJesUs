@@ -103,11 +103,22 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
 
   return (
     <div className="max-w-3xl mx-auto">
-      <header className="mb-12 text-center">
-        <h1 className="text-4xl font-serif text-text-primary mb-4">Seek the Word</h1>
-        <p className="text-text-secondary italic max-w-lg mx-auto">
+      <header className="mb-8 text-center">
+        <h1 className="text-4xl font-serif text-text-primary mb-3">Seek the Word</h1>
+        <p className="text-text-secondary italic max-w-lg mx-auto text-sm mb-5">
           "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you."
         </p>
+        
+        {/* XeJesUs Foundational Exegesis Banner */}
+        <div className="p-4 bg-ui-card/90 border border-ui-border rounded-2xl text-left max-w-2xl mx-auto shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] mb-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-accent" />
+            <span>The XeJesUs Standard of Exegesis</span>
+          </div>
+          <p className="font-serif italic text-xs sm:text-sm text-text-secondary leading-relaxed">
+            <strong className="text-text-primary font-semibold">Exegesis</strong> ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (<span className="text-accent/90 font-medium">eisegesis</span>)) to discover Jesus' true intentions for Us today.
+          </p>
+        </div>
       </header>
 
       <div className="bg-ui-card p-8 md:p-12 rounded-3xl shadow-xl border border-ui-border relative overflow-hidden">
@@ -198,7 +209,7 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
           <div>
             <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Your Seeking</label>
             <textarea
-              placeholder="What do you seek to understand about this passage?"
+              placeholder="What do you seek to understand about this passage? (e.g., How does this passage lead out the original meaning rather than human bias? How does it reveal the role and person of Jesus? What are Jesus' true intentions for Us today?)"
               className="w-full bg-bg-primary/50 border border-ui-border rounded-xl px-6 py-4 font-serif text-lg focus:outline-none focus:border-accent focus:bg-ui-card transition-all shadow-inner min-h-[150px] text-text-primary"
               value={queryText}
               onChange={(e) => setQueryText(e.target.value)}

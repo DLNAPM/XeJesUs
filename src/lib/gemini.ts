@@ -10,12 +10,20 @@ function getClientFallbackExegesis(scripture: string, queryText: string) {
 
   if (combined.includes("matthew 16") || (combined.includes("rock") && (combined.includes("peter") || combined.includes("church")))) {
     return {
-      interpretation: `In Matthew 16:18, Jesus responds to Simon Peter's confession ('You are the Christ, the Son of the living God') with the declaration: 'And I tell you, you are Peter, and on this rock I will build my church, and the gates of hell shall not prevail against it.'
+      interpretation: `### XeJesUs Exegesis: Leading Out the Truth of Matthew 16:18
+
+**Pure Exegesis vs. Eisegesis**:
+True exegesis ("leading out" the original intended meaning of the passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (eisegesis)) requires us to set aside modern ecclesiastical biases and analyze Christ's words in their historical and grammatical reality.
+
+In Matthew 16:18, Jesus responds to Simon Peter's confession ('You are the Christ, the Son of the living God') with the declaration: 'And I tell you, you are Peter, and on this rock I will build my church, and the gates of hell shall not prevail against it.'
 
 In directly answering your seeking ('${q}'):
-1. Patristic & Classical Consensus (Source 3): St. Augustine (Retractationes I.21.1) clarified that Christ did not say 'You are the rock (petra), but You are Peter (Petros). But the Rock was Christ.' St. John Chrysostom affirmed that the church is built 'on the faith of his confession' of Christ's divine Sonship. Classical commentators like Matthew Henry and Charles Spurgeon emphasize Christ as the sole foundation (1 Corinthians 3:11).
-2. Canonical Foundation (Source 1): Scripture repeatedly identifies the unshakeable foundation stone as Jesus Christ Himself (Isaiah 28:16; Ephesians 2:20; 1 Peter 2:4-6).
-3. Contemporary Discipleship (Source 5): In times of cultural instability and spiritual warfare, believers can rest in the absolute promise that Christ's church is indestructible.`,
+1. **Focus on the Role and Person of Jesus (Source 1 & Source 3)**:
+The cornerstone of this declaration is not mortal Simon, but Jesus Christ Himself and the divine revelation of His messianic identity and eternal Sonship. St. Augustine (*Retractationes* I.21.1) clarified that Christ did not say 'You are the rock (*petra*), but You are Peter (*Petros*). But the Rock was Christ.' St. John Chrysostom affirmed that the church is built 'on the faith of his confession' of Christ's divine Sonship. Classical commentators like Matthew Henry and Charles Spurgeon emphasize Christ as the sole foundation (1 Corinthians 3:11).
+2. **Rejecting Eisegetical Distortions**:
+Eisegesis has historically attempted to elevate human hierarchy over the sovereign Lordship of Christ. Pure exegesis leads out the reality that Jesus is the architect, owner, and defender ('*I* will build *My* church').
+3. **Jesus' True Intentions for Us Today (Source 5)**:
+In times of cultural instability and spiritual warfare, believers can rest in Jesus' absolute promise that His Church is indestructible, grounded forever upon His living reality.`,
       historicalContext: `Authored by Matthew circa AD 60–68. Spoken in the district of Caesarea Philippi (Banias), described by Jewish historian Flavius Josephus (Antiquities of the Jews 18.2.1; The Jewish War 2.9.1) as an ancient sanctuary at the base of Mount Hermon featuring limestone cliffs, shrines to Pan, a marble Augustus temple, and a deep cave spring regarded as the 'Gates of Hades'. In this citadel of paganism, Christ revealed His eternal kingdom (Source 4).`,
       grammarAnalysis: `Key Greek terminology via BDAG (Bauer-Danker-Arndt-Gingrich) and Strong's Concordance (Source 2):
 • Πέτρος (Petros, Strong's G4074): Masculine proper noun signifying an individual stone, detached pebble, or rock fragment.
@@ -24,7 +32,7 @@ In directly answering your seeking ('${q}'):
 • ἐκκλησίαν (ekklēsian, Strong's G1577, BDAG p. 303): Accusative singular of ekklēsia ('called-out assembly/covenant community').
 • πύλαι ᾅδου (pylai hadou, Strong's G4439 / G86): Gates of the underworld/realm of death, symbolizing the defensive stronghold of darkness that cannot withstand the advance of Christ's church.`,
       literaryGenre: `Gospel Narrative & Messianic Foundation Discourse`,
-      godIntent: `God's divine intent in Matthew 16:18 is to reveal that the Church is established not upon frail human power, but upon the immovable bedrock of Jesus Christ, the eternal Son of the Living God, guaranteeing victory over sin and death.`,
+      godIntent: `Jesus' divine intent in Matthew 16:18 is to reveal that the Church is established not upon frail human power, but upon the immovable bedrock of Jesus Christ, the eternal Son of the Living God, guaranteeing victory over sin and death and securing His true intentions for Us today.`,
       crossReferences: [
         "1 Corinthians 3:11 - For no other foundation can anyone lay than that which is laid, which is Jesus Christ.",
         "Ephesians 2:20 - Built on the foundation of the apostles and prophets, Jesus Christ Himself being the chief cornerstone.",
@@ -45,12 +53,20 @@ In directly answering your seeking ('${q}'):
 
   if (combined.includes("leviticus 21") || (combined.includes("aaron") && (combined.includes("defect") || combined.includes("blemish") || combined.includes("descendant")))) {
     return {
-      interpretation: `In Leviticus 21:16-24, God commands Moses that descendants of Aaron with physical blemishes (Hebrew: mum) shall not draw near (nagash) to present the food offerings at the altar.
+      interpretation: `### XeJesUs Exegesis: Leading Out the Meaning of Leviticus 21:16-24
+
+**Pure Exegesis vs. Eisegesis**:
+Exegesis ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (eisegesis)) rescues Leviticus 21 from modern cynical eisegesis. Secular or shallow interpretations mistakenly read this passage as discriminatory; grammatical-historical exegesis leads out its authentic covenant typology.
+
+In Leviticus 21:16-24, God commands Moses that descendants of Aaron with physical blemishes (Hebrew: *mum*) shall not draw near (*nagash*) to present the food offerings at the altar.
 
 In answering your seeking ('${q}'):
-1. Typology of the Spotless High Priest: As early church fathers and classical commentators (Augustine, Calvin, Matthew Henry) observed, the Levitical priesthood functioned as an earthly pedagogical shadow pointing toward Jesus Christ, our spotless High Priest (Hebrews 7:26; 1 Peter 1:19).
-2. Covenant Sustenance & Dignity: God explicitly guarantees in verse 22: 'He may eat the food of his God, both of the most holy and of the holy.' Blemished descendants were never cast out, cursed, or stripped of their priestly inheritance; they retained full priestly dignity and sacred table fellowship.
-3. Contemporary Application (Source 5): Under the New Covenant, Christ welcomes all who are weary, heavy-laden, and physically broken, making every believer part of a 'royal priesthood' (1 Peter 2:9) whose weaknesses magnify His divine grace (2 Corinthians 12:9).`,
+1. **Focus on the Role and Person of Jesus (The Spotless High Priest)**:
+The Levitical priesthood functioned as an earthly pedagogical shadow pointing directly to Jesus Christ, our sinless, spotless High Priest (Hebrews 7:26; 1 Peter 1:19). The requirement for external physical wholeness in the Old Covenant pointed to the internal moral and divine perfection embodied exclusively in Jesus Christ.
+2. **Covenant Grace & Sustenance**:
+God explicitly guarantees in verse 22: 'He may eat the food of his God, both of the most holy and of the holy.' Blemished descendants were never discarded, rejected, or stripped of their priestly inheritance; they enjoyed full priestly dignity and intimate table fellowship with God.
+3. **Jesus' True Intentions for Us Today**:
+Under the New Covenant, Jesus Christ touches the broken, welcomes the wounded, and makes every believer part of a 'royal priesthood' (1 Peter 2:9) whose human weaknesses showcase His all-sufficient grace (2 Corinthians 12:9).`,
       historicalContext: `Delivered by God to Moses at Mount Sinai (circa 1446 or 1260 BC) during Israel's encampment in the wilderness. Jewish historian Flavius Josephus notes in Antiquities of the Jews (3.12.2) that Aaronic priests were required to be of unblemished lineage and bodily wholeness to preserve the visual sanctity of the sanctuary (Source 4). While ancient Near Eastern cults viewed bodily flaws with pagan superstition, Yahweh's covenant honored the men's livelihood while guarding symbolic purity.`,
       grammarAnalysis: `Key Hebrew terminology via BDB (Brown-Driver-Briggs Hebrew Lexicon) and Strong's Concordance (Source 2):
 • מוּם (mum, Strong's H3971, BDB p. 548): Blemish, bodily defect, spot; used of sacrificial animals and priests to symbolize unblemished perfection.
@@ -172,21 +188,28 @@ When believers labor in human self-reliance, the nets remain empty. But when dis
   }
 
   return {
-    interpretation: `An exhaustive, collegiate-level grammatical-historical exposition of ${s} directly engages your seeking: '${q}'.
+    interpretation: `### XeJesUs Exegesis: Leading Out the Original Meaning of ${s}
 
-Grounded across the 5 Primary Foundational Sources of Sacred Scripture:
-1. **Canonical Revelation & Christological Fulfillment**:
-Within its broader canonical framework, ${s} articulates the unshakeable righteousness, holy character, and redemptive purpose of God. Scripture interprets Scripture: every verse operates as a living thread in the tapestry of divine salvation history culminating in the person and work of Jesus Christ.
+**The XeJesUs Foundation**:
+XeJesUs is the divine synthesis of Exegesis ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (eisegesis)) and the name of Our Savior, Jesus Christ. Our purpose is to travel through the text to discover Jesus' true intentions for Us today.
 
-2. **Patristic & Classical Commentary Consensus**:
-From early church fathers (including St. Augustine, St. John Chrysostom, and Athanasius) to classical reformers and expositors (such as John Calvin, Matthew Henry, and Charles Spurgeon), Christian scholarship uniformly attests that ${s} addresses the depths of the human condition with divine authority. God does not speak in abstract ambiguities; He addresses human suffering, obedience, and covenant faith with living transformative power.
+In directly addressing your seeking ('${q}'):
 
-3. **Contemporary Discipleship & Practical Application**:
-For the modern pilgrim navigating cultural disorientation and spiritual trial, this passage provides an immovable ethical and spiritual anchor. Discipleship requires not merely intellectual assent to historical facts, but an active trust in the living God whose promises in ${s} remain faithful and true.`,
-    historicalContext: `${s} was delivered within the concrete historical, geopolitical, and cultural landscape of God's covenant people—whether the Ancient Near Eastern bronze age, the Davidic monarchy, the Babylonian exile, or the Greco-Roman world of the Second Temple period. Verified by levantine archaeology, ancient Near Eastern legal codes, and historical chronicles such as Flavius Josephus (*Antiquities of the Jews*), the passage directly confronted the pagan worldview of its day while communicating eternal divine truth to its original hearers.`,
-    grammarAnalysis: `Rigorous linguistic parsing of ${s} in its original biblical language (Hebrew, Aramaic, or Koine Greek) utilizing standard academic lexicons (BDB, BDAG, and Strong's Concordance) reveals precise verbal aspects, moods, and covenantal terminology, demonstrating that the inspired text communicates with exacting theological precision and divine intentionality.`,
+1. **Exegesis vs. Eisegesis (Rejecting Human Bias)**:
+Rigorous biblical exegesis forbids imposing modern presuppositions, cultural preferences, or sectarian biases onto ${s}. Instead, we lead out what the inspired author communicated in historical, grammatical, and canonical context.
+
+2. **Specifically Focusing on the Role and Person of Jesus Christ (Source 1 & Source 3)**:
+As Christ declared to the disciples on the Emmaus road (Luke 24:27), all Scripture finds its ultimate coherence, prophetic trajectory, and fulfillment in Him. In ${s}, the role, character, and redemptive mission of Jesus Christ shine forth as the central foundation of faith.
+
+3. **Patristic & Classical Commentary Consensus (Source 3)**:
+From early church fathers (including St. Augustine, St. John Chrysostom, and Athanasius) to classical reformers and expositors (such as John Calvin, Matthew Henry, and Charles Spurgeon), the historic church consistently witnesses that Scripture speaks with living divine authority to reconcile humanity to God in Christ.
+
+4. **Jesus' True Intentions for Us Today (Source 5)**:
+Scripture does not remain a dead letter; it commands and transforms. Discipleship requires actively trusting and obeying Jesus' true intentions for Us today, walking in covenant faith, holiness, and love.`,
+    historicalContext: `${s} was delivered within the concrete historical, geopolitical, and cultural landscape of God's covenant people—whether the Ancient Near Eastern bronze age, the Davidic monarchy, the Babylonian exile, or the Greco-Roman world of the Second Temple period. Grounded in Source 4 (Flavius Josephus, Roman records, Levant geography), the passage directly confronted the pagan worldview of its day, preventing anachronistic eisegesis and anchoring the text in its true original reality.`,
+    grammarAnalysis: `Rigorous linguistic parsing of ${s} in its original biblical language (Hebrew, Aramaic, or Koine Greek) utilizing standard academic lexicons (BDB, BDAG, and Strong's Concordance) reveals precise verbal aspects, moods, and covenantal terminology, demonstrating that the inspired text communicates with exacting theological precision, leading out the author's inspired intent.`,
     literaryGenre: "Biblical Exegetical Exposition & Canonical Discourse",
-    godIntent: `God's sovereign divine intent in ${s} regarding '${q}' is to unveil His holy character, declare His eternal covenant faithfulness in Jesus Christ, dismantle human error and pride, and equip the believer with spiritual wisdom, steadfast hope, and a deeper intimacy with the living God.`,
+    godIntent: `Jesus' divine intent in ${s} regarding '${q}' is to unveil His holy character, declare His eternal covenant faithfulness, dismantle human biases and eisegetical errors, and reveal His true intentions for Us today—granting spiritual wisdom, steadfast hope, and a transformed life in Him.`,
     crossReferences: [
       "2 Timothy 3:16-17 - All Scripture is given by inspiration of God, and is profitable for doctrine, for reproof, for correction, for instruction in righteousness.",
       "Psalm 119:105 - Your word is a lamp to my feet and a light to my path.",

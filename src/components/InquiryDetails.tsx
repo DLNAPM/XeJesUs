@@ -597,7 +597,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       {/* Mobile & Notebook Ribbon of consolidated buttons at the top of the page */}
       <div className="xl:hidden grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-8">
         {[
-          { id: 'faith', label: "God's Intent", icon: Sparkles, emoji: '✨' },
+          { id: 'faith', label: "Jesus' Intentions for Us", icon: Sparkles, emoji: '✨' },
           { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
           { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
           { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
@@ -674,7 +674,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
           <div className="hidden xl:flex flex-col gap-2">
             {[
-              { id: 'faith', label: 'God\'s Intent', icon: Sparkles, emoji: '✨' },
+              { id: 'faith', label: "Jesus' Intentions for Us", icon: Sparkles, emoji: '✨' },
               { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
               { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
               { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
@@ -740,19 +740,32 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         {/* Right Column: Content Area */}
         <div className="xl:col-span-2">
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
+            {/* XeJesUs Standard Banner */}
+            <div className="mb-8 p-4 bg-ui-sidebar/50 rounded-2xl border border-ui-border flex items-start sm:items-center gap-3 shadow-sm">
+              <div className="w-8 h-8 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+                <Sparkles className="w-4 h-4 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] mb-0.5">The XeJesUs Standard</div>
+                <p className="font-serif italic text-xs text-text-secondary leading-snug">
+                  <strong className="text-text-primary font-semibold">Exegesis</strong> ("leading out" the original intended meaning of a passage—specifically focusing on the role and person of Jesus—rather than inserting one's own biases (<span className="text-accent/80 font-medium">eisegesis</span>)) to discover Jesus' true intentions for Us today.
+                </p>
+              </div>
+            </div>
+
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs font-sans font-bold text-accent uppercase tracking-[0.3em]">
                       <Sparkles className="w-4 h-4 text-accent" />
-                      <span>How God Intended (Divine Covenant Purpose)</span>
+                      <span>Jesus' True Intentions for Us Today (Divine Covenant Purpose)</span>
                     </div>
                     <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-2xl md:text-3xl leading-relaxed text-text-primary shadow-inner">
                       "{inquiry.godIntent}"
                     </div>
                   </div>
                   <div className="prose prose-invert max-w-none">
-                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Exegetical Deep-Dive & Detailed Interpretation</h3>
+                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Exegetical Deep-Dive: Leading Out the Truth of Jesus</h3>
                     <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-text-secondary">
                       <Markdown>{inquiry.interpretation}</Markdown>
                     </div>
