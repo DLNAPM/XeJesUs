@@ -1014,38 +1014,42 @@ Return ONLY valid JSON matching this schema.`;
   // Neural Voice Configuration matched to the assigned Sanctuary Scholar Personas
   function getNeuralVoiceConfig(personaName: string, gender: string) {
     const p = (personaName || "").toLowerCase();
-    if (gender === "male") {
-      if (p.includes("osteen")) {
-        return { voice: "en-US-GuyNeural", rate: "+4%", pitch: "+2Hz" };
-      } else if (p.includes("spurgeon")) {
-        return { voice: "en-GB-ThomasNeural", rate: "-3%", pitch: "-2Hz" };
-      } else if (p.includes("lewis")) {
-        return { voice: "en-GB-RyanNeural", rate: "-2%", pitch: "+0Hz" };
-      } else if (p.includes("luther")) {
-        return { voice: "en-US-ChristopherNeural", rate: "+0%", pitch: "-3Hz" };
-      } else if (p.includes("keller")) {
-        return { voice: "en-US-BrianNeural", rate: "-2%", pitch: "-1Hz" };
-      } else if (p.includes("graham")) {
-        return { voice: "en-US-EricNeural", rate: "+3%", pitch: "+1Hz" };
-      } else {
-        return { voice: "en-US-AndrewNeural", rate: "+0%", pitch: "+0Hz" };
-      }
+
+    // Check specific female scholar personas first
+    if (p.includes("oprah") || p.includes("winfrey")) {
+      return { voice: "en-US-MichelleNeural", rate: "-3%", pitch: "-2Hz" };
+    } else if (p.includes("moore")) {
+      return { voice: "en-US-JennyNeural", rate: "+3%", pitch: "+2Hz" };
+    } else if (p.includes("meyer")) {
+      return { voice: "en-US-AriaNeural", rate: "+2%", pitch: "+0Hz" };
+    } else if (p.includes("shirer")) {
+      return { voice: "en-US-EmmaNeural", rate: "+2%", pitch: "+1Hz" };
+    } else if (p.includes("arthur")) {
+      return { voice: "en-GB-SoniaNeural", rate: "-4%", pitch: "-1Hz" };
+    } else if (p.includes("ten boom") || p.includes("corrie")) {
+      return { voice: "en-GB-LibbyNeural", rate: "-5%", pitch: "+0Hz" };
+    }
+
+    // Check specific male scholar personas
+    if (p.includes("osteen")) {
+      return { voice: "en-US-GuyNeural", rate: "+4%", pitch: "+2Hz" };
+    } else if (p.includes("spurgeon")) {
+      return { voice: "en-GB-ThomasNeural", rate: "-3%", pitch: "-2Hz" };
+    } else if (p.includes("lewis")) {
+      return { voice: "en-GB-RyanNeural", rate: "-2%", pitch: "+0Hz" };
+    } else if (p.includes("luther")) {
+      return { voice: "en-US-ChristopherNeural", rate: "+0%", pitch: "-3Hz" };
+    } else if (p.includes("keller")) {
+      return { voice: "en-US-BrianNeural", rate: "-2%", pitch: "-1Hz" };
+    } else if (p.includes("graham")) {
+      return { voice: "en-US-EricNeural", rate: "+3%", pitch: "+1Hz" };
+    }
+
+    // Fallback based on gender if persona name is custom or unknown
+    if (gender === "female") {
+      return { voice: "en-US-AvaNeural", rate: "+0%", pitch: "+0Hz" };
     } else {
-      if (p.includes("oprah") || p.includes("winfrey")) {
-        return { voice: "en-US-MichelleNeural", rate: "-3%", pitch: "-2Hz" };
-      } else if (p.includes("moore")) {
-        return { voice: "en-US-JennyNeural", rate: "+3%", pitch: "+2Hz" };
-      } else if (p.includes("meyer")) {
-        return { voice: "en-US-AriaNeural", rate: "+2%", pitch: "+0Hz" };
-      } else if (p.includes("shirer")) {
-        return { voice: "en-US-EmmaNeural", rate: "+2%", pitch: "+1Hz" };
-      } else if (p.includes("arthur")) {
-        return { voice: "en-GB-SoniaNeural", rate: "-4%", pitch: "-1Hz" };
-      } else if (p.includes("ten boom") || p.includes("corrie")) {
-        return { voice: "en-GB-LibbyNeural", rate: "-5%", pitch: "+0Hz" };
-      } else {
-        return { voice: "en-US-AvaNeural", rate: "+0%", pitch: "+0Hz" };
-      }
+      return { voice: "en-US-AndrewNeural", rate: "+0%", pitch: "+0Hz" };
     }
   }
 

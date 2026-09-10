@@ -91,6 +91,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
   const isPremium = userProfile?.tier === 'premium' || userProfile?.role === 'admin';
 
+  const [voiceConfig, setVoiceConfig] = useState(() => getEffectiveScholarVoiceInfo(userProfile));
   const [profileSyncKey, setProfileSyncKey] = useState(0);
 
   useEffect(() => {
@@ -112,11 +113,16 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
   useEffect(() => {
     const onProfileChange = () => {
+      setVoiceConfig(getEffectiveScholarVoiceInfo(userProfile));
       setProfileSyncKey(k => k + 1);
     };
     window.addEventListener('scholar-profile-updated', onProfileChange);
-    return () => window.removeEventListener('scholar-profile-updated', onProfileChange);
-  }, []);
+    window.addEventListener('storage', onProfileChange);
+    return () => {
+      window.removeEventListener('scholar-profile-updated', onProfileChange);
+      window.removeEventListener('storage', onProfileChange);
+    };
+  }, [userProfile]);
 
   useEffect(() => {
     const unsubscribe = subscribeScholarSpeechProgress((state) => {
@@ -404,7 +410,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                       title="Change Sanctuary Scholar Voice"
                     >
                       <Mic className="w-3 h-3 text-accent" />
-                      <span>Voice: <strong>{getEffectiveScholarVoiceInfo(userProfile).personaName}</strong> ({getEffectiveScholarVoiceInfo(userProfile).gender === 'female' ? 'Female' : 'Male'})</span>
+                      <span>Voice: <strong>{voiceConfig.personaName}</strong> ({voiceConfig.gender === 'female' ? 'Female' : 'Male'})</span>
                       <ChevronDown className={`w-3 h-3 transition-transform ${isToolbarVoiceDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
 
@@ -412,8 +418,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                       {isToolbarVoiceDropdownOpen && (
                         <ScholarVoiceDropdown
                           anchorEl={toolbarVoiceAnchorEl}
-                          currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
-                          currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
+                          currentVoiceName={voiceConfig.personaName}
+                          currentGender={voiceConfig.gender}
                           onSelectVoice={(voiceName, gender) => {
                             const activeSession = sessions.find(s => s.id === speakingSessionId);
                             if (activeSession) {
@@ -594,7 +600,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                           title="Change Sanctuary Scholar Voice"
                         >
                           <Mic className="w-2.5 h-2.5" />
-                          <span>Voice: {getEffectiveScholarVoiceInfo(userProfile).personaName}</span>
+                          <span>Voice: {voiceConfig.personaName}</span>
                           <ChevronDown className="w-2.5 h-2.5" />
                         </button>
                       </div>

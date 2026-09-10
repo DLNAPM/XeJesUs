@@ -80,15 +80,41 @@ export function getEffectiveScholarVoiceInfo(profile?: UserProfile | null): {
     } catch (_) {}
   }
 
-  // Client-side stored preference takes immediate priority over cached profile props
-  const maleVoiceName = parsed?.maleScholarVoice || p?.maleScholarVoice || 'Joel Osteen';
-  const femaleVoiceName = parsed?.femaleScholarVoice || p?.femaleScholarVoice || 'Oprah Winfrey';
-  const activeGender = parsed?.activeScholarGender || p?.activeScholarGender || 'male';
-  const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
-  const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
-  const scholarsVoicesEnabled = parsed?.scholarsVoicesEnabled !== undefined
-    ? parsed.scholarsVoicesEnabled
-    : (p?.scholarsVoicesEnabled !== undefined ? p.scholarsVoicesEnabled : true);
+  const activeGender: 'male' | 'female' | 'auto' = 
+    p?.activeScholarGender || parsed?.activeScholarGender || 'male';
+
+  const maleVoiceName = p?.maleScholarVoice || parsed?.maleScholarVoice || 'Joel Osteen';
+  const femaleVoiceName = p?.femaleScholarVoice || parsed?.femaleScholarVoice || 'Oprah Winfrey';
+
+  let genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
+  let personaName = genderToUse === 'female' ? femaleVoiceName : maleVoiceName;
+
+  // Auto-align gender based on preset catalog if persona is recognized
+  const lowerPersona = (personaName || '').toLowerCase();
+  if (
+    lowerPersona.includes('oprah') || 
+    lowerPersona.includes('moore') || 
+    lowerPersona.includes('meyer') || 
+    lowerPersona.includes('shirer') || 
+    lowerPersona.includes('arthur') || 
+    lowerPersona.includes('ten boom') || 
+    lowerPersona.includes('corrie')
+  ) {
+    genderToUse = 'female';
+  } else if (
+    lowerPersona.includes('osteen') || 
+    lowerPersona.includes('spurgeon') || 
+    lowerPersona.includes('lewis') || 
+    lowerPersona.includes('luther') || 
+    lowerPersona.includes('keller') || 
+    lowerPersona.includes('graham')
+  ) {
+    genderToUse = 'male';
+  }
+
+  const scholarsVoicesEnabled = p?.scholarsVoicesEnabled !== undefined
+    ? p.scholarsVoicesEnabled
+    : (parsed?.scholarsVoicesEnabled !== undefined ? parsed.scholarsVoicesEnabled : true);
 
   return {
     personaName,

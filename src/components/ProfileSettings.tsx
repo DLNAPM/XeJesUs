@@ -34,10 +34,46 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bibleWebsite, setBibleWebsite] = useState('');
   const [theme, setTheme] = useState('modern');
-  const [maleScholarVoice, setMaleScholarVoice] = useState('Joel Osteen');
-  const [femaleScholarVoice, setFemaleScholarVoice] = useState('Oprah Winfrey');
-  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>('male');
-  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(true);
+  const [maleScholarVoice, setMaleScholarVoice] = useState(() => {
+    try {
+      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
+      if (stored) {
+        const p = JSON.parse(stored);
+        if (p?.maleScholarVoice) return p.maleScholarVoice;
+      }
+    } catch (_) {}
+    return 'Joel Osteen';
+  });
+  const [femaleScholarVoice, setFemaleScholarVoice] = useState(() => {
+    try {
+      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
+      if (stored) {
+        const p = JSON.parse(stored);
+        if (p?.femaleScholarVoice) return p.femaleScholarVoice;
+      }
+    } catch (_) {}
+    return 'Oprah Winfrey';
+  });
+  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>(() => {
+    try {
+      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
+      if (stored) {
+        const p = JSON.parse(stored);
+        if (p?.activeScholarGender) return p.activeScholarGender;
+      }
+    } catch (_) {}
+    return 'male';
+  });
+  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(() => {
+    try {
+      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
+      if (stored) {
+        const p = JSON.parse(stored);
+        if (p?.scholarsVoicesEnabled !== undefined) return p.scholarsVoicesEnabled;
+      }
+    } catch (_) {}
+    return true;
+  });
   const [customMaleVoice, setCustomMaleVoice] = useState('');
   const [customFemaleVoice, setCustomFemaleVoice] = useState('');
   const [testingVoice, setTestingVoice] = useState<'male' | 'female' | null>(null);
@@ -94,14 +130,17 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
             setScholarsVoicesEnabled(data.scholarsVoicesEnabled);
           }
 
-          // Cache to localStorage for instant client-wide access
+          // Cache to localStorage for instant client-wide access without clobbering with defaults
           try {
-            localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify({
-              maleScholarVoice: data.maleScholarVoice || 'Joel Osteen',
-              femaleScholarVoice: data.femaleScholarVoice || 'Oprah Winfrey',
-              activeScholarGender: data.activeScholarGender || 'male',
-              scholarsVoicesEnabled: data.scholarsVoicesEnabled !== undefined ? data.scholarsVoicesEnabled : true
-            }));
+            const currentStored = localStorage.getItem('xejesus_user_scholar_voice_profile');
+            const parsedStored = currentStored ? JSON.parse(currentStored) : {};
+            const voicePayload = {
+              maleScholarVoice: data.maleScholarVoice || parsedStored.maleScholarVoice || 'Joel Osteen',
+              femaleScholarVoice: data.femaleScholarVoice || parsedStored.femaleScholarVoice || 'Oprah Winfrey',
+              activeScholarGender: data.activeScholarGender || parsedStored.activeScholarGender || 'male',
+              scholarsVoicesEnabled: data.scholarsVoicesEnabled !== undefined ? data.scholarsVoicesEnabled : (parsedStored.scholarsVoicesEnabled ?? true)
+            };
+            localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify(voicePayload));
           } catch (_) {}
 
           onProfileUpdated?.(data);
@@ -211,60 +250,68 @@ export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: Pr
   };
 
   const handleSave = async () => {
-    const auth = getAuthService();
-    const db = getDbService();
-    if (!auth || !auth.currentUser || !db) return;
-
     setSaving(true);
     const finalMaleVoice = maleScholarVoice === 'Custom' ? (customMaleVoice.trim() || 'Custom Male Voice') : maleScholarVoice;
     const finalFemaleVoice = femaleScholarVoice === 'Custom' ? (customFemaleVoice.trim() || 'Custom Female Voice') : femaleScholarVoice;
 
-    const updatedData = {
-      uid: auth.currentUser.uid,
-      email: auth.currentUser.email,
-      displayName: auth.currentUser.displayName,
-      photoURL: auth.currentUser.photoURL,
-      bibleWebsite: bibleWebsite,
-      theme: theme as 'modern' | 'midnight' | 'parchment',
-      maleScholarVoice: finalMaleVoice,
-      femaleScholarVoice: finalFemaleVoice,
-      activeScholarGender: activeScholarGender,
-      scholarsVoicesEnabled: scholarsVoicesEnabled
-    };
-
+    // 1. Immediately cache to localStorage & notify system listeners
     try {
-      await setDoc(doc(db, 'users', auth.currentUser.uid), updatedData, { merge: true });
-      
-      // Update theme in real-time
-      document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
-
-      // Immediately cache to localStorage & notify system listeners
-      try {
-        localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify({
+      localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify({
+        maleScholarVoice: finalMaleVoice,
+        femaleScholarVoice: finalFemaleVoice,
+        activeScholarGender: activeScholarGender,
+        scholarsVoicesEnabled: scholarsVoicesEnabled
+      }));
+      window.dispatchEvent(new CustomEvent('scholar-profile-updated', { 
+        detail: {
           maleScholarVoice: finalMaleVoice,
           femaleScholarVoice: finalFemaleVoice,
           activeScholarGender: activeScholarGender,
           scholarsVoicesEnabled: scholarsVoicesEnabled
-        }));
-        window.dispatchEvent(new CustomEvent('scholar-profile-updated', { 
-          detail: {
-            maleScholarVoice: finalMaleVoice,
-            femaleScholarVoice: finalFemaleVoice,
-            activeScholarGender: activeScholarGender,
-            scholarsVoicesEnabled: scholarsVoicesEnabled
-          } 
-        }));
-      } catch (_) {}
+        } 
+      }));
+    } catch (_) {}
 
-      onProfileUpdated?.(updatedData);
+    // Update theme in real-time
+    document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
 
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
-    } finally {
-      setSaving(false);
+    const auth = getAuthService();
+    const db = getDbService();
+
+    if (auth?.currentUser && db) {
+      const updatedData = {
+        uid: auth.currentUser.uid,
+        email: auth.currentUser.email,
+        displayName: auth.currentUser.displayName,
+        photoURL: auth.currentUser.photoURL,
+        bibleWebsite: bibleWebsite,
+        theme: theme as 'modern' | 'midnight' | 'parchment',
+        maleScholarVoice: finalMaleVoice,
+        femaleScholarVoice: finalFemaleVoice,
+        activeScholarGender: activeScholarGender,
+        scholarsVoicesEnabled: scholarsVoicesEnabled
+      };
+
+      try {
+        await setDoc(doc(db, 'users', auth.currentUser.uid), updatedData, { merge: true });
+        onProfileUpdated?.(updatedData);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+      }
+    } else {
+      onProfileUpdated?.({
+        maleScholarVoice: finalMaleVoice,
+        femaleScholarVoice: finalFemaleVoice,
+        activeScholarGender: activeScholarGender,
+        scholarsVoicesEnabled: scholarsVoicesEnabled,
+        bibleWebsite,
+        theme: theme as any
+      } as any);
     }
+
+    setSaving(false);
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
   };
 
   if (loading) {

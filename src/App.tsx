@@ -197,7 +197,7 @@ export default function App() {
     const handleVoiceProfileUpdate = (e: any) => {
       const detail = e.detail;
       if (detail) {
-        setUserProfile((prev) => (prev ? { ...prev, ...detail } : prev));
+        setUserProfile((prev) => (prev ? { ...prev, ...detail } : (detail as UserProfile)));
       }
     };
     window.addEventListener('scholar-profile-updated', handleVoiceProfileUpdate);
@@ -839,7 +839,7 @@ export default function App() {
             {currentPage === 'settings' && (
               <SettingsPage 
                 onNavigatePage={(page) => setCurrentPage(page)} 
-                onProfileUpdated={(updated) => setUserProfile(prev => prev ? { ...prev, ...updated } : prev)}
+                onProfileUpdated={(updated) => setUserProfile(prev => prev ? { ...prev, ...updated } : (updated as UserProfile))}
               />
             )}
             {currentPage === 'privacy' && <PrivacyPolicyPage onBack={() => setCurrentPage('dashboard')} />}
