@@ -126,11 +126,11 @@ export default function App() {
   });
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [hasInquiries, setHasInquiries] = useState<boolean | null>(null);
-  const [openChatbotSignal, setOpenChatbotSignal] = useState<{ open: boolean; view: 'chat' | 'sessions'; id: number }>({ open: false, view: 'chat', id: 0 });
+  const [openChatbotSignal, setOpenChatbotSignal] = useState<{ open: boolean; view: 'chat' | 'sessions'; id: number; session?: any }>({ open: false, view: 'chat', id: 0 });
 
   const openSavedChatSessions = () => {
     setCurrentPage('saved-chats');
-    setOpenChatbotSignal({ open: true, view: 'sessions', id: Date.now() });
+    setOpenChatbotSignal({ open: false, view: 'chat', id: Date.now() });
     setShowMobileMenu(false);
   };
 
@@ -785,7 +785,13 @@ export default function App() {
             {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} isPremium={isPremium} />}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
-            {currentPage === 'saved-chats' && <SavedChatSessions userProfile={userProfile} onSelectSession={() => setOpenChatbotSignal({ open: true, view: 'chat', id: Date.now() })} />}
+            {currentPage === 'saved-chats' && (
+              <SavedChatSessions 
+                userProfile={userProfile} 
+                onUpdateProfile={(updated) => setUserProfile(updated)}
+                onSelectSession={(session) => setOpenChatbotSignal({ open: true, view: 'chat', id: Date.now(), session })} 
+              />
+            )}
             {currentPage === 'glossary' && <Glossary />}
             {currentPage === 'settings' && <SettingsPage onNavigatePage={(page) => setCurrentPage(page)} />}
             {currentPage === 'privacy' && <PrivacyPolicyPage onBack={() => setCurrentPage('dashboard')} />}
@@ -858,7 +864,11 @@ export default function App() {
           onClose={() => setPremiumModal({ ...premiumModal, isOpen: false })} 
           featureName={premiumModal.feature} 
         />
-        <Chatbot userProfile={userProfile} openSignal={openChatbotSignal} />
+        <Chatbot 
+          userProfile={userProfile} 
+          openSignal={openChatbotSignal} 
+          onUpdateProfile={(updated) => setUserProfile(updated)}
+        />
       </main>
 
       {/* Mobile Bottom Nav */}

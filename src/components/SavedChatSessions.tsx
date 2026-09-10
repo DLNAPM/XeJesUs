@@ -43,16 +43,24 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import PremiumOverlay from './PremiumOverlay';
 import { exportElementToPdf } from '../utils/pdfExporter';
+import ScholarVoiceDropdown from './ScholarVoiceDropdown';
 
 interface SavedChatSessionsProps {
   userProfile: UserProfile | null;
   onSelectSession?: (session: ChatSession) => void;
+  onUpdateProfile?: (updatedProfile: UserProfile) => void;
 }
 
-export default function SavedChatSessions({ userProfile, onSelectSession }: SavedChatSessionsProps) {
+export default function SavedChatSessions({ userProfile, onSelectSession, onUpdateProfile }: SavedChatSessionsProps) {
+  const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(userProfile);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    setCurrentProfile(userProfile);
+  }, [userProfile]);
   
   // Audio Speech States
   const [speakingSessionId, setSpeakingSessionId] = useState<string | null>(null);
@@ -190,8 +198,32 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     setIsPaused(false);
   };
 
-  const speakSession = (session: ChatSession) => {
-    if (speakingSessionId === session.id) {
+  const handleVoiceChange = (
+    updatedProfile: UserProfile,
+    newVoiceName: string,
+    gender: 'male' | 'female'
+  ) => {
+    setCurrentProfile(updatedProfile);
+    onUpdateProfile?.(updatedProfile);
+
+    // If currently playing a session, restart it immediately with the new voice
+    if (speakingSessionId) {
+      const activeSession = sessions.find(s => s.id === speakingSessionId);
+      if (activeSession) {
+        speakSession(activeSession, updatedProfile, newVoiceName, gender);
+      }
+    }
+  };
+
+  const speakSession = (
+    session: ChatSession,
+    overrideProfile?: UserProfile | null,
+    overrideVoice?: string,
+    overrideGender?: 'male' | 'female'
+  ) => {
+    setSelectedSessionId(session.id || null);
+
+    if (speakingSessionId === session.id && !overrideVoice) {
       if (isPaused) {
         resumeScholarSpeech();
         setIsPaused(false);
@@ -211,8 +243,12 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
     if (!fullScript.trim()) return;
 
+    const profileToUse = overrideProfile || currentProfile;
+
     speakWithScholarVoice(fullScript, {
-      profile: userProfile,
+      profile: profileToUse,
+      voiceName: overrideVoice,
+      gender: overrideGender,
       onStart: () => {
         setSpeakingSessionId(session.id || null);
         setIsPaused(false);
@@ -283,43 +319,54 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative w-full md:w-72">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary" />
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search saved sessions..."
-            className="w-full bg-ui-card border border-ui-border rounded-xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-accent transition-all"
+        {/* Controls: Scholar Voice Dropdown & Search Bar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto relative z-30">
+          <ScholarVoiceDropdown
+            userProfile={currentProfile}
+            onVoiceChange={handleVoiceChange}
+            variant="banner"
           />
+
+          <div className="relative w-full sm:w-64 md:w-72">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary" />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search saved sessions..."
+              className="w-full bg-ui-card border border-ui-border rounded-xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-accent transition-all"
+            />
+          </div>
         </div>
       </header>
 
-      {/* Audio Player Toolbar (if active) */}
+      {/* Audio Player Toolbar (if active) - Brought to front with z-30 and no overflow clipping */}
       {speakingSessionId && (
         <motion.div 
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 sm:p-5 bg-ui-card border-2 border-accent/40 rounded-3xl shadow-xl mb-8 backdrop-blur-md relative overflow-hidden"
+          className="p-4 sm:p-5 bg-ui-card border-2 border-accent/40 rounded-3xl shadow-xl mb-8 backdrop-blur-md relative z-30"
         >
           {/* Accent top gradient bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent rounded-t-3xl" />
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Info */}
+            {/* Left: Info & Voice Dropdown */}
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-2xl bg-accent/15 text-accent flex items-center justify-center flex-shrink-0 border border-accent/30 shadow-inner">
                 <Volume2 className="w-5 h-5 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent flex items-center gap-1">
                     <Sparkles className="w-3 h-3" /> Sanctuary Audio Playback
                   </span>
-                  <span className="text-[10px] text-text-secondary">
-                    • {userProfile?.activeScholarGender === 'female' ? (userProfile?.femaleScholarVoice || 'Female Scholar') : (userProfile?.maleScholarVoice || 'Male Scholar')}
-                  </span>
+                  <ScholarVoiceDropdown
+                    userProfile={currentProfile}
+                    onVoiceChange={handleVoiceChange}
+                    variant="toolbar"
+                    labelPrefix="Scholar Voice"
+                  />
                 </div>
                 <h4 className="font-serif font-bold text-text-primary text-base truncate">
                   {sessions.find(s => s.id === speakingSessionId)?.name || 'Saved Session'}
@@ -435,8 +482,13 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
           {filteredSessions.map((session) => (
             <div 
               key={session.id}
-              className={`bg-ui-card border rounded-[2rem] p-6 shadow-sm flex flex-col justify-between transition-all group ${
-                speakingSessionId === session.id ? 'border-accent ring-2 ring-accent/20 bg-accent/5' : 'border-ui-border hover:border-accent/50'
+              onClick={() => setSelectedSessionId(session.id || null)}
+              className={`bg-ui-card border rounded-[2rem] p-6 shadow-sm flex flex-col justify-between transition-all group relative ${
+                speakingSessionId === session.id 
+                  ? 'border-accent ring-2 ring-accent/30 bg-accent/5 shadow-md' 
+                  : selectedSessionId === session.id
+                  ? 'border-accent/80 ring-2 ring-accent/20 bg-accent/5'
+                  : 'border-ui-border hover:border-accent/50'
               }`}
             >
               <div>
@@ -476,13 +528,14 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                   </div>
 
                   <button 
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (window.confirm("Remove this session's records from the sanctuary?")) {
                         if (speakingSessionId === session.id) stopSpeech();
                         deleteSession(session.id!);
                       }
                     }}
-                    className="p-1.5 text-text-secondary/40 hover:text-red-500 transition-colors"
+                    className="p-1.5 text-text-secondary/40 hover:text-red-500 transition-colors cursor-pointer"
                     title="Delete Session"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -496,12 +549,15 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
               </div>
 
               {/* Action Ribbon */}
-              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-ui-border">
+              <div 
+                className="flex flex-wrap items-center gap-2 pt-3 border-t border-ui-border relative z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Resume Session Button */}
                 {onSelectSession && (
                   <button 
                     onClick={() => onSelectSession(session)}
-                    className="flex-1 py-2 px-3 bg-ui-sidebar hover:bg-accent hover:text-bg-primary text-text-primary rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 min-w-[90px] py-2 px-3 bg-ui-sidebar hover:bg-accent hover:text-bg-primary text-text-primary rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     Open Chat
@@ -511,7 +567,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                 {/* Read Audibly Button */}
                 <button 
                   onClick={() => speakSession(session)}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
                     speakingSessionId === session.id 
                       ? 'bg-accent text-bg-primary shadow-sm' 
                       : 'bg-accent/10 text-accent hover:bg-accent/20'
@@ -531,10 +587,20 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                   )}
                 </button>
 
+                {/* Scholar Voice Dropdown - Brought to Front */}
+                <ScholarVoiceDropdown
+                  userProfile={currentProfile}
+                  onVoiceChange={(updatedProfile, newVoiceName, gender) => {
+                    setSelectedSessionId(session.id || null);
+                    handleVoiceChange(updatedProfile, newVoiceName, gender);
+                  }}
+                  variant="card"
+                />
+
                 {/* Export as Literary Work PDF Button */}
                 <button 
                   onClick={() => handleExportLiteraryWork(session)}
-                  className="py-2 px-3 bg-text-primary text-bg-primary hover:opacity-90 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                  className="py-2 px-3 bg-text-primary text-bg-primary hover:opacity-90 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
                   title="Export Session as Professional Literary Work (PDF)"
                 >
                   <FileText className="w-3.5 h-3.5 text-accent" />

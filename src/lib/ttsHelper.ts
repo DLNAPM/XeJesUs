@@ -1,5 +1,6 @@
 import { UserProfile } from '../types';
 import { generateScholarTTS } from '../services/geminiService';
+import { isFemalePreset } from './scholarVoices';
 
 export interface ScholarSpeechState {
   isPlaying: boolean;
@@ -614,6 +615,7 @@ export function speakWithScholarVoice(
   options?: {
     gender?: 'male' | 'female' | 'auto';
     profile?: UserProfile | null;
+    voiceName?: string;
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (err: any) => void;
@@ -625,12 +627,20 @@ export function speakWithScholarVoice(
   if (!text || !text.trim()) return;
 
   const profile = options?.profile;
-  const activeGender = options?.gender || profile?.activeScholarGender || 'male';
+  let activeGender = options?.gender || profile?.activeScholarGender;
+  
+  // If a specific voiceName is provided and gender was not explicitly specified, infer gender
+  if (options?.voiceName && !options?.gender) {
+    activeGender = isFemalePreset(options.voiceName) ? 'female' : 'male';
+  } else if (!activeGender || activeGender === 'auto') {
+    activeGender = 'male';
+  }
+
   const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
 
   const maleVoiceName = profile?.maleScholarVoice || 'Joel Osteen';
   const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
-  const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
+  const personaName = options?.voiceName || (genderToUse === 'male' ? maleVoiceName : femaleVoiceName);
 
   const chunks = splitTextIntoChunks(text, 100, 200);
   if (chunks.length === 0) return;

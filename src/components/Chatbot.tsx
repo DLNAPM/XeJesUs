@@ -37,6 +37,7 @@ import { Inquiry, UserProfile, ChatSession, LiteraryWorkExport } from '../types'
 import { cn } from '../lib/utils';
 import PremiumOverlay from './PremiumOverlay';
 import { exportElementToPdf } from '../utils/pdfExporter';
+import ScholarVoiceDropdown from './ScholarVoiceDropdown';
 import { 
   speakWithScholarVoice, 
   stopScholarSpeech, 
@@ -57,12 +58,18 @@ interface Message {
 
 interface ChatbotProps {
   userProfile: UserProfile | null;
-  openSignal?: { open: boolean; view: 'chat' | 'sessions'; id: number };
+  openSignal?: { open: boolean; view: 'chat' | 'sessions'; id: number; session?: ChatSession };
+  onUpdateProfile?: (updatedProfile: UserProfile) => void;
 }
 
-export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
+export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: ChatbotProps) {
+  const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(userProfile);
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    setCurrentProfile(userProfile);
+  }, [userProfile]);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', text: "Greetings, pilgrim. I am here to help you reflect on your recent seekings and see how they apply to your life today. How can I assist your study?" }
   ]);
@@ -175,6 +182,9 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
       if (openSignal.view) {
         setView(openSignal.view);
       }
+      if (openSignal.session) {
+        loadSession(openSignal.session);
+      }
       fetchSessions().catch(err => console.error("Error in fetchSessions:", err));
     }
   }, [openSignal]);
@@ -202,8 +212,25 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     setIsPaused(false);
   };
 
-  const speakSession = (session: ChatSession) => {
-    if (speakingSessionId === session.id) {
+  const handleVoiceChange = (updatedProfile: UserProfile, newVoiceName: string, gender: 'male' | 'female') => {
+    setCurrentProfile(updatedProfile);
+    onUpdateProfile?.(updatedProfile);
+
+    if (speakingSessionId) {
+      const activeSession = sessions.find(s => s.id === speakingSessionId);
+      if (activeSession) {
+        speakSession(activeSession, updatedProfile, newVoiceName, gender);
+      }
+    }
+  };
+
+  const speakSession = (
+    session: ChatSession,
+    overrideProfile?: UserProfile | null,
+    overrideVoice?: string,
+    overrideGender?: 'male' | 'female'
+  ) => {
+    if (speakingSessionId === session.id && !overrideVoice) {
       if (isPaused) {
         resumeScholarSpeech();
         setIsPaused(false);
@@ -223,8 +250,12 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     if (!fullScript.trim()) return;
 
+    const profileToUse = overrideProfile || currentProfile;
+
     speakWithScholarVoice(fullScript, {
-      profile: userProfile,
+      profile: profileToUse,
+      voiceName: overrideVoice,
+      gender: overrideGender,
       onStart: () => {
         setSpeakingSessionId(session.id || null);
         setIsPaused(false);
@@ -671,8 +702,8 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
                   {/* Active Audio Player Control for Saved Sessions */}
                   {speakingSessionId && (
-                    <div className="p-3.5 bg-ui-card border-2 border-accent/40 rounded-2xl shadow-md mb-3 text-xs relative overflow-hidden">
-                      <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <div className="p-3.5 bg-ui-card border-2 border-accent/40 rounded-2xl shadow-md mb-3 text-xs relative z-30">
+                      <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                         <div className="flex items-center gap-2 min-w-0 pr-1">
                           <Volume2 className="w-4 h-4 text-accent animate-pulse flex-shrink-0" />
                           <span className="font-serif italic text-text-primary truncate">
@@ -680,58 +711,65 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                           </span>
                         </div>
 
-                        {/* Controls */}
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {/* 10s Rewind */}
-                          <button
-                            type="button"
-                            onClick={() => rewindScholarSpeech(10)}
-                            className="p-1.5 bg-ui-sidebar hover:bg-accent/20 text-accent rounded-lg font-bold text-[10px] uppercase flex items-center gap-0.5 transition-all cursor-pointer"
-                            title="Rewind 10 seconds"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            <span>10s</span>
-                          </button>
+                        {/* Scholar Voice Dropdown */}
+                        <ScholarVoiceDropdown
+                          userProfile={currentProfile}
+                          onVoiceChange={handleVoiceChange}
+                          variant="toolbar"
+                          labelPrefix="Voice"
+                        />
+                      </div>
 
-                          {/* Play / Pause */}
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              if (isPaused) {
-                                resumeScholarSpeech();
-                                setIsPaused(false);
-                              } else {
-                                pauseScholarSpeech();
-                                setIsPaused(true);
-                              }
-                            }}
-                            className="px-2 py-1 bg-accent text-bg-primary rounded-lg font-bold text-[10px] uppercase flex items-center gap-1 hover:opacity-90 active:scale-95 transition-opacity cursor-pointer"
-                          >
-                            {isPaused ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3 fill-current" />}
-                            <span>{isPaused ? 'Resume' : 'Pause'}</span>
-                          </button>
+                      <div className="flex items-center justify-end gap-1 mb-2">
+                        {/* 10s Rewind */}
+                        <button
+                          type="button"
+                          onClick={() => rewindScholarSpeech(10)}
+                          className="p-1.5 bg-ui-sidebar hover:bg-accent/20 text-accent rounded-lg font-bold text-[10px] uppercase flex items-center gap-0.5 transition-all cursor-pointer"
+                          title="Rewind 10 seconds"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>10s</span>
+                        </button>
 
-                          {/* 10s Fast-Forward */}
-                          <button
-                            type="button"
-                            onClick={() => fastForwardScholarSpeech(10)}
-                            className="p-1.5 bg-ui-sidebar hover:bg-accent/20 text-accent rounded-lg font-bold text-[10px] uppercase flex items-center gap-0.5 transition-all cursor-pointer"
-                            title="Fast-forward 10 seconds"
-                          >
-                            <span>10s</span>
-                            <RotateCw className="w-3 h-3" />
-                          </button>
+                        {/* Play / Pause */}
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (isPaused) {
+                              resumeScholarSpeech();
+                              setIsPaused(false);
+                            } else {
+                              pauseScholarSpeech();
+                              setIsPaused(true);
+                            }
+                          }}
+                          className="px-2 py-1 bg-accent text-bg-primary rounded-lg font-bold text-[10px] uppercase flex items-center gap-1 hover:opacity-90 active:scale-95 transition-opacity cursor-pointer"
+                        >
+                          {isPaused ? <Play className="w-3 h-3 fill-current" /> : <Pause className="w-3 h-3 fill-current" />}
+                          <span>{isPaused ? 'Resume' : 'Pause'}</span>
+                        </button>
 
-                          {/* Stop */}
-                          <button 
-                            type="button"
-                            onClick={stopSpeech}
-                            className="p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer"
-                            title="Stop Reading"
-                          >
-                            <Square className="w-3 h-3" />
-                          </button>
-                        </div>
+                        {/* 10s Fast-Forward */}
+                        <button
+                          type="button"
+                          onClick={() => fastForwardScholarSpeech(10)}
+                          className="p-1.5 bg-ui-sidebar hover:bg-accent/20 text-accent rounded-lg font-bold text-[10px] uppercase flex items-center gap-0.5 transition-all cursor-pointer"
+                          title="Fast-forward 10 seconds"
+                        >
+                          <span>10s</span>
+                          <RotateCw className="w-3 h-3" />
+                        </button>
+
+                        {/* Stop */}
+                        <button 
+                          type="button"
+                          onClick={stopSpeech}
+                          className="p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer"
+                          title="Stop Reading"
+                        >
+                          <Square className="w-3 h-3" />
+                        </button>
                       </div>
 
                       {/* Scrubber & Time */}
