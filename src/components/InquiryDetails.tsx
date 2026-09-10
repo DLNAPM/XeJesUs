@@ -653,11 +653,17 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                  <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-3xl leading-relaxed text-text-primary shadow-inner">
-                    "{inquiry.godIntent}"
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-sans font-bold text-accent uppercase tracking-[0.3em]">
+                      <Sparkles className="w-4 h-4 text-accent" />
+                      <span>How God Intended (Divine Covenant Purpose)</span>
+                    </div>
+                    <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-2xl md:text-3xl leading-relaxed text-text-primary shadow-inner">
+                      "{inquiry.godIntent}"
+                    </div>
                   </div>
                   <div className="prose prose-invert max-w-none">
-                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Detailed Interpretation</h3>
+                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Exegetical Deep-Dive & Detailed Interpretation</h3>
                     <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-text-secondary">
                       <Markdown>{inquiry.interpretation}</Markdown>
                     </div>
@@ -705,7 +711,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
              {activeTab === 'academic' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                   <section>
-                    <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
+                    <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-accent" />
+                      <span>The Meaning of the Scriptures at the Time When They Were Written (Historical Context)</span>
+                    </h3>
                     <div className="text-xl leading-relaxed text-text-secondary font-serif space-y-4">
                        <Markdown>{inquiry.historicalContext}</Markdown>
                     </div>

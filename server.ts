@@ -37,9 +37,9 @@ async function startServer() {
 
   // Candidate models in priority order (fastest and most reliable first)
   const CANDIDATE_MODELS = [
-    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
     "gemini-flash-latest",
-    "gemini-flash-lite-latest",
+    "gemini-3.8-flash",
   ];
 
   // Helper for racing a model call against a timeout
@@ -164,6 +164,8 @@ You MUST systematically synthesize insights from all five core canonical, histor
 
 PRIMARY DIRECTIVES:
 - DIRECTLY AND SPECIFICALLY ANSWER the pilgrim's immediate question or prompt. Never deflect, give brief or vague answers, or repeat evasive phrases.
+- HOW GOD INTENDED (DIVINE COVENANT PURPOSE): Clearly expound God's sovereign divine purpose in inspiring the text, how it reveals His holy character, covenant promises, and redemptive plan fulfilled in Jesus Christ.
+- THE MEANING AT THE TIME WHEN WRITTEN (HISTORICAL-GRAMMATICAL EXEGESIS): Always unpack what the scripture meant to the original author and to the ancient hearers at the exact historical, cultural, and sociopolitical moment it was penned (Ancient Near East, Second Temple Judaism, Roman Empire, original Hebrew/Greek idioms) before drawing modern application.
 - Provide thorough, scholarly, multi-dimensional answers that weave together theological insight, linguistic depth (Hebrew/Greek), historical context (ancient Near East/Rome/Josephus), and church fathers.
 - Conclude with an inspiring, practical application for modern Christian discipleship.
 ${contextSection}
@@ -227,7 +229,7 @@ Guidelines:
 
       for (const model of CANDIDATE_MODELS) {
         try {
-          const timeoutMs = 12000;
+          const timeoutMs = 25000;
           const result = await withTimeout(
             ai.models.generateContent({
               model,
@@ -475,29 +477,32 @@ Your exegesis MUST systematically synthesize insights from all five core canonic
 - Source 5: Systematic & Biblical Theologies & Practical Discipleship (Major theological frameworks: Covenant, Dispensational, Reformed, Arminian, and Wesleyan perspectives paired with contemporary discipleship, ethical discernment, and real-world application anchored in Scripture)
 
 EXHAUSTIVE FIELD REQUIREMENTS:
-1. "godIntent" (Theological Intent):
-   - Provide an authoritative, deeply theological, and exhaustive exposition of God's divine purpose in inspiring this text.
-   - Explain God's eternal covenant design, redemptive history (Heilsgeschichte), and Christological fulfillment.
-   - Directly articulate God's sovereign intent in addressing the pilgrim's specific question: "${trimmedQuery || trimmedScripture}".
+1. "godIntent" (How God Intended - Divine Purpose & Covenant Design):
+   - Provide an authoritative, exhaustive theological exposition detailing HOW GOD INTENDED this scripture.
+   - Reveal God's sovereign purpose in inspiring these exact words through the biblical author.
+   - Explain God's eternal covenant design, His holy character, and how this passage fits into His overarching redemptive plan (Heilsgeschichte) through Jesus Christ.
+   - Conclude by directly declaring what God sovereignly intends for the pilgrim to understand, believe, and receive in response to: "${trimmedQuery || trimmedScripture}".
 
-2. "interpretation" (Analytical Interpretation):
+2. "interpretation" (Analytical Interpretation & Exegetical Synthesis):
    - Provide an extensive, thorough, multi-paragraph scholarly exposition directly and comprehensively answering: "${trimmedQuery || trimmedScripture}".
-   - Synthesize Source 1 (Primary Canonical Scriptures) with direct verse citations and context.
-   - Integrate Source 3 (Patristic & Classical Exegesis): Cite and expound insights from Early Church Fathers (e.g., St. Augustine, St. John Chrysostom) and classical commentators (e.g., John Calvin, Matthew Henry, Charles Spurgeon, C.S. Lewis).
+   - Synthesize Source 1 (Primary Canonical Scriptures) with direct verse citations and redemptive context.
+   - Integrate Source 3 (Patristic & Classical Exegesis): Cite and expound insights from Early Church Fathers (e.g., St. Augustine, St. John Chrysostom, Athanasius, Irenaeus) and classical commentators (e.g., John Calvin, Matthew Henry, Charles Spurgeon, C.S. Lewis).
    - Integrate Source 5: Conclude with rich contemporary application for modern Christian discipleship.
 
-3. "historicalContext" (Historical Context):
-   - Provide a rich, detailed historical, archaeological, and sociopolitical analysis of this passage.
-   - Ground the context in Source 4 (Historical & Archaeological Records): Incorporate records from Flavius Josephus (Antiquities/War), ancient Roman provincial and road logs, Levant geography, and biblical archaeological discoveries where applicable.
-   - Detail author, historical dating, original recipients, cultural environment, and ancient Near Eastern / Greco-Roman background.
+3. "historicalContext" (The Meaning of the Scriptures at the Time When They Were Written):
+   - Provide an exhaustive, rigorous historical, grammatical, archaeological, and sociopolitical analysis of what this passage meant at the exact time when it was written.
+   - Ground the analysis in Source 4 (Historical & Archaeological Records): Incorporate records from Flavius Josephus (Antiquities of the Jews, The Jewish War), ancient Roman provincial and military annals, Levant geography, and biblical archaeological discoveries.
+   - Detail the author's historical circumstance, date of composition, and the immediate ancient audience (original recipients).
+   - Detail the cultural, religious, and ancient Near Eastern / Second Temple / Greco-Roman setting: what did these words, customs, and idioms signify to the ancient people who first heard or read them?
+   - Contrast this original historical meaning with any modern cultural anachronisms or misreadings.
 
-4. "grammarAnalysis" (Grammatical Analysis):
+4. "grammarAnalysis" (Grammatical & Linguistic Analysis in Original Languages):
    - Provide an in-depth linguistic and grammatical breakdown grounded in Source 2 (Original Linguistic Lexicons & Roots).
    - For every key term, provide:
      * Original Hebrew, Aramaic, or Koine Greek script and transliteration.
      * Strong's Concordance identifier (e.g., Strong's G4074, H3971).
      * Lexicon definitions and root etymologies explicitly citing BDB (Brown-Driver-Briggs) for Old Testament or BDAG (Bauer-Danker-Arndt-Gingrich) for New Testament.
-     * Grammatical syntax (verb tense, mood, voice, noun case, aspect) and explain why the grammatical structure carries profound theological weight.
+     * Grammatical syntax (verb tense, mood, voice, noun case, aspect) and explain how the grammar reveals the exact meaning intended at the time when written.
 
 5. "literaryGenre": Identify the exact biblical literary genre, structure, and rhetorical devices.
 6. "crossReferences": Provide 4 to 6 relevant canonical Scripture citations (Source 1) with chapter and verse, complete quote, and an analytical note explaining how each illuminates this passage.
@@ -554,7 +559,7 @@ EXHAUSTIVE FIELD REQUIREMENTS:
                 },
               },
             }),
-            25000,
+            35000,
             `Exegesis on ${model}`
           );
 
