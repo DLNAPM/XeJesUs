@@ -55,6 +55,31 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // --- System Alerts & Incident Alarms ---
+    match /system_alerts/{alertId} {
+      allow read: if isAdmin();
+      allow create: if isValidAlert(incoming());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      function isValidAlert(data) {
+        return data.keys().hasAll(['title', 'category', 'severity', 'message', 'createdAt', 'status'])
+          && data.title is string && data.title.size() <= 300
+          && data.category is string && data.category.size() <= 50
+          && data.severity is string && data.severity in ['critical', 'high', 'warning', 'info']
+          && data.message is string && data.message.size() <= 10000
+          && data.status is string && data.status in ['active', 'acknowledged', 'resolved']
+          && (data.createdAt == request.time || data.createdAt is timestamp);
+      }
+    }
+
+    // --- Alert Emails Audit Log ---
+    match /alert_emails/{emailId} {
+      allow read: if isAdmin();
+      allow create: if true;
+      allow delete: if isAdmin();
+    }
+
     // --- Users ---
     match /users/{userId} {
       allow read: if isSignedIn();

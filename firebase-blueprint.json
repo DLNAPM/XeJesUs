@@ -138,9 +138,29 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "name", "messages", "createdAt"]
+    },
+    "SystemAlert": {
+      "title": "System Alert",
+      "description": "Critical alarms and incidents for API restrictions, billing, or system errors",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["billing", "api_restriction", "rate_limit", "service_outage", "permission_denied", "other"] },
+        "severity": { "type": "string", "enum": ["critical", "high", "warning", "info"] },
+        "message": { "type": "string" },
+        "service": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "acknowledged", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "severity", "message", "status", "createdAt"]
     }
   },
   "firestore": {
+    "/system_alerts/{alertId}": {
+      "schema": "SystemAlert",
+      "description": "System operational alarms and error incidents"
+    },
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles"

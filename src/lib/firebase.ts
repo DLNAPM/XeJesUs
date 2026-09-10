@@ -105,6 +105,20 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   }
   console.error('Firestore Error: ', JSON.stringify(errInfo));
+
+  // Report critical database incidents (avoiding recursion if reporting alerts itself errors)
+  if (path && !path.includes('system_alerts') && !path.includes('alert_emails')) {
+    import('../services/incidentService').then(({ reportIncident }) => {
+      reportIncident({
+        error,
+        service: 'Firestore Database',
+        endpoint: `${operationType.toUpperCase()} ${path}`,
+        details: errInfo,
+        userEmail: auth?.currentUser?.email || undefined
+      }).catch(() => {});
+    }).catch(() => {});
+  }
+
   throw new Error(JSON.stringify(errInfo));
 }
 

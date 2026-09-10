@@ -13,9 +13,11 @@ import {
   query,
   orderBy,
   limit,
-  Timestamp
+  Timestamp,
+  onSnapshot
 } from '../lib/firebase';
 import { UserProfile } from '../types';
+import AdminAlertsStation from './AdminAlertsStation';
 import { 
   Shield, 
   UserX, 
@@ -29,7 +31,9 @@ import {
   Crown,
   Settings,
   Bell,
-  ArrowUpDown
+  ArrowUpDown,
+  Radio,
+  AlertOctagon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -48,6 +52,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
+  const [activeTab, setActiveTab] = useState<'alarms' | 'registry'>('alarms');
+  const [activeAlertCount, setActiveAlertCount] = useState<number>(0);
   
   type SortField = 'pilgrim' | 'role' | 'tier' | 'status' | 'lastLogin';
   type SortOrder = 'asc' | 'desc';
@@ -60,6 +66,23 @@ export default function AdminDashboard() {
 
   const isAdminEmail = auth?.currentUser?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
                       auth?.currentUser?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
+
+  // Real-time listener for active alert count badge
+  useEffect(() => {
+    if (!db) return;
+    try {
+      const q = query(collection(db, 'system_alerts'));
+      const unsub = onSnapshot(q, (snapshot) => {
+        const active = snapshot.docs.filter(d => d.data().status === 'active').length;
+        setActiveAlertCount(active);
+      }, (err) => {
+        console.warn("Could not listen to alert count:", err);
+      });
+      return () => unsub();
+    } catch (err) {
+      console.warn("Failed setting up alert badge listener:", err);
+    }
+  }, [db]);
 
   const fetchUsers = async () => {
     if (!db) return;
@@ -244,7 +267,53 @@ export default function AdminDashboard() {
         )}
       </header>
 
-      {/* Analytics Section */}
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-3 border-b border-ui-border pb-4 overflow-x-auto">
+        <button
+          id="tab-btn-alarms"
+          onClick={() => setActiveTab('alarms')}
+          className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'alarms'
+              ? 'bg-accent text-bg-primary shadow-lg shadow-accent/20 scale-[1.02]'
+              : 'bg-ui-card hover:bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <Radio className="w-4 h-4" />
+          <span>Operational Alarms & Incidents</span>
+          {activeAlertCount > 0 ? (
+            <span className="px-2.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black animate-pulse flex items-center gap-1">
+              <AlertOctagon className="w-3 h-3" />
+              {activeAlertCount} ACTION REQUIRED
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black">
+              NORMAL
+            </span>
+          )}
+        </button>
+
+        <button
+          id="tab-btn-registry"
+          onClick={() => setActiveTab('registry')}
+          className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'registry'
+              ? 'bg-accent text-bg-primary shadow-lg shadow-accent/20 scale-[1.02]'
+              : 'bg-ui-card hover:bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <UsersIcon className="w-4 h-4" />
+          <span>Pilgrim Registry & Analytics</span>
+          <span className="px-2 py-0.5 rounded-full bg-bg-primary text-text-secondary text-[10px] font-black">
+            {users.length}
+          </span>
+        </button>
+      </div>
+
+      {activeTab === 'alarms' ? (
+        <AdminAlertsStation />
+      ) : (
+        <>
+          {/* Analytics Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1 bg-ui-card rounded-[2rem] border border-ui-border p-6 shadow-sm">
           <h3 className="text-[10px] font-sans font-black text-accent uppercase tracking-[0.3em] mb-6">User Distribution</h3>
@@ -543,6 +612,8 @@ export default function AdminDashboard() {
           </table>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }

@@ -1,3 +1,28 @@
+export type AlertCategory = 'billing' | 'api_restriction' | 'rate_limit' | 'service_outage' | 'permission_denied' | 'other';
+export type AlertSeverity = 'critical' | 'high' | 'warning' | 'info';
+export type AlertStatus = 'active' | 'acknowledged' | 'resolved';
+
+export interface SystemAlert {
+  id?: string;
+  title: string;
+  category: AlertCategory;
+  severity: AlertSeverity;
+  message: string;
+  service: string;
+  endpoint?: string;
+  details?: string;
+  userEmail?: string;
+  userId?: string;
+  status: AlertStatus;
+  createdAt: any;
+  acknowledgedAt?: any;
+  acknowledgedBy?: string;
+  resolvedAt?: any;
+  resolvedBy?: string;
+  emailNotified?: boolean;
+  emailRecipient?: string;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;

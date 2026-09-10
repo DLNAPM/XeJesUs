@@ -1,5 +1,6 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { Inquiry, LiteraryWorkExport } from "../types";
+import { reportIncident } from "./incidentService";
 
 let aiInstance: GoogleGenAI | null = null;
 
@@ -90,25 +91,36 @@ export async function generateScholarTTS(
     }
   }
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-tts-preview",
-    contents: [{ parts: [{ text: `${promptStyle}\n\n"${cleanText}"` }] }],
-    config: {
-      responseModalities: [Modality.AUDIO],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName }
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-tts-preview",
+      contents: [{ parts: [{ text: `${promptStyle}\n\n"${cleanText}"` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName }
+          }
         }
       }
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) {
+      throw new Error("No audio data returned from Gemini TTS");
     }
-  });
 
-  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!base64Audio) {
-    throw new Error("No audio data returned from Gemini TTS");
+    return base64Audio;
+  } catch (error) {
+    console.error("Gemini Scholar TTS Error:", error);
+    reportIncident({
+      error,
+      service: 'Gemini AI (TTS)',
+      endpoint: 'generateScholarTTS (Scholar Voice Audio)',
+      details: { personaName, gender, textSnippet: cleanText.slice(0, 150) }
+    }).catch(err => console.warn("Could not report incident:", err));
+    throw error;
   }
-
-  return base64Audio;
 }
 
 export async function chatWithSanctuary(
@@ -139,23 +151,34 @@ Guidelines:
 7. If a user asks something completely unrelated to faith or their studies, gently guide them back to their spiritual journey.
 8. Keep responses relatively concise but profound, ensuring all biblical and historical claims carry citations.`;
 
-  const chat = ai.chats.create({
-    model: modelName,
-    config: {
-      systemInstruction,
-      tools: [{ googleSearch: {} }] // Adding Google Search Grounding
-    },
-    history: history.map(h => ({
-      role: h.role,
-      parts: [{ text: h.text }]
-    }))
-  });
+  try {
+    const chat = ai.chats.create({
+      model: modelName,
+      config: {
+        systemInstruction,
+        tools: [{ googleSearch: {} }] // Adding Google Search Grounding
+      },
+      history: history.map(h => ({
+        role: h.role,
+        parts: [{ text: h.text }]
+      }))
+    });
 
-  const result = await chat.sendMessage({
-    message: message
-  });
+    const result = await chat.sendMessage({
+      message: message
+    });
 
-  return result.text;
+    return result.text;
+  } catch (error) {
+    console.error("Gemini Scholar Chat Error:", error);
+    reportIncident({
+      error,
+      service: 'Gemini AI',
+      endpoint: 'chatWithSanctuary (Sanctuary Scholar)',
+      details: { message, historyCount: history.length }
+    }).catch(err => console.warn("Could not report incident:", err));
+    throw error;
+  }
 }
 
 export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
@@ -617,6 +640,12 @@ Return ONLY valid JSON matching this schema.`;
     }
   } catch (err) {
     console.warn("Failed to generate literary work from Gemini, using fallback data:", err);
+    reportIncident({
+      error: err,
+      service: 'Gemini AI',
+      endpoint: 'generateLiteraryWorkExport (Literary Synthesis)',
+      details: { sessionName, messageCount: messages.length }
+    }).catch(e => console.warn("Could not report incident:", e));
   }
 
   return fallbackData;

@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { reportIncident } from "../services/incidentService";
 
 let aiInstance: GoogleGenAI | null = null;
 
@@ -109,6 +110,12 @@ export async function generateExegesis(scripture: string, queryText: string) {
     return data;
   } catch (error) {
     console.error("Gemini Error:", error);
+    reportIncident({
+      error,
+      service: 'Gemini AI',
+      endpoint: 'generateExegesis (Seek the Word)',
+      details: { scripture, queryText }
+    }).catch(err => console.warn("Could not log incident:", err));
     throw error;
   }
 }
@@ -132,6 +139,12 @@ export async function fetchDefinition(word: string, context: string): Promise<st
     return response.text.trim();
   } catch (error) {
     console.error("Fetch Definition Error:", error);
+    reportIncident({
+      error,
+      service: 'Gemini AI',
+      endpoint: 'fetchDefinition (Theological Lexicon)',
+      details: { word, context }
+    }).catch(err => console.warn("Could not log incident:", err));
     throw error;
   }
 }
@@ -171,6 +184,12 @@ export async function searchScriptureBySubject(subject: string): Promise<{refere
     return JSON.parse(text.trim());
   } catch (error) {
     console.error("Search Scripture Error:", error);
+    reportIncident({
+      error,
+      service: 'Gemini AI',
+      endpoint: 'searchScriptureBySubject',
+      details: { subject }
+    }).catch(err => console.warn("Could not log incident:", err));
     return [];
   }
 }
