@@ -726,6 +726,21 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                       </div>
                     </section>
                   </div>
+
+                  {/* Academic & Spiritual Citation Framework Notice */}
+                  <div className="p-6 bg-accent/[0.04] border border-accent/20 rounded-3xl space-y-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent uppercase tracking-wider">
+                        Citation Framework
+                      </span>
+                      <h4 className="text-xs font-sans font-bold text-text-primary uppercase tracking-wider">
+                        Academic & Spiritual Authorities
+                      </h4>
+                    </div>
+                    <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
+                      This exegesis is anchored in the XeJesUs Academic & Spiritual Citation Framework — drawing from Primary Canonical Scriptures, <strong>Asher Wilson's The Most Complete Ethiopian Bible In English</strong> (preserving the ancient 81-book Ge'ez canon, 1 Enoch, Jubilees, and Meqabyan), original Hebrew, Aramaic, Ge'ez, and Greek lexicons, and classical Patristic commentary.
+                    </p>
+                  </div>
                </motion.div>
              )}
 

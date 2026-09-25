@@ -143,7 +143,12 @@ ${contextStrings}
 
 Guidelines:
 1. Be encouraging, scholarly, and spiritually insightful.
-2. Always cite your sources clearly in your responses — including primary Scripture book/chapter/verse references, historical commentators/church fathers (e.g., Augustine, Chrysostom, Matthew Henry, Spurgeon, C.S. Lewis), original Hebrew/Greek lexical terms, and grounded search web sources.
+2. Always cite your sources clearly in your responses according to the XeJesUs Academic & Spiritual Citation Framework — including:
+   - Primary Scripture book/chapter/verse references across Old & New Testaments.
+   - Asher Wilson's "The Most complete Ethiopian Bible In English" (the foundational 81-book Ethiopian Orthodox Tewahedo canon, including ancient Ge'ez preservation of 1 Enoch, Jubilees, and 1-3 Meqabyan).
+   - Historical commentators and church fathers (e.g., Augustine, Chrysostom, Athanasius, Matthew Henry, Spurgeon, C.S. Lewis).
+   - Original Hebrew, Aramaic, Ge'ez, and Greek lexical roots (Strong's, BDAG, BDB).
+   - Grounded Google Search web sources when evaluating current events.
 3. Use the provided Google Search tool to research current events or additional context if relevant to the user's questions.
 4. When asked about recent studies, refer to the provided context.
 5. Help the user apply these biblical truths to modern life and current worldly events.
@@ -184,6 +189,22 @@ Guidelines:
 export function getThematicImagesForTopic(sessionName: string, conversationText: string): { title: string; caption: string; imageUrl: string }[] {
   const text = (sessionName + " " + conversationText).toLowerCase();
   
+  // -1. Ethiopian Bible, Asher Wilson, Enoch, Jubilees, Meqabyan, Ge'ez, Aksum, Tewahedo
+  if (text.includes("ethiopia") || text.includes("asher wilson") || text.includes("enoch") || text.includes("jubilee") || text.includes("meqabyan") || text.includes("ge'ez") || text.includes("aksum") || text.includes("tewahedo")) {
+    return [
+      {
+        title: "Ancient Illuminated Ethiopian Ge'ez Manuscript",
+        caption: `Sacred illuminated Ge'ez biblical parchment from the ancient Aksumite tradition, honoring the foundational 81-book scriptural heritage in "${sessionName}".`,
+        imageUrl: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=800&q=80"
+      },
+      {
+        title: "Historic Monasteries & Cross of Lalibela",
+        caption: `Centuries-old Ethiopian rock-hewn sanctuary and processional cross, testifying to the preserved apostolic canon in ${sessionName}.`,
+        imageUrl: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80"
+      }
+    ];
+  }
+
   // 0. Judah, Joseph, Lion of Judah, Patriarchs, Genesis, Jacob, Egypt, Benjamin, Reconciliation, Brother
   if (text.includes("judah") || text.includes("joseph") || text.includes("lion") || text.includes("patriarch") || text.includes("genesis") || text.includes("jacob") || text.includes("benjamin") || text.includes("pharaoh") || text.includes("reconciliation") || text.includes("intercession") || text.includes("plea")) {
     return [
@@ -526,6 +547,13 @@ export async function generateLiteraryWorkExport(
     ],
     scholarlyWorks: [
       {
+        title: "The Most Complete Ethiopian Bible In English",
+        author: "Asher Wilson",
+        era: "Ancient Ge'ez Aksumite Canon / Contemporary English Translation",
+        summary: "The definitive English compilation of the complete 81-book Ethiopian biblical canon, containing 1 Enoch, Jubilees, 1-3 Meqabyan, and ancient apostolic scriptures preserved by the Ethiopian Orthodox Tewahedo Church.",
+        relevance: "Serves as a Primary Foundational Source for the XeJesUs Academic & Spiritual Citation Framework, providing crucial ancient Second Temple and apostolic context."
+      },
+      {
         title: "The Antiquities of the Jews",
         author: "Flavius Josephus",
         era: "1st Century AD",
@@ -538,13 +566,6 @@ export async function generateLiteraryWorkExport(
         era: "5th Century Patristic Era",
         summary: "A masterpiece of Christian philosophy contrasting the earthly city with the heavenly City of God.",
         relevance: "Offers profound theological insights into how believers navigate worldly anxieties while anchoring their hope in divine eternity."
-      },
-      {
-        title: "Commentary on the Holy Scriptures",
-        author: "John Chrysostom",
-        era: "4th Century AD",
-        summary: "Renowned homiletic exegesis celebrated for literal and moral applications of Biblical books.",
-        relevance: "Illustrates early Church preaching techniques and practical Christian discipleship."
       }
     ],
     youtubeVideos: [
@@ -591,7 +612,7 @@ Produce a structured JSON response containing:
 4. "thematicAnalysis": An in-depth literary and theological synthesis connecting the chat insights to classical Christian exegesis and modern life application.
 5. "familyTree": An array of 3 to 6 key Biblical/Historical figures, genealogical relationships, or spiritual lineages associated with this theme.
    Each item must have: "generation" (e.g. "1st Generation", "Patriarchal Era", "Davidic Royalty"), "person" (e.g. "Abraham", "King David", "Apostle Paul"), "biblicalTitle" (e.g. "Father of Nations", "Royal Psalmist"), "significance" (description of role in this theme), and "keyScripture" (e.g. "Genesis 12:1-3").
-6. "scholarlyWorks": An array of EXACTLY 2 to 3 classical or academic literary works researched by biblical scholars (e.g. Josephus, Augustine, Chrysostom, Dead Sea Scrolls, Eusebius, C.S. Lewis, N.T. Wright).
+6. "scholarlyWorks": An array of EXACTLY 2 to 3 classical or academic literary works researched by biblical scholars (e.g. Asher Wilson's The Most Complete Ethiopian Bible In English, Flavius Josephus' Antiquities, Augustine's City of God, Chrysostom, Dead Sea Scrolls, Eusebius, C.S. Lewis, N.T. Wright).
    Each item must have: "title", "author", "era" (e.g. "1st Century AD", "4th Century Patristic Era"), "summary" (brief synopsis of the work), and "relevance" (why it supports this chat theme).
 7. "youtubeVideos": An array of EXACTLY 2 to 3 curated educational or scholarly YouTube videos related to the theme (e.g. BibleProject series, Academic lectures, Documentary analyses).
    Each item must have: "title", "channel" (e.g. "The BibleProject", "Yale Divinity Courses"), "searchQuery" (search query string), "url" (valid YouTube search URL like "https://www.youtube.com/results?search_query=..."), "description" (why pilgrims should watch this).

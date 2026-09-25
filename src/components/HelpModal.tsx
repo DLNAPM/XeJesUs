@@ -93,6 +93,24 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </div>
               </section>
 
+              {/* Foundational Sources & Citation Framework */}
+              <section className="space-y-4">
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Academic & Spiritual Citation Framework</h3>
+                <div className="p-6 bg-ui-card rounded-2xl border border-ui-border space-y-3">
+                  <p className="text-sm font-serif italic text-text-secondary leading-relaxed">
+                    XeJesUs grounds every theological interpretation and AI exegesis in six core foundational authorities:
+                  </p>
+                  <ul className="text-xs text-text-secondary font-serif space-y-1.5 pl-4 list-disc marker:text-accent">
+                    <li><strong className="font-sans text-text-primary">Primary Canonical Scriptures:</strong> Direct Old & New Testament book/chapter/verse citations.</li>
+                    <li><strong className="font-sans text-text-primary">Asher Wilson's The Most Complete Ethiopian Bible In English:</strong> Complete 81-book Ethiopian Orthodox Tewahedo canon, preserving ancient Ge'ez manuscripts, 1 Enoch, Jubilees, and 1-3 Meqabyan.</li>
+                    <li><strong className="font-sans text-text-primary">Original Linguistic Lexicons:</strong> Hebrew, Aramaic, Ge'ez, and Greek etymologies via Strong’s, BDB, and BDAG.</li>
+                    <li><strong className="font-sans text-text-primary">Patristic & Classical Exegesis:</strong> Early Church Fathers (Augustine, Chrysostom, Athanasius) & classic commentators.</li>
+                    <li><strong className="font-sans text-text-primary">Historical & Archaeological Records:</strong> Josephus, Dead Sea Scrolls, and ancient Levant geography.</li>
+                    <li><strong className="font-sans text-text-primary">Real-Time Web Grounding:</strong> Contemporary application anchored in unchanging scripture.</li>
+                  </ul>
+                </div>
+              </section>
+
               {/* Audience */}
               <section className="space-y-4">
                 <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Intended Audience</h3>

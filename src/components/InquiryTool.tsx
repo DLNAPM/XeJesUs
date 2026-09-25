@@ -224,8 +224,8 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
         </form>
       </div>
 
-      <p className="mt-8 text-center text-xs text-text-secondary font-serif italic max-w-md mx-auto">
-        Exegesis results are generated using AI-powered scholarship and cross-referenced with historic biblical contexts.
+      <p className="mt-8 text-center text-xs text-text-secondary font-serif italic max-w-lg mx-auto">
+        Exegesis grounded in our Academic & Spiritual Citation Framework (Canonical Scriptures, Asher Wilson's Ethiopian Bible Canon, Original Lexicons & Patristic Exegesis).
       </p>
 
       <PremiumOverlay 

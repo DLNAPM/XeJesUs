@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search, ChevronRight } from 'lucide-react';
+import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search, ChevronRight, Scroll, ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
@@ -497,7 +497,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
             </div>
 
             <p className="text-sm text-text-secondary mb-6 leading-relaxed font-serif italic">
-              XeJesUs synthesizes exegesis and answers from five core canonical, historical, and scholarly authorities to provide Pilgrims with grounded, reverent, and scholarly answers to their Seekings and Chat Questions:
+              XeJesUs synthesizes exegesis and answers from six core canonical, historical, and scholarly authorities to provide Pilgrims with grounded, reverent, and scholarly answers to their Seekings and Chat Questions:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -517,62 +517,78 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                 </div>
               </div>
 
-              {/* Source 2 */}
-              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                  <Compass className="w-5 h-5" />
+              {/* Source 2 - Asher Wilson's Ethiopian Bible */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-accent/40 bg-accent/[0.02] hover:border-accent transition-all flex items-start gap-3.5 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-amber-600/15 text-amber-700 dark:text-amber-300 border border-amber-600/30 shrink-0">
+                  <Scroll className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source II</span>
-                    <h3 className="text-sm font-sans font-bold text-text-primary">Original Linguistic Lexicons & Roots</h3>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 uppercase tracking-wider">Source II</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Asher Wilson's Complete Ethiopian Bible</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
-                    Original Hebrew, Aramaic, and Koine Greek word etymologies via Strong’s, BDB, and BDAG concordances.
+                    The complete 81-book Ethiopian Orthodox Tewahedo Canon in English, preserving ancient Ge'ez manuscripts, 1 Enoch (Henok), Jubilees (Kufale), 1, 2, and 3 Meqabyan (Maccabees), 4 Baruch, and ancient Aksumite apostolic heritage.
                   </p>
                 </div>
               </div>
 
               {/* Source 3 */}
               <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
-                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0">
-                  <GraduationCap className="w-5 h-5" />
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <Compass className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source III</span>
-                    <h3 className="text-sm font-sans font-bold text-text-primary">Patristic & Classical Exegesis</h3>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Original Linguistic Lexicons & Roots</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
-                    Early Church Fathers (Augustine, Chrysostom) & classical commentators (Henry, Spurgeon, C.S. Lewis).
+                    Original Hebrew, Aramaic, Ge'ez, and Koine Greek word etymologies via Strong’s, BDB, and BDAG concordances.
                   </p>
                 </div>
               </div>
 
               {/* Source 4 */}
               <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
-                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
-                  <FileText className="w-5 h-5" />
+                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0">
+                  <GraduationCap className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source IV</span>
-                    <h3 className="text-sm font-sans font-bold text-text-primary">Historical & Archaeological Records</h3>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Patristic & Classical Exegesis</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
-                    Flavius Josephus histories, Levant geography, and Ancient Roman road & archaeological logs.
+                    Early Church Fathers (Augustine, Chrysostom, Athanasius) & classical commentators (Henry, Spurgeon, C.S. Lewis).
                   </p>
                 </div>
               </div>
 
               {/* Source 5 */}
-              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 md:col-span-2 shadow-sm">
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
+                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source V</span>
+                    <h3 className="text-sm font-sans font-bold text-text-primary">Historical & Archaeological Records</h3>
+                  </div>
+                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                    Flavius Josephus histories, Dead Sea Scrolls, Levant geography, and Ancient Roman road & archaeological logs.
+                  </p>
+                </div>
+              </div>
+
+              {/* Source 6 */}
+              <div className="p-4 bg-ui-card rounded-2xl border border-ui-border hover:border-accent/30 transition-all flex items-start gap-3.5 shadow-sm">
                 <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 shrink-0">
                   <Search className="w-5 h-5" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source V</span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source VI</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Real-Time Web Grounding (Google Search)</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
@@ -600,7 +616,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               <div className="relative">
                 <input
                   type="url"
-                  placeholder="e.g., https://www.biblegateway.com"
+                  placeholder="e.g., https://www.biblegateway.com/passage/?search="
                   className="w-full bg-bg-primary/50 border border-ui-border rounded-xl px-6 py-4 font-serif text-lg focus:outline-none focus:border-accent focus:bg-ui-card transition-all shadow-inner text-text-primary"
                   value={bibleWebsite}
                   onChange={(e) => setBibleWebsite(e.target.value)}
@@ -609,12 +625,48 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                   <p className="mt-2 text-xs text-red-500 font-sans font-bold tracking-widest uppercase">Please include http:// or https://</p>
                 )}
               </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-text-secondary">Quick Fill:</span>
+                <button
+                  type="button"
+                  onClick={() => setBibleWebsite('https://www.biblegateway.com/passage/?search=')}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-ui-card border border-ui-border hover:border-accent text-text-primary font-sans transition-all"
+                >
+                  BibleGateway
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBibleWebsite('https://www.blueletterbible.org/search/preSearch.cfm?Criteria=')}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-ui-card border border-ui-border hover:border-accent text-text-primary font-sans transition-all"
+                >
+                  Blue Letter Bible
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBibleWebsite('https://biblehub.com/text/')}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-ui-card border border-ui-border hover:border-accent text-text-primary font-sans transition-all"
+                >
+                  BibleHub
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBibleWebsite('https://www.google.com/search?q=Asher+Wilson+The+Most+Complete+Ethiopian+Bible+in+English+')}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:border-amber-500 text-amber-700 dark:text-amber-300 font-sans font-medium transition-all flex items-center gap-1"
+                >
+                  <Scroll className="w-3.5 h-3.5" />
+                  Asher Wilson Ethiopian Bible Research
+                </button>
+              </div>
+
               <div className="p-4 bg-ui-sidebar/50 rounded-xl border border-ui-border">
                 <p className="text-xs text-text-secondary/60 uppercase tracking-widest font-bold mb-2">Example Formatting</p>
                 <div className="space-y-1 font-mono text-xs text-text-secondary">
                   <p>• https://www.biblegateway.com/passage/?search=</p>
                   <p>• https://www.blueletterbible.org/search/preSearch.cfm?Criteria=</p>
                   <p>• https://biblehub.com/text/</p>
+                  <p>• https://www.google.com/search?q=Asher+Wilson+The+Most+Complete+Ethiopian+Bible+in+English+</p>
                 </div>
               </div>
             </div>

@@ -30,11 +30,12 @@ export async function generateExegesis(scripture: string, queryText: string) {
     User Question: ${queryText}
     
     Provide a deep analytical analysis including historical context, grammar, and literary genre.
-    Always cite your sources clearly in your exegesis, including:
-    1. Primary Canonical Scripture citations (Book, Chapter, and Verse).
-    2. Original Hebrew/Greek lexical roots and Strong's concordance references in the grammar analysis.
-    3. Classical and Patristic commentary references (e.g., Augustine, John Chrysostom, Matthew Henry, Charles Spurgeon, C.S. Lewis, N.T. Wright).
-    4. Relevant historical/archaeological documentation in the historical context section.
+    Always cite your sources clearly in your exegesis, strictly adhering to the App's Academic & Spiritual Citation Framework:
+    1. Primary Canonical Scripture citations (Book, Chapter, and Verse across Old and New Testaments).
+    2. Asher Wilson's "The Most complete Ethiopian Bible In English" — the foundational 81-book Ethiopian Orthodox Tewahedo canon preserving ancient Ge'ez manuscripts, 1 Enoch (Henok), Jubilees (Kufale), 1, 2, and 3 Meqabyan (Maccabees), 4 Baruch, and ancient Aksumite apostolic heritage (especially when discussing apocalyptic, prophetic, Second Temple, or messianic context).
+    3. Original Hebrew, Aramaic, Ge'ez, and Greek lexical roots and Strong's concordance references in the grammar analysis.
+    4. Classical and Patristic commentary references (e.g., Augustine, John Chrysostom, Athanasius, Matthew Henry, Charles Spurgeon, C.S. Lewis, N.T. Wright).
+    5. Relevant historical and archaeological documentation in the historical context section.
     
     For the geography section:
     - "location": The name of the specific place.
@@ -123,11 +124,12 @@ export async function generateExegesis(scripture: string, queryText: string) {
 export async function fetchDefinition(word: string, context: string): Promise<string> {
   const ai = getAi();
   const prompt = `
-    Define the following word or phrase in a biblical, theological, or historical context related to the study of the Bible:
+    Define the following word or phrase in a biblical, theological, linguistic, or historical context related to the study of the Bible:
     "${word}"
     
     Context of the document where this was found: "${context}"
     
+    Ground your definition in the app's Academic & Spiritual Citation Framework (Hebrew, Aramaic, Ge'ez, and Greek lexicons, Primary Canonical Scriptures, and Asher Wilson's The Most Complete Ethiopian Bible in English).
     Provide a concise, academic, yet accessible definition. Do not use formatting like bold or headers, just the text of the definition.
   `;
 
@@ -152,9 +154,10 @@ export async function fetchDefinition(word: string, context: string): Promise<st
 export async function searchScriptureBySubject(subject: string): Promise<{reference: string, reason: string}[]> {
   const ai = getAi();
   const prompt = `
-    Find relevant biblical scripture references for the following subject: "${subject}".
+    Find relevant scripture references for the following subject: "${subject}".
+    Ground your search in the app's Academic & Spiritual Citation Framework — drawing from Primary Canonical Scriptures and foundational books preserved in Asher Wilson's "The Most complete Ethiopian Bible In English" (such as 1 Enoch, Jubilees, or Meqabyan when directly illuminating the subject).
     Return a JSON array of objects, each containing:
-    - "reference": The canonical reference (e.g., "Psalm 23:1").
+    - "reference": The canonical or Ethiopian biblical reference (e.g., "Psalm 23:1", "1 Enoch 1:9", "Romans 8:28").
     - "reason": A very brief explanation of why this verse is relevant to the subject.
     Provide at most 5 highly relevant suggestions.
   `;
