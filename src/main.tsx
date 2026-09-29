@@ -61,6 +61,205 @@ if (typeof window !== 'undefined') {
       event.stopImmediatePropagation();
     }
   }, true);
+
+  // Resilient Storage Layer for Android & Storage-Partitioned Browsers
+  // Prevents "Unable to process request due to missing initial state" by ensuring sessionStorage
+  // is accessible, mirroring OAuth state to localStorage to survive Android background tab discards,
+  // rehydrating sessionStorage on page reload, and providing a persistent store if partitioned or blocked.
+  try {
+    const memoryStore: Record<string, string> = {};
+    let canUseSession = false;
+    let originalSession: Storage | null = null;
+
+    try {
+      originalSession = window.sessionStorage;
+      if (originalSession) {
+        const testKey = '__xe_test_storage__';
+        originalSession.setItem(testKey, '1');
+        canUseSession = originalSession.getItem(testKey) === '1';
+        originalSession.removeItem(testKey);
+      }
+    } catch {
+      canUseSession = false;
+    }
+
+    const safeGetFromLocal = (key: string): string | null => {
+      try {
+        const item = localStorage.getItem('__xe_sess_' + key);
+        if (item !== null) return item;
+      } catch {}
+      return memoryStore[key] || null;
+    };
+
+    const safeSetToLocal = (key: string, value: string): void => {
+      try {
+        localStorage.setItem('__xe_sess_' + key, value);
+      } catch {}
+      memoryStore[key] = value;
+    };
+
+    const safeRemoveFromLocal = (key: string): void => {
+      try {
+        localStorage.removeItem('__xe_sess_' + key);
+      } catch {}
+      delete memoryStore[key];
+    };
+
+    // 1. Initial Rehydration: Restore any stored session items from localStorage into memoryStore and originalSession
+    try {
+      const lLen = localStorage.length;
+      for (let i = 0; i < lLen; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('__xe_sess_')) {
+          const realKey = k.slice('__xe_sess_'.length);
+          const val = localStorage.getItem(k);
+          if (val !== null) {
+            memoryStore[realKey] = val;
+            if (canUseSession && originalSession) {
+              try {
+                originalSession.setItem(realKey, val);
+              } catch {}
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Storage initial rehydration notice:", e);
+    }
+
+    if (canUseSession && originalSession) {
+      const origGet = originalSession.getItem.bind(originalSession);
+      const origSet = originalSession.setItem.bind(originalSession);
+      const origRemove = originalSession.removeItem.bind(originalSession);
+      const origClear = originalSession.clear.bind(originalSession);
+      const origKey = originalSession.key ? originalSession.key.bind(originalSession) : () => null;
+
+      originalSession.getItem = function (key: string): string | null {
+        try {
+          const val = origGet(key);
+          if (val !== null && val !== undefined) return val;
+        } catch {}
+        return safeGetFromLocal(key);
+      };
+
+      originalSession.setItem = function (key: string, value: string): void {
+        try {
+          origSet(key, value);
+        } catch {}
+        safeSetToLocal(key, value);
+      };
+
+      originalSession.removeItem = function (key: string): void {
+        try {
+          origRemove(key);
+        } catch {}
+        safeRemoveFromLocal(key);
+      };
+
+      originalSession.clear = function (): void {
+        try {
+          origClear();
+        } catch {}
+        try {
+          Object.keys(localStorage).forEach(k => {
+            if (k.startsWith('__xe_sess_')) localStorage.removeItem(k);
+          });
+        } catch {}
+        Object.keys(memoryStore).forEach(k => delete memoryStore[k]);
+      };
+
+      originalSession.key = function (index: number): string | null {
+        try {
+          const k = origKey(index);
+          if (k !== null && k !== undefined) return k;
+        } catch {}
+        return Object.keys(memoryStore)[index] || null;
+      };
+
+      try {
+        Object.defineProperty(originalSession, 'length', {
+          get() {
+            try {
+              const origLen = Object.getPrototypeOf(originalSession)?.length ?? originalSession?.length;
+              if (typeof origLen === 'number' && origLen > 0) return origLen;
+            } catch {}
+            return Object.keys(memoryStore).length;
+          },
+          configurable: true
+        });
+      } catch {}
+
+      // Lifecycle hooks to sync on Android tab discards / background switching
+      const syncSessionToLocal = () => {
+        try {
+          const currentLen = originalSession.length;
+          for (let i = 0; i < currentLen; i++) {
+            const k = originalSession.key(i);
+            if (k) {
+              const v = originalSession.getItem(k);
+              if (v !== null) safeSetToLocal(k, v);
+            }
+          }
+        } catch {}
+      };
+
+      window.addEventListener('beforeunload', syncSessionToLocal, { capture: true });
+      window.addEventListener('pagehide', syncSessionToLocal, { capture: true });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+          syncSessionToLocal();
+        } else {
+          // Re-hydrate on tab refocus
+          try {
+            const lLen = localStorage.length;
+            for (let i = 0; i < lLen; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith('__xe_sess_')) {
+                const realKey = k.slice('__xe_sess_'.length);
+                const val = localStorage.getItem(k);
+                if (val !== null) {
+                  memoryStore[realKey] = val;
+                  try {
+                    originalSession.setItem(realKey, val);
+                  } catch {}
+                }
+              }
+            }
+          } catch {}
+        }
+      });
+    } else {
+      const storageShim: Storage = {
+        getItem: (k: string) => safeGetFromLocal(k),
+        setItem: (k: string, v: string) => safeSetToLocal(k, v),
+        removeItem: (k: string) => safeRemoveFromLocal(k),
+        clear: () => {
+          try {
+            Object.keys(localStorage).forEach(k => {
+              if (k.startsWith('__xe_sess_')) localStorage.removeItem(k);
+            });
+          } catch {}
+          Object.keys(memoryStore).forEach(k => delete memoryStore[k]);
+        },
+        key: (i: number) => Object.keys(memoryStore)[i] || null,
+        get length() {
+          return Object.keys(memoryStore).length;
+        }
+      };
+
+      try {
+        Object.defineProperty(window, 'sessionStorage', {
+          value: storageShim,
+          configurable: true,
+          writable: true
+        });
+      } catch {
+        (window as any).sessionStorage = storageShim;
+      }
+    }
+  } catch (err) {
+    console.warn("Storage resilience patch initialized with fallback:", err);
+  }
 }
 
 interface ErrorBoundaryProps {

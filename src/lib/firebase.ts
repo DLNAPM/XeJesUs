@@ -1,8 +1,55 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, setPersistence, browserLocalPersistence, indexedDBLocalPersistence, signInAnonymously } from 'firebase/auth';
+import { 
+  getAuth, 
+  initializeAuth,
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
+  signOut, 
+  onAuthStateChanged, 
+  type User as FirebaseUser, 
+  setPersistence, 
+  browserLocalPersistence, 
+  indexedDBLocalPersistence, 
+  browserPopupRedirectResolver,
+  signInAnonymously 
+} from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp, limit } from 'firebase/firestore';
+import firebaseConfigJson from '../../firebase-applet-config.json';
 
-export { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, FirebaseUser, getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp, setPersistence, browserLocalPersistence, limit, signInAnonymously };
+export { 
+  initializeApp, 
+  getAuth, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
+  signOut, 
+  onAuthStateChanged, 
+  FirebaseUser, 
+  getFirestore, 
+  doc, 
+  getDocFromServer, 
+  collection, 
+  getDocs, 
+  onSnapshot, 
+  setDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy, 
+  Timestamp, 
+  getDoc, 
+  serverTimestamp, 
+  setPersistence, 
+  browserLocalPersistence, 
+  indexedDBLocalPersistence, 
+  limit, 
+  signInAnonymously 
+};
 
 // Singleton instances
 let appInstance: any = null;
@@ -11,20 +58,20 @@ let dbInstance: any = null;
 
 const getFirebaseApp = () => {
   if (!appInstance) {
-    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || (firebaseConfigJson as any).apiKey;
     if (!apiKey) {
-      console.warn('Firebase configuration is missing. Please set environment variables in the Settings menu.');
+      console.warn('Firebase configuration is missing.');
       return null;
     }
 
     const firebaseConfig = {
       apiKey: apiKey,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID,
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || (firebaseConfigJson as any).authDomain,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || (firebaseConfigJson as any).projectId,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || (firebaseConfigJson as any).storageBucket,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || (firebaseConfigJson as any).messagingSenderId,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || (firebaseConfigJson as any).appId,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || (firebaseConfigJson as any).measurementId || ''
     };
     appInstance = initializeApp(firebaseConfig);
   }
@@ -35,12 +82,23 @@ export const getAuthService = () => {
   if (!authInstance) {
     const app = getFirebaseApp();
     if (!app) return null;
-    authInstance = getAuth(app);
-    // Fix for mobile/Safari "missing initial state" error
-    // Set persistence to LOCAL to ensure state is maintained
-    setPersistence(authInstance, browserLocalPersistence).catch(err => {
-      console.error("Auth persistence setup failed:", err);
-    });
+    
+    // Robust Auth initialization for Android and storage-partitioned environments:
+    // Prioritizes indexedDBLocalPersistence which is NOT cleared during mobile tab switches,
+    // backed up by browserLocalPersistence and explicit popup/redirect resolvers.
+    try {
+      authInstance = initializeAuth(app, {
+        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+        popupRedirectResolver: browserPopupRedirectResolver
+      });
+    } catch {
+      authInstance = getAuth(app);
+      setPersistence(authInstance, indexedDBLocalPersistence).catch(() => {
+        setPersistence(authInstance, browserLocalPersistence).catch(err => {
+          console.warn("Auth persistence fallback notice:", err);
+        });
+      });
+    }
   }
   return authInstance;
 };
@@ -49,16 +107,20 @@ export const getDbService = () => {
   if (!dbInstance) {
     const app = getFirebaseApp();
     if (!app) return null;
-    const dbId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID;
+    const dbId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || (firebaseConfigJson as any).firestoreDatabaseId;
     dbInstance = dbId && dbId.trim() ? getFirestore(app, dbId) : getFirestore(app);
   }
   return dbInstance;
 };
 
 export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+// On desktop, allow prompt: 'select_account' for choosing specific accounts.
+// On Android and mobile devices, omitting prompt: 'select_account' allows single-tap instant authentication with the device's Google account without extra redirection cycles.
+if (typeof navigator !== 'undefined' && !/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)) {
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  });
+}
 
 export enum OperationType {
   CREATE = 'create',

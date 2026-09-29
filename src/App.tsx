@@ -13,6 +13,8 @@ import {
   getAuthService, 
   googleProvider, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   signOut, 
   onAuthStateChanged, 
   FirebaseUser,
@@ -56,7 +58,8 @@ import {
   Settings as SettingsIcon,
   Menu,
   Globe,
-  History
+  History,
+  LogIn
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -164,6 +167,7 @@ export default function App() {
   const [showHelpPointer, setShowHelpPointer] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
+  const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = safeLocalStorage.getItem('xejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
@@ -207,6 +211,30 @@ export default function App() {
       setLoading(false);
       return;
     }
+
+    // Process redirect sign-in result for mobile/Android browsers
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result && result.user) {
+          console.log("Redirect login successful:", result.user.email);
+        }
+      })
+      .catch((error: any) => {
+        console.warn("getRedirectResult notice:", error);
+        // Clean URL if there are OAuth redirect residues in the URL query string
+        if (typeof window !== 'undefined' && window.location.search) {
+          if (
+            window.location.search.includes('apiKey') || 
+            window.location.search.includes('state') || 
+            error?.code === 'auth/missing-initial-state'
+          ) {
+            try {
+              window.history.replaceState(null, '', window.location.pathname);
+            } catch {}
+          }
+        }
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
         try {
@@ -307,25 +335,64 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  const handleLogin = async () => {
+  const handleLogin = async (eOrForce?: React.MouseEvent | boolean) => {
+    const forceRedirect = eOrForce === true;
     const auth = getAuthService();
     if (!auth) {
-      alert("Firebase is not configured. Please set environment variables in the Settings menu.");
+      setAuthErrorNotice("Firebase is not configured. Please set environment variables in Settings.");
       return;
     }
+    setAuthErrorNotice(null);
+
+    // Clean up any stale or orphaned OAuth session items before authenticating
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        ['firebase:authUser', 'firebase:redirectUser', 'firebase:oauth'].forEach(prefix => {
+          Object.keys(sessionStorage).forEach(k => {
+            if (k.startsWith(prefix) && !k.includes((auth as any).config?.apiKey || '')) {
+              try { sessionStorage.removeItem(k); } catch {}
+            }
+          });
+        });
+      }
+    } catch {}
+
+    const isMobileOrAndroid = typeof navigator !== 'undefined' && /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+
+    if (forceRedirect) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      } catch (err: any) {
+        console.error("Direct redirect sign-in failed:", err);
+        setAuthErrorNotice(err.message || "Direct redirect could not proceed. Try Guest sign-in.");
+        setShowLoginErrorModal(true);
+        return;
+      }
+    }
+
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
-      console.error("Login failed", error);
-      if (error.code === 'auth/auth-domain-config-required') {
-        alert("Firebase Auth Domain is not configured correctly.");
-      } else if (error.code === 'auth/operation-not-supported-in-this-environment' || 
-                 error.message?.includes('missing initial state') ||
-                 error.message?.includes('storage-partitioned') ||
-                 error.message?.includes('sessionStorage is inaccessible')) {
+      console.warn("Popup login notice:", error);
+      const isMissingInitialState = 
+        error.code === 'auth/missing-initial-state' ||
+        error.message?.includes('missing initial state') ||
+        error.message?.includes('storage-partitioned') ||
+        error.message?.includes('sessionStorage is inaccessible');
+
+      const isPopupBlocked = 
+        error.code === 'auth/popup-blocked' ||
+        error.code === 'auth/cancelled-popup-request';
+
+      // For Android and mobile browsers with popups blocked or storage partitioned,
+      // present the dedicated Mobile & Android Sign-In Resolver with clear one-tap pathways
+      if (isMissingInitialState || isPopupBlocked || error.code === 'auth/operation-not-supported-in-this-environment') {
         setShowLoginErrorModal(true);
-      } else {
-        alert("Login failed: " + (error.message || "Unknown error"));
+      } else if (error.code === 'auth/auth-domain-config-required') {
+        setAuthErrorNotice("Firebase Auth Domain is not configured correctly.");
+      } else if (error.code !== 'auth/popup-closed-by-user') {
+        setAuthErrorNotice(error.message || "Sign-in could not be completed. You can continue as a Guest Pilgrim.");
       }
     }
   };
@@ -333,17 +400,19 @@ export default function App() {
   const handleGuestLogin = async () => {
     const auth = getAuthService();
     if (!auth) {
-      alert("Firebase is not configured.");
+      setAuthErrorNotice("Firebase is not configured.");
       return;
     }
+    setAuthErrorNotice(null);
     try {
       await signInAnonymously(auth);
+      setShowLoginErrorModal(false);
     } catch (error: any) {
       console.error("Guest login failed", error);
       if (error.code === 'auth/admin-restricted-operation') {
-        alert("Anonymous sign-in is not enabled in the Firebase Console. Please enable it in the Auth settings.");
+        setAuthErrorNotice("Anonymous sign-in is not enabled in Firebase Auth settings.");
       } else {
-        alert("Guest login failed: " + (error.message || "Unknown error"));
+        setAuthErrorNotice("Guest login failed: " + (error.message || "Unknown error"));
       }
     }
   };
@@ -445,6 +514,19 @@ export default function App() {
           </p>
           
           <div className="flex flex-col gap-4 w-full max-w-sm mx-auto">
+            {authErrorNotice && (
+              <div className="p-4 bg-accent/10 border border-accent/20 rounded-xl text-text-primary text-xs font-sans text-center flex items-center justify-between gap-3 animate-fade-in">
+                <span className="leading-snug">{authErrorNotice}</span>
+                <button 
+                  onClick={() => setAuthErrorNotice(null)} 
+                  className="text-accent font-bold text-sm px-1.5 py-0.5 hover:opacity-80 transition-opacity"
+                  aria-label="Dismiss error notice"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             <button 
               onClick={handleLogin}
               className="w-full px-8 py-4 bg-text-primary text-bg-primary font-sans font-bold rounded-xl text-lg shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-3"
@@ -522,38 +604,73 @@ export default function App() {
               >
                 <div className="absolute top-0 left-0 w-full h-2 bg-accent opacity-20"></div>
                 
-                <div className="w-20 h-20 bg-accent/10 rounded-[2rem] flex items-center justify-center text-accent mx-auto mb-8">
-                  <Globe className="w-10 h-10" />
+                <div className="w-16 h-16 bg-accent/10 rounded-[1.75rem] flex items-center justify-center text-accent mx-auto mb-6">
+                  <Globe className="w-8 h-8" />
                 </div>
                 
-                <h3 className="text-2xl font-serif font-bold text-text-primary text-center italic mb-4">Login Boundary Detected</h3>
+                <h3 className="text-2xl font-serif font-bold text-text-primary text-center italic mb-3">Mobile & Android Sign-In</h3>
                 
-                <div className="space-y-4 mb-8">
-                  <p className="text-text-secondary font-serif italic text-center leading-relaxed">
-                    This browser view (common on tablets and mobile) restricts the secure verification process required for the Sanctuary.
+                <div className="space-y-4 mb-6">
+                  <p className="text-text-secondary font-serif italic text-center text-sm leading-relaxed">
+                    Some Android browsers and preview views restrict cross-window popups and partitioned session storage during Google authentication.
                   </p>
                   
-                  <div className="bg-ui-sidebar/50 p-6 rounded-2xl border border-ui-border">
-                    <p className="text-xs font-sans font-black uppercase tracking-widest text-accent mb-4 text-center">To continue your journey:</p>
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-6 h-6 rounded-full bg-text-primary text-bg-primary flex flex-shrink-0 items-center justify-center text-[10px] font-bold">1</div>
-                      <p className="text-sm text-text-primary font-medium leading-tight">Tap the <span className="text-accent underline font-bold uppercase tracking-tighter">"Open in New Tab"</span> icon in your browser's toolbar.</p>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-6 h-6 rounded-full bg-text-primary text-bg-primary flex flex-shrink-0 items-center justify-center text-[10px] font-bold">2</div>
-                      <p className="text-sm text-text-primary font-medium leading-tight">Complete the login in the new window to bypass storage restrictions.</p>
-                    </div>
+                  <div className="bg-ui-sidebar/50 p-5 rounded-2xl border border-ui-border space-y-3">
+                    <p className="text-xs font-sans font-black uppercase tracking-widest text-accent text-center">Seamless Authentication Pathways:</p>
+                    
+                    <button 
+                      onClick={() => {
+                        setShowLoginErrorModal(false);
+                        // Clean any previous session clutter and retry
+                        try {
+                          ['firebase:authUser', 'firebase:redirectUser', 'firebase:oauth'].forEach(p => {
+                            Object.keys(sessionStorage).forEach(k => { if (k.startsWith(p)) sessionStorage.removeItem(k); });
+                          });
+                        } catch {}
+                        handleLogin();
+                      }}
+                      className="w-full py-3.5 px-4 bg-accent text-bg-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      Retry Google Sign-In (Allow Pop-ups)
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        setShowLoginErrorModal(false);
+                        handleLogin(true);
+                      }}
+                      className="w-full py-3.5 px-4 bg-text-primary text-bg-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <Globe className="w-4 h-4 text-accent" />
+                      Sign In via Direct Redirect
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        setShowLoginErrorModal(false);
+                        handleGuestLogin();
+                      }}
+                      className="w-full py-3.5 px-4 bg-ui-card border border-ui-border text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider hover:bg-accent/10 transition-all flex items-center justify-center gap-2"
+                    >
+                      <UserSearch className="w-4 h-4 text-accent" />
+                      Test Drive as Guest Pilgrim
+                    </button>
                   </div>
+
+                  <p className="text-xs text-text-secondary/80 font-serif italic text-center">
+                    Tip: If opening inside an app preview or social webview, tap the browser menu (⋮) and select <span className="font-sans font-bold text-accent">"Open in Chrome"</span>.
+                  </p>
                 </div>
                 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
                   <button 
                     onClick={() => setShowLoginErrorModal(false)}
-                    className="w-full py-4 bg-text-primary text-bg-primary rounded-2xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-ui-sidebar text-text-secondary rounded-xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:text-text-primary transition-all text-center"
                   >
-                    I Understand
+                    Close
                   </button>
-                  <p className="text-[10px] text-text-secondary text-center font-sans tracking-widest opacity-60 uppercase">Error: Missing Initial State (Restricted Browser)</p>
+                  <p className="text-[10px] text-text-secondary/60 text-center font-sans tracking-widest uppercase">Storage-Partitioned Environment Resolver Active</p>
                 </div>
               </motion.div>
             </div>
