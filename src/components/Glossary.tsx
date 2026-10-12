@@ -346,14 +346,50 @@ export default function Glossary() {
               <span className="hidden sm:inline">Check Duplicates</span>
             </button>
 
-            <button 
-              type="button"
-              onClick={() => setShowInfo(!showInfo)}
-              aria-label="How to use Lexicon"
-              className={`p-2 sm:p-2.5 rounded-2xl transition-all cursor-pointer shrink-0 ${showInfo ? 'bg-accent text-bg-primary shadow-md' : 'bg-ui-card text-text-secondary border border-ui-border hover:border-accent'}`}
-            >
-              <Lightbulb className="w-4 h-4" />
-            </button>
+            <div className="relative group/bulb">
+              <button 
+                type="button"
+                onClick={() => setShowInfo(!showInfo)}
+                aria-label={showInfo ? "Hide Lexicon guide" : "How to use Lexicon guide"}
+                title={showInfo ? "Hide Lexicon guide" : "Show Lexicon guide: Learn how to highlight words, save definitions, and manage terms"}
+                className={`p-2 sm:p-2.5 rounded-2xl transition-all cursor-pointer shrink-0 ${showInfo ? 'bg-accent text-bg-primary shadow-md ring-2 ring-accent/30' : 'bg-ui-card text-text-secondary border border-ui-border hover:border-accent hover:text-text-primary'}`}
+              >
+                <Lightbulb className="w-4 h-4" />
+              </button>
+
+              {/* Hover Hint Tooltip */}
+              <div 
+                role="tooltip"
+                className="pointer-events-none absolute right-0 top-full mt-2.5 z-50 w-64 sm:w-72 p-3 bg-ui-card/95 backdrop-blur-md border border-ui-border shadow-2xl rounded-2xl opacity-0 invisible -translate-y-1 group-hover/bulb:opacity-100 group-hover/bulb:visible group-hover/bulb:translate-y-0 group-focus-within/bulb:opacity-100 group-focus-within/bulb:visible group-focus-within/bulb:translate-y-0 transition-all duration-200"
+              >
+                {/* Pointer Arrow */}
+                <div className="absolute -top-1.5 right-3.5 w-3 h-3 bg-ui-card border-t border-l border-ui-border rotate-45" />
+
+                <div className="relative z-10 flex items-start gap-2.5">
+                  <div className="p-1.5 rounded-xl bg-accent/15 text-accent shrink-0 mt-0.5">
+                    <Lightbulb className="w-4 h-4" />
+                  </div>
+                  <div className="text-left space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[11px] font-sans font-black uppercase tracking-wider text-accent">
+                        {showInfo ? 'Hide Lexicon Guide' : 'Lexicon Usage Guide'}
+                      </p>
+                      <span className="text-[9px] font-sans px-1.5 py-0.5 rounded-full bg-ui-border/50 text-text-secondary font-medium">
+                        Hint
+                      </span>
+                    </div>
+                    <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                      {showInfo
+                        ? 'Press this light bulb to close the instructions and view more of your glossary words.'
+                        : 'Press this light bulb to reveal step-by-step instructions on how to highlight scripture words, look up theological definitions, and catalog terms into your Lexicon.'}
+                    </p>
+                    <p className="text-[10px] text-accent/80 font-sans font-medium pt-0.5">
+                      {showInfo ? 'Click to collapse guide' : 'Click to expand 3-step guide'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
