@@ -89,3 +89,59 @@
   -webkit-touch-callout: default;
 }
 
+/* iOS & WebKit Scrollbar and Scrolling Enhancements */
+.ios-scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+/* Custom Visible Scrollbar for iOS Safari, WebKit, and Modern Browsers */
+.lexicon-scroll-container {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--ui-border);
+}
+
+.lexicon-scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  display: block !important;
+  -webkit-appearance: none;
+}
+
+.lexicon-scroll-container::-webkit-scrollbar-track {
+  background: var(--ui-border);
+  border-radius: 9999px;
+}
+
+.lexicon-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 9999px;
+  border: 2px solid var(--ui-card);
+}
+
+.lexicon-scroll-container::-webkit-scrollbar-thumb:hover {
+  opacity: 0.8;
+}
+
+/* Horizontal scrollbar for Letter Strip on small screens */
+.lexicon-letters-bar {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.lexicon-letters-bar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.lexicon-letters-bar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lexicon-letters-bar::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 9999px;
+}
+

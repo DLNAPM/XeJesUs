@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService, deleteDoc } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
-import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { fetchDefinition } from '../lib/gemini';
@@ -108,6 +108,8 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   const [isDefining, setIsDefining] = useState(false);
   const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [isDuplicateInLexicon, setIsDuplicateInLexicon] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [deleting, setDeleting] = useState(false);
 
@@ -226,7 +228,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       document.removeEventListener('mousedown', handleGlobalPointerDown);
       document.removeEventListener('touchstart', handleGlobalPointerDown);
     };
-  }, [updateSelectionFromDOM, isDefining, definitionResult, addedSuccess]);
+  }, [updateSelectionFromDOM, isDefining, definitionResult, addedSuccess, isDuplicateInLexicon]);
 
   const askForMeaning = async () => {
     const targetText = selectedTextRef.current || selectedText;
@@ -238,10 +240,31 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     }
     isInteractingWithMenuRef.current = true;
     setIsDefining(true);
+    setDuplicateWarning(null);
+    setIsDuplicateInLexicon(false);
     try {
       const context = `Biblical study of ${inquiry?.scripture}. Query: ${inquiry?.query}`;
       const definition = await fetchDefinition(targetText, context);
       setDefinitionResult({ word: targetText, definition });
+
+      // Proactively check if this word or phrase already exists in user's Lexicon Glossary
+      if (auth?.currentUser && db) {
+        try {
+          const glossaryPath = `users/${auth.currentUser.uid}/glossary`;
+          const snapshot = await getDocs(collection(db, glossaryPath));
+          const normalizedTarget = targetText.trim().toLowerCase();
+          const match = snapshot.docs.find(doc => {
+            const w = doc.data().word;
+            return typeof w === 'string' && w.trim().toLowerCase() === normalizedTarget;
+          });
+          if (match) {
+            setIsDuplicateInLexicon(true);
+            setDuplicateWarning(`"${targetText.trim()}" already exists in your Lexicon Glossary.`);
+          }
+        } catch (checkErr) {
+          console.error("Error checking lexicon duplicate:", checkErr);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -256,13 +279,29 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     isInteractingWithMenuRef.current = true;
     const path = `users/${auth.currentUser.uid}/glossary`;
     try {
+      // Always verify against database before saving to prevent duplicate entries
+      const snapshot = await getDocs(collection(db, path));
+      const normalizedTarget = definitionResult.word.trim().toLowerCase();
+      const existing = snapshot.docs.find(d => {
+        const w = d.data().word;
+        return typeof w === 'string' && w.trim().toLowerCase() === normalizedTarget;
+      });
+
+      if (existing) {
+        setIsDuplicateInLexicon(true);
+        setDuplicateWarning(`The word or phrase "${definitionResult.word.trim()}" already exists in your Lexicon Glossary.`);
+        return;
+      }
+
       await addDoc(collection(db, path), {
         userId: auth.currentUser.uid,
-        word: definitionResult.word,
-        definition: definitionResult.definition,
+        word: definitionResult.word.trim(),
+        definition: definitionResult.definition.trim(),
         createdAt: serverTimestamp()
       });
       setAddedSuccess(true);
+      setDuplicateWarning(null);
+      setIsDuplicateInLexicon(false);
       setTimeout(() => {
         setAddedSuccess(false);
         setDefinitionResult(null);
@@ -1156,6 +1195,8 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     onClick={() => { 
                       setDefinitionResult(null); 
                       setSelectionPosition(null);
+                      setDuplicateWarning(null);
+                      setIsDuplicateInLexicon(false);
                       isInteractingWithMenuRef.current = false;
                     }} 
                     className="text-bg-primary/50 hover:text-bg-primary p-1 rounded transition-colors"
@@ -1163,17 +1204,38 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="max-h-44 overflow-y-auto pr-1.5 [scrollbar-width:thin] text-xs font-serif leading-relaxed opacity-90 whitespace-pre-wrap">
+
+                {isDuplicateInLexicon && (
+                  <div className="flex items-start gap-2 p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-200 text-xs animate-in fade-in duration-200">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-amber-300">Already in Lexicon</p>
+                      <p className="text-[11px] text-amber-100/90 leading-tight mt-0.5">
+                        {duplicateWarning || `The word or phrase "${definitionResult.word}" already exists in your Lexicon Glossary.`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="max-h-44 overflow-y-auto pr-1.5 [scrollbar-width:thin] text-xs font-serif leading-relaxed opacity-90 whitespace-pre-wrap select-text">
                   {definitionResult.definition}
                 </div>
-                <button 
-                  type="button"
-                  onClick={addToGlossary}
-                  className="w-full bg-accent text-bg-primary hover:opacity-95 active:scale-[0.98] py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-                >
-                  <GraduationCap className="w-3.5 h-3.5" />
-                  Add to Lexicon
-                </button>
+
+                {isDuplicateInLexicon ? (
+                  <div className="w-full bg-amber-500/15 border border-amber-500/30 text-amber-300 py-2 px-3 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 select-none text-center">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Already Saved in Lexicon</span>
+                  </div>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={addToGlossary}
+                    className="w-full bg-accent text-bg-primary hover:opacity-95 active:scale-[0.98] py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                  >
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    Add to Lexicon
+                  </button>
+                )}
               </div>
             ) : (
               <button 
