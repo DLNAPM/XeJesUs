@@ -1,6 +1,50 @@
 import { Inquiry, LiteraryWorkExport } from "../types";
 import { reportIncident } from "./incidentService";
 
+// Robust helper that avoids "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
+async function safeFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  let rawText = '';
+  try {
+    rawText = await response.text();
+  } catch (err: any) {
+    throw new Error(`Failed to read response from ${url}: ${err?.message || ''}`);
+  }
+
+  let parsed: any = null;
+  if (rawText && rawText.trim().length > 0) {
+    try {
+      parsed = JSON.parse(rawText.trim());
+    } catch {
+      parsed = null;
+    }
+  }
+
+  if (!response.ok) {
+    let errorMsg = parsed?.error || parsed?.message || rawText || `Server returned HTTP ${response.status}`;
+    if (typeof errorMsg === 'string') {
+      // If errorMsg is a stringified JSON object (e.g. from Google API), extract the human-readable message
+      try {
+        const nested = JSON.parse(errorMsg);
+        if (nested?.error?.message) {
+          errorMsg = nested.error.message;
+        }
+      } catch {
+        // Not a JSON string, keep as is
+      }
+    } else {
+      errorMsg = JSON.stringify(errorMsg);
+    }
+    throw new Error(errorMsg);
+  }
+
+  if (parsed === null) {
+    throw new Error(`Invalid response received from server (${response.status})`);
+  }
+
+  return parsed as T;
+}
+
 export async function generateScholarTTS(
   text: string,
   personaName: string,
@@ -18,18 +62,12 @@ export async function generateScholarTTS(
   if (!cleanText) return "";
 
   try {
-    const response = await fetch('/api/gemini/tts', {
+    const data = await safeFetchJson<{ audioBase64?: string }>('/api/gemini/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: cleanText, personaName, gender }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `TTS server error (${response.status})`);
-    }
-
-    const data = await response.json();
     if (!data.audioBase64) {
       throw new Error("No audio data returned from Gemini TTS");
     }
@@ -53,18 +91,12 @@ export async function chatWithSanctuary(
   recentInquiries: Inquiry[]
 ) {
   try {
-    const response = await fetch('/api/gemini/chat', {
+    const data = await safeFetchJson<{ text?: string }>('/api/gemini/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, history, recentInquiries }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `Sanctuary chat server error (${response.status})`);
-    }
-
-    const data = await response.json();
     return data.text || '';
   } catch (error) {
     console.error("Gemini Scholar Chat Error:", error);
@@ -487,7 +519,7 @@ export async function generateLiteraryWorkExport(
   };
 
   try {
-    const response = await fetch('/api/gemini/literary-work', {
+    const parsed = await safeFetchJson<any>('/api/gemini/literary-work', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -497,9 +529,7 @@ export async function generateLiteraryWorkExport(
       }),
     });
 
-    if (response.ok) {
-      const parsed = await response.json();
-      if (parsed && typeof parsed === 'object') {
+    if (parsed && typeof parsed === 'object') {
         const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
           ? parsed.images.map((img: any, idx: number) => {
               const imgContext = `${img.title || ''} ${img.caption || ''} ${sessionName} ${conversationText}`;
@@ -523,7 +553,6 @@ export async function generateLiteraryWorkExport(
           images: imagesWithFallback,
         };
       }
-    }
   } catch (err) {
     console.warn("Failed to generate literary work from Gemini, using fallback data:", err);
     reportIncident({

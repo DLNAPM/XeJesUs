@@ -5,20 +5,49 @@ export const MODELS = {
   IMAGE: "gemini-3.1-flash-lite-image",
 };
 
+// Robust helper that avoids "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
+async function safeFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+  let rawText = '';
+  try {
+    rawText = await response.text();
+  } catch (err: any) {
+    throw new Error(`Failed to read response from ${url}: ${err?.message || ''}`);
+  }
+
+  let parsed: any = null;
+  if (rawText && rawText.trim().length > 0) {
+    try {
+      parsed = JSON.parse(rawText.trim());
+    } catch {
+      parsed = null;
+    }
+  }
+
+  if (!response.ok) {
+    const errorMsg =
+      parsed?.error ||
+      parsed?.message ||
+      rawText ||
+      `Server returned HTTP ${response.status}`;
+    throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+  }
+
+  if (parsed === null) {
+    throw new Error(`Invalid response received from server (${response.status})`);
+  }
+
+  return parsed as T;
+}
+
 export async function generateExegesis(scripture: string, queryText: string) {
   try {
-    const response = await fetch('/api/gemini/exegesis', {
+    const data = await safeFetchJson<any>('/api/gemini/exegesis', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scripture, queryText }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `Exegesis server error (${response.status})`);
-    }
-
-    const data = await response.json();
     return data;
   } catch (error: any) {
     console.error("Gemini Exegesis Error:", error);
@@ -34,18 +63,12 @@ export async function generateExegesis(scripture: string, queryText: string) {
 
 export async function fetchDefinition(word: string, context: string): Promise<string> {
   try {
-    const response = await fetch('/api/gemini/define', {
+    const data = await safeFetchJson<{ definition?: string }>('/api/gemini/define', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ word, context }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `Lexicon definition server error (${response.status})`);
-    }
-
-    const data = await response.json();
     return data.definition || '';
   } catch (error: any) {
     console.error("Fetch Definition Error:", error);
@@ -61,18 +84,12 @@ export async function fetchDefinition(word: string, context: string): Promise<st
 
 export async function searchScriptureBySubject(subject: string): Promise<{reference: string, reason: string}[]> {
   try {
-    const response = await fetch('/api/gemini/subject-search', {
+    const data = await safeFetchJson<{ results?: { reference: string; reason: string }[] }>('/api/gemini/subject-search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subject }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `Subject search server error (${response.status})`);
-    }
-
-    const data = await response.json();
     return data.results || [];
   } catch (error: any) {
     console.error("Search Scripture Error:", error);

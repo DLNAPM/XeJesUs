@@ -28,7 +28,7 @@ function getAi(): GoogleGenAI {
   });
 }
 
-// Helper to execute generation with automatic resilience fallback
+// Helper to execute generation with automatic multi-tier resilience fallback
 async function generateWithFallback(options: {
   contents: any;
   config?: any;
@@ -46,16 +46,30 @@ async function generateWithFallback(options: {
     });
   } catch (err: any) {
     const errMsg = String(err?.message || '');
-    // If the primary model experiences high load (503) or rate limit (429), retry with flash-lite
-    if ((errMsg.includes('503') || errMsg.includes('UNAVAILABLE') || errMsg.includes('429')) && primaryModel !== fallbackModel) {
-      console.warn(`Primary model ${primaryModel} busy, falling back to ${fallbackModel}`);
+    console.warn(`Primary generation with ${primaryModel} failed: ${errMsg.slice(0, 150)}`);
+
+    // Tier 2: Try fallback model (gemini-3.1-flash-lite) with tools removed if search quota exceeded
+    try {
+      const fallbackConfig = options.config ? { ...options.config } : undefined;
+      if (fallbackConfig && fallbackConfig.tools) {
+        // Strip search tools on fallback to avoid search quota exhaustion
+        delete fallbackConfig.tools;
+      }
+
       return await ai.models.generateContent({
         model: fallbackModel,
         contents: options.contents,
-        config: options.config,
+        config: fallbackConfig,
+      });
+    } catch (err2: any) {
+      console.warn(`Fallback generation with ${fallbackModel} failed: ${String(err2?.message || '').slice(0, 150)}`);
+      
+      // Tier 3: Simplest configuration fallback without responseSchema
+      return await ai.models.generateContent({
+        model: fallbackModel,
+        contents: options.contents,
       });
     }
-    throw err;
   }
 }
 
@@ -148,17 +162,25 @@ app.post('/api/gemini/exegesis', async (req, res) => {
       return res.status(500).json({ error: 'No response returned from Gemini AI' });
     }
 
-    const data = JSON.parse(text.trim());
+    // Clean JSON response (strip potential markdown wrapping)
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const data = JSON.parse(cleanedText);
 
     if (data.geography) {
       const formatPrompt = (p: string) =>
         `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=800&height=600&nologo=true`;
-      if (!data.geography.thenImageUrl.startsWith('http')) {
+      if (data.geography.thenImageUrl && !data.geography.thenImageUrl.startsWith('http')) {
         data.geography.thenImageUrl = formatPrompt(
           `historical biblical map of ${data.geography.location}, ancient style, parchment texture, high detail, ${data.geography.thenImageUrl}`
         );
       }
-      if (!data.geography.nowImageUrl.startsWith('http')) {
+      if (data.geography.nowImageUrl && !data.geography.nowImageUrl.startsWith('http')) {
         data.geography.nowImageUrl = formatPrompt(
           `modern geographical view or drone shot of ${data.geography.location} Israel, high resolution, realistic, ${data.geography.nowImageUrl}`
         );
@@ -245,7 +267,14 @@ app.post('/api/gemini/subject-search', async (req, res) => {
     });
 
     const text = response.text || '[]';
-    const results = JSON.parse(text.trim());
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const results = JSON.parse(cleanedText);
     res.json({ results });
   } catch (error: any) {
     console.error('Server Subject Search Error:', error);
@@ -337,7 +366,7 @@ app.post('/api/gemini/tts', async (req, res) => {
   }
 });
 
-// 5. Sanctuary Scholar Chat
+// 5. Sanctuary Scholar Chat with Robust Multi-Tier Fallback
 app.post('/api/gemini/chat', async (req, res) => {
   try {
     const { message, history, recentInquiries } = req.body;
@@ -375,26 +404,62 @@ Guidelines:
 7. If a user asks something completely unrelated to faith or their studies, gently guide them back to their spiritual journey.
 8. Keep responses relatively concise but profound, ensuring all biblical and historical claims carry citations.`;
 
+    const chatHistory = Array.isArray(history)
+      ? history.map((h: any) => ({
+          role: h.role,
+          parts: [{ text: h.text }],
+        }))
+      : [];
+
     const ai = getAi();
-    const chat = ai.chats.create({
-      model: 'gemini-3.8-flash',
-      config: {
-        systemInstruction,
-        tools: [{ googleSearch: {} }],
-      },
-      history: Array.isArray(history)
-        ? history.map((h: any) => ({
-            role: h.role,
-            parts: [{ text: h.text }],
-          }))
-        : [],
-    });
+    let replyText = '';
 
-    const result = await chat.sendMessage({
-      message,
-    });
+    // Attempt 1: Try gemini-3.8-flash with googleSearch tool
+    try {
+      const chat = ai.chats.create({
+        model: 'gemini-3.8-flash',
+        config: {
+          systemInstruction,
+          tools: [{ googleSearch: {} }],
+        },
+        history: chatHistory,
+      });
 
-    res.json({ text: result.text || '' });
+      const result = await chat.sendMessage({ message });
+      replyText = result.text || '';
+    } catch (err1: any) {
+      console.warn('Chat attempt 1 (gemini-3.8-flash with search) error:', String(err1?.message || '').slice(0, 150));
+      
+      // Attempt 2: Fallback to gemini-3.1-flash-lite without search tool (bypasses tool quota & high-demand issues)
+      try {
+        const chatFallback = ai.chats.create({
+          model: 'gemini-3.1-flash-lite',
+          config: {
+            systemInstruction,
+          },
+          history: chatHistory,
+        });
+
+        const result2 = await chatFallback.sendMessage({ message });
+        replyText = result2.text || '';
+      } catch (err2: any) {
+        console.warn('Chat attempt 2 (gemini-3.1-flash-lite chat) error:', String(err2?.message || '').slice(0, 150));
+        
+        // Attempt 3: Direct single-turn generateContent with gemini-3.1-flash-lite
+        const fullPrompt = `${systemInstruction}\n\nUser Question: ${message}`;
+        const result3 = await ai.models.generateContent({
+          model: 'gemini-3.1-flash-lite',
+          contents: fullPrompt,
+        });
+        replyText = result3.text || '';
+      }
+    }
+
+    if (!replyText) {
+      return res.status(500).json({ error: 'Sanctuary Scholar could not generate a response. Please try again.' });
+    }
+
+    res.json({ text: replyText });
   } catch (error: any) {
     console.error('Server Chat Error:', error);
     res.status(500).json({
@@ -453,7 +518,14 @@ Return ONLY valid JSON.`;
       return res.json(fallbackData || {});
     }
 
-    const parsed = JSON.parse(text.trim());
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const parsed = JSON.parse(cleaned);
     res.json(parsed);
   } catch (error: any) {
     console.error('Server Literary Work Export Error:', error);
@@ -462,6 +534,14 @@ Return ONLY valid JSON.`;
       status: error?.status,
     });
   }
+});
+
+// Global Express Error-Handling Middleware for JSON APIs
+app.use('/api', (err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Unhandled API Error:', err);
+  res.status(500).json({
+    error: err?.message || 'Internal server error occurred',
+  });
 });
 
 // Boot dev server with Vite middleware or serve production dist
