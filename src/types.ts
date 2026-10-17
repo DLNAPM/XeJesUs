@@ -23,6 +23,18 @@ export interface SystemAlert {
   emailRecipient?: string;
 }
 
+export interface MaintenanceConfig {
+  enabled: boolean;
+  title: string;
+  message: string;
+  severity?: 'maintenance' | 'upgrade' | 'investigation';
+  affectedServices?: string[];
+  estimatedCompletion?: string;
+  allowGuestAccess?: boolean;
+  updatedAt?: any;
+  updatedBy?: string;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;

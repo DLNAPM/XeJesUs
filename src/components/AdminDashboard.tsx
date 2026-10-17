@@ -18,6 +18,8 @@ import {
 } from '../lib/firebase';
 import { UserProfile } from '../types';
 import AdminAlertsStation from './AdminAlertsStation';
+import AdminMaintenanceStation from './AdminMaintenanceStation';
+import { subscribeToMaintenance } from '../services/maintenanceService';
 import { 
   Shield, 
   UserX, 
@@ -33,7 +35,8 @@ import {
   Bell,
   ArrowUpDown,
   Radio,
-  AlertOctagon
+  AlertOctagon,
+  Wrench
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -46,14 +49,19 @@ interface SystemLog {
   timestamp: Timestamp;
 }
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  initialTab?: 'alarms' | 'registry' | 'maintenance';
+}
+
+export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboardProps) {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
-  const [activeTab, setActiveTab] = useState<'alarms' | 'registry'>('alarms');
+  const [activeTab, setActiveTab] = useState<'alarms' | 'registry' | 'maintenance'>(initialTab);
   const [activeAlertCount, setActiveAlertCount] = useState<number>(0);
+  const [maintenanceActive, setMaintenanceActive] = useState<boolean>(false);
   
   type SortField = 'pilgrim' | 'role' | 'tier' | 'status' | 'lastLogin';
   type SortOrder = 'asc' | 'desc';
@@ -83,6 +91,14 @@ export default function AdminDashboard() {
       console.warn("Failed setting up alert badge listener:", err);
     }
   }, [db]);
+
+  // Real-time listener for maintenance mode status
+  useEffect(() => {
+    const unsub = subscribeToMaintenance((cfg) => {
+      setMaintenanceActive(Boolean(cfg.enabled));
+    });
+    return () => unsub();
+  }, []);
 
   const fetchUsers = async () => {
     if (!db) return;
@@ -307,11 +323,34 @@ export default function AdminDashboard() {
             {users.length}
           </span>
         </button>
+
+        <button
+          id="tab-btn-maintenance"
+          onClick={() => setActiveTab('maintenance')}
+          className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'maintenance'
+              ? 'bg-accent text-bg-primary shadow-lg shadow-accent/20 scale-[1.02]'
+              : 'bg-ui-card hover:bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <Wrench className="w-4 h-4" />
+          <span>Maintenance & Landing Broadcast</span>
+          {maintenanceActive ? (
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-bg-primary text-[10px] font-black animate-pulse flex items-center gap-1 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+              ACTIVE
+            </span>
+          ) : (
+            <span className="px-2 py-0.5 rounded-full bg-ui-sidebar border border-ui-border text-text-secondary text-[10px] font-black">
+              STANDBY
+            </span>
+          )}
+        </button>
       </div>
 
-      {activeTab === 'alarms' ? (
-        <AdminAlertsStation />
-      ) : (
+      {activeTab === 'alarms' && <AdminAlertsStation />}
+      {activeTab === 'maintenance' && <AdminMaintenanceStation />}
+      {activeTab === 'registry' && (
         <>
           {/* Analytics Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">

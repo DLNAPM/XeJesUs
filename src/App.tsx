@@ -83,6 +83,9 @@ import Chatbot from './components/Chatbot';
 import SavedChatSessions from './components/SavedChatSessions';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import TermsOfUsePage from './components/TermsOfUsePage';
+import MaintenanceNoticeCard from './components/MaintenanceNoticeCard';
+import { MaintenanceConfig } from './types';
+import { subscribeToMaintenance } from './services/maintenanceService';
 
 const safeSessionStorage = {
   getItem(key: string): string | null {
@@ -168,10 +171,19 @@ export default function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
   const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
+  const [maintenanceConfig, setMaintenanceConfig] = useState<MaintenanceConfig | null>(null);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = safeLocalStorage.getItem('xejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
   });
+
+  // Real-time subscription to Sanctuary Maintenance status
+  useEffect(() => {
+    const unsub = subscribeToMaintenance((cfg) => {
+      setMaintenanceConfig(cfg);
+    });
+    return () => unsub();
+  }, []);
 
   const isAdmin = userProfile?.role === 'admin' || 
     user?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
@@ -509,10 +521,17 @@ export default function App() {
           <h1 className="text-6xl md:text-8xl text-text-primary font-serif mb-2 tracking-tight">
             XeJesUs
           </h1>
-          <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-12 opacity-80 uppercase tracking-widest text-xs leading-tight">
+          <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-8 opacity-80 uppercase tracking-widest text-xs leading-tight">
             The divine synthesis of Exegesis and the name of Our Savior, Jesus Christ
           </p>
           
+          {/* Maintenance Notice Card on Landing Page */}
+          {maintenanceConfig?.enabled && (
+            <div className="w-full max-w-xl mx-auto mb-6">
+              <MaintenanceNoticeCard config={maintenanceConfig} variant="landing" />
+            </div>
+          )}
+
           <div className="flex flex-col gap-4 w-full max-w-sm mx-auto">
             {authErrorNotice && (
               <div className="p-4 bg-accent/10 border border-accent/20 rounded-xl text-text-primary text-xs font-sans text-center flex items-center justify-between gap-3 animate-fade-in">
@@ -821,20 +840,32 @@ export default function App() {
             { id: 'reports', label: 'Reports Menu', icon: FileText },
             { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap },
             { id: 'settings', label: 'Sanctuary Settings', icon: SettingsIcon },
-            ...(isAdmin ? [{ id: 'admin', label: 'Admin Cabinet', icon: Shield }] : []),
-          ].map((item) => (
+            ...(isAdmin ? [{ 
+              id: 'admin', 
+              label: 'Admin Cabinet', 
+              icon: Shield,
+              badge: maintenanceConfig?.enabled ? 'MAINT' : undefined 
+            }] : []),
+          ].map((item: any) => (
             <button
               key={item.id}
               onClick={() => item.onClick ? item.onClick() : navigateToPage(item.id as Page, item.label)}
               className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-semibold",
+                "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-sans text-sm font-semibold",
                 currentPage === item.id 
                   ? "bg-accent text-bg-primary shadow-sm" 
                   : "hover:bg-accent/10 text-text-secondary hover:text-text-primary"
               )}
             >
-              <item.icon className="w-4 h-4" />
-              <span className="tracking-wide text-left">{item.label}</span>
+              <div className="flex items-center gap-3">
+                <item.icon className="w-4 h-4" />
+                <span className="tracking-wide text-left">{item.label}</span>
+              </div>
+              {item.badge && (
+                <span className="px-2 py-0.5 rounded-full bg-amber-500 text-bg-primary text-[9px] font-black animate-pulse shadow-sm">
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
 
@@ -889,6 +920,14 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto h-screen relative scroll-smooth">
         <ScriptureBanner />
+        {maintenanceConfig?.enabled && (
+          <MaintenanceNoticeCard 
+            config={maintenanceConfig} 
+            variant="in-app" 
+            isAdmin={isAdmin}
+            onOpenAdminMaintenance={() => setCurrentPage('admin')}
+          />
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
@@ -1092,10 +1131,15 @@ export default function App() {
                 {isAdmin && (
                   <button 
                     onClick={() => navigateToPage('admin', 'Admin Cabinet')}
-                    className="w-full flex items-center justify-center gap-3 p-5 bg-accent/5 text-accent border border-accent/10 rounded-2xl mb-4 transition-all"
+                    className="w-full flex items-center justify-center gap-3 p-5 bg-accent/5 text-accent border border-accent/10 rounded-2xl mb-4 transition-all relative"
                   >
                     <Shield className="w-5 h-5" />
                     <span className="text-xs font-sans font-bold uppercase tracking-[0.2em]">Admin Cabinet</span>
+                    {maintenanceConfig?.enabled && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500 text-bg-primary text-[9px] font-black animate-pulse shadow-sm">
+                        MAINT ACTIVE
+                      </span>
+                    )}
                   </button>
                 )}
 
