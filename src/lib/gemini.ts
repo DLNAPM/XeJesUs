@@ -6,13 +6,58 @@ export const MODELS = {
 };
 
 // Robust helper that avoids "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
-async function safeFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
+// and handles HTML fallbacks, transient network truncations, and clear diagnostics
+async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 2): Promise<T> {
+  const fetchUrl = retries < 2 
+    ? `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    : url;
+
+  const headers = new Headers(init?.headers);
+  if (!headers.has('Content-Type') && init?.method === 'POST') {
+    headers.set('Content-Type', 'application/json');
+  }
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(fetchUrl, {
+      ...init,
+      headers,
+      cache: 'no-store',
+    });
+  } catch (netErr: any) {
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 400));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
+    throw netErr;
+  }
+
+  const contentType = response.headers.get('content-type') || '';
   let rawText = '';
   try {
     rawText = await response.text();
   } catch (err: any) {
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 400));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
     throw new Error(`Failed to read response from ${url}: ${err?.message || ''}`);
+  }
+
+  // Detect HTML response masquerading with 200 OK (e.g. SPA index.html fallback)
+  if (
+    contentType.includes('text/html') || 
+    rawText.trim().startsWith('<!doctype') || 
+    rawText.trim().startsWith('<html')
+  ) {
+    if (retries > 0 && init?.method === 'POST') {
+      await new Promise(r => setTimeout(r, 600));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
+    throw new Error(`Server returned HTML document instead of JSON (${response.status}). The service route may be unconfigured.`);
   }
 
   let parsed: any = null;
@@ -25,16 +70,27 @@ async function safeFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
-    const errorMsg =
-      parsed?.error ||
-      parsed?.message ||
-      rawText ||
-      `Server returned HTTP ${response.status}`;
-    throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+    let errorMsg = parsed?.error || parsed?.message || rawText || `Server returned HTTP ${response.status}`;
+    if (typeof errorMsg === 'string') {
+      try {
+        const nested = JSON.parse(errorMsg);
+        if (nested?.error?.message) {
+          errorMsg = nested.error.message;
+        }
+      } catch {}
+    } else {
+      errorMsg = JSON.stringify(errorMsg);
+    }
+    throw new Error(errorMsg);
   }
 
   if (parsed === null) {
-    throw new Error(`Invalid response received from server (${response.status})`);
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 500));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
+    const snippet = rawText ? rawText.slice(0, 100).replace(/\s+/g, ' ') : '<empty>';
+    throw new Error(`Invalid response received from server (${response.status}): ${snippet}`);
   }
 
   return parsed as T;

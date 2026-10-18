@@ -3,13 +3,43 @@ import { reportIncident } from "./incidentService";
 
 // Robust helper that avoids "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
 // and handles HTML fallbacks, transient network truncations, and clear diagnostics
-async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 1): Promise<T> {
-  const response = await fetch(url, init);
+async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 2): Promise<T> {
+  const fetchUrl = retries < 2 
+    ? `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    : url;
+
+  const headers = new Headers(init?.headers);
+  if (!headers.has('Content-Type') && init?.method === 'POST') {
+    headers.set('Content-Type', 'application/json');
+  }
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(fetchUrl, {
+      ...init,
+      headers,
+      cache: 'no-store',
+    });
+  } catch (netErr: any) {
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 400));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
+    throw netErr;
+  }
+
   const contentType = response.headers.get('content-type') || '';
   let rawText = '';
   try {
     rawText = await response.text();
   } catch (err: any) {
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 400));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
     throw new Error(`Failed to read response from ${url}: ${err?.message || ''}`);
   }
 
@@ -38,15 +68,12 @@ async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 1): P
   if (!response.ok) {
     let errorMsg = parsed?.error || parsed?.message || rawText || `Server returned HTTP ${response.status}`;
     if (typeof errorMsg === 'string') {
-      // If errorMsg is a stringified JSON object (e.g. from Google API), extract the human-readable message
       try {
         const nested = JSON.parse(errorMsg);
         if (nested?.error?.message) {
           errorMsg = nested.error.message;
         }
-      } catch {
-        // Not a JSON string, keep as is
-      }
+      } catch {}
     } else {
       errorMsg = JSON.stringify(errorMsg);
     }
@@ -54,7 +81,7 @@ async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 1): P
   }
 
   if (parsed === null) {
-    // If parse failed due to a transient stream truncation, retry once
+    // If parse failed (e.g. empty body or truncated JSON), retry with cache-busting
     if (retries > 0) {
       await new Promise(r => setTimeout(r, 500));
       return safeFetchJson<T>(url, init, retries - 1);
@@ -93,6 +120,7 @@ export async function fetchScholarAudioBlob(
         'Content-Type': 'application/json',
         'Accept': 'audio/wav, application/json'
       },
+      cache: 'no-store',
       body: JSON.stringify({ text: cleanText, personaName, gender }),
     });
 
@@ -128,6 +156,12 @@ export async function fetchScholarAudioBlob(
         for (let i = 0; i < len; i++) {
           pcmBytes[i] = binaryString.charCodeAt(i);
         }
+
+        // If the binary already starts with "RIFF", it is already a complete WAV file from Gemini 3.8
+        if (pcmBytes.length >= 4 && pcmBytes[0] === 0x52 && pcmBytes[1] === 0x49 && pcmBytes[2] === 0x46 && pcmBytes[3] === 0x46) {
+          return new Blob([pcmBytes], { type: 'audio/wav' });
+        }
+
         const sampleRate = 24000;
         const numChannels = 1;
         const bitsPerSample = 16;

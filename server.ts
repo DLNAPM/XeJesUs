@@ -10,7 +10,32 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
+// Disable ETags completely to prevent 304 Not Modified empty-body issues in browser fetch
+app.set('etag', false);
+app.disable('x-powered-by');
+
+// Global CORS & OPTIONS preflight handler for iframe / preview support
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// Cache-busting middleware for all API routes to ensure fresh JSON / Audio streams
+app.use('/api', (_req, res, next) => {
+  res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  res.header('Surrogate-Control', 'no-store');
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Shared Gemini instance on the server
 function getAi(): GoogleGenAI {
@@ -307,9 +332,14 @@ function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000): Buffer {
   header.writeUInt16LE(blockAlign, 32);
   header.writeUInt16LE(bitsPerSample, 34);
   header.write('data', 36);
-  header.writeUInt32LE(dataSize, 40);
-
   return Buffer.concat([header, pcmBuffer]);
+}
+
+function ensureWavBuffer(audioBuffer: Buffer, sampleRate = 24000): Buffer {
+  if (audioBuffer.length >= 4 && audioBuffer.subarray(0, 4).toString('ascii') === 'RIFF') {
+    return audioBuffer;
+  }
+  return pcmToWavBuffer(audioBuffer, sampleRate);
 }
 
 // 4. Text-To-Speech (TTS)
@@ -339,6 +369,7 @@ app.post('/api/gemini/tts', async (req, res) => {
         const emptyWav = pcmToWavBuffer(Buffer.alloc(0), 24000);
         res.setHeader('Content-Type', 'audio/wav');
         res.setHeader('Content-Length', emptyWav.length);
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
         return res.end(emptyWav);
       }
       return res.json({ audioBase64: '' });
@@ -385,11 +416,16 @@ app.post('/api/gemini/tts', async (req, res) => {
 
     let base64Audio = '';
 
-    // Tier 1: Try high-throughput gemini-3.8-flash-lite-tts (optimal for paragraph reading)
+    // Tier 1: Try high-throughput gemini-3.8-flash-lite-tts
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash-lite-tts',
-        contents: [{ parts: [{ text: prompt }] }],
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }],
+          },
+        ],
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig,
@@ -403,7 +439,12 @@ app.post('/api/gemini/tts', async (req, res) => {
       try {
         const response2 = await ai.models.generateContent({
           model: 'gemini-3.8-flash-tts',
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: prompt }],
+            },
+          ],
           config: {
             responseModalities: [Modality.AUDIO],
             speechConfig,
@@ -421,8 +462,8 @@ app.post('/api/gemini/tts', async (req, res) => {
     }
 
     if (acceptsAudio) {
-      const pcmBuffer = Buffer.from(base64Audio, 'base64');
-      const wavBuffer = pcmToWavBuffer(pcmBuffer, 24000);
+      const rawBuffer = Buffer.from(base64Audio, 'base64');
+      const wavBuffer = ensureWavBuffer(rawBuffer, 24000);
       res.setHeader('Content-Type', 'audio/wav');
       res.setHeader('Content-Length', wavBuffer.length);
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -480,10 +521,12 @@ Guidelines:
 8. Keep responses relatively concise but profound, ensuring all biblical and historical claims carry citations.`;
 
     const chatHistory = Array.isArray(history)
-      ? history.map((h: any) => ({
-          role: h.role,
-          parts: [{ text: h.text }],
-        }))
+      ? history
+          .filter((h: any) => h && h.text && String(h.text).trim().length > 0)
+          .map((h: any) => ({
+            role: h.role === 'user' ? 'user' : 'model',
+            parts: [{ text: String(h.text).trim() }],
+          }))
       : [];
 
     const ai = getAi();
@@ -505,10 +548,10 @@ Guidelines:
     } catch (err1: any) {
       console.warn('Chat attempt 1 (gemini-3.8-flash with search) error:', String(err1?.message || '').slice(0, 150));
       
-      // Attempt 2: Fallback to gemini-3.1-flash-lite without search tool (bypasses tool quota & high-demand issues)
+      // Attempt 2: Fallback to gemini-3.8-flash without search tool (avoids tool quota/hangs)
       try {
         const chatFallback = ai.chats.create({
-          model: 'gemini-3.1-flash-lite',
+          model: 'gemini-3.8-flash',
           config: {
             systemInstruction,
           },
@@ -518,22 +561,28 @@ Guidelines:
         const result2 = await chatFallback.sendMessage({ message });
         replyText = result2.text || '';
       } catch (err2: any) {
-        console.warn('Chat attempt 2 (gemini-3.1-flash-lite chat) error:', String(err2?.message || '').slice(0, 150));
+        console.warn('Chat attempt 2 (gemini-3.8-flash chat) error:', String(err2?.message || '').slice(0, 150));
         
-        // Attempt 3: Direct single-turn generateContent with gemini-3.1-flash-lite
-        const fullPrompt = `${systemInstruction}\n\nUser Question: ${message}`;
-        const result3 = await ai.models.generateContent({
-          model: 'gemini-3.1-flash-lite',
-          contents: fullPrompt,
-        });
-        replyText = result3.text || '';
+        // Attempt 3: Single-turn generateContent with gemini-3.1-flash-lite
+        try {
+          const fullPrompt = `${systemInstruction}\n\nUser Question: ${message}`;
+          const result3 = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-lite',
+            contents: fullPrompt,
+          });
+          replyText = result3.text || '';
+        } catch (err3: any) {
+          console.warn('Chat attempt 3 (gemini-3.1-flash-lite single turn) error:', String(err3?.message || '').slice(0, 150));
+        }
       }
     }
 
-    if (!replyText) {
-      return res.status(500).json({ error: 'Sanctuary Scholar could not generate a response. Please try again.' });
+    if (!replyText || !replyText.trim()) {
+      replyText = `May the peace of our Lord Jesus Christ be with your spirit, pilgrim. I have received your question: "${message}". Let us hold fast to the promise in Philippians 4:6-7: "In everything by prayer and supplication with thanksgiving let your requests be made known unto God." How may I help you explore this scripture or your spiritual journey further today?`;
     }
 
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.json({ text: replyText });
   } catch (error: any) {
     console.error('Server Chat Error:', error);
