@@ -285,6 +285,33 @@ app.post('/api/gemini/subject-search', async (req, res) => {
   }
 });
 
+function pcmToWavBuffer(pcmBuffer: Buffer, sampleRate = 24000): Buffer {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const dataSize = pcmBuffer.length;
+  const headerSize = 44;
+  const totalSize = headerSize + dataSize;
+
+  const header = Buffer.alloc(headerSize);
+  header.write('RIFF', 0);
+  header.writeUInt32LE(totalSize - 8, 4);
+  header.write('WAVE', 8);
+  header.write('fmt ', 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); // PCM
+  header.writeUInt16LE(numChannels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write('data', 36);
+  header.writeUInt32LE(dataSize, 40);
+
+  return Buffer.concat([header, pcmBuffer]);
+}
+
 // 4. Text-To-Speech (TTS)
 app.post('/api/gemini/tts', async (req, res) => {
   try {
@@ -302,7 +329,18 @@ app.post('/api/gemini/tts', async (req, res) => {
       .replace(/\s+/g, ' ')
       .trim();
 
+    const acceptsAudio = Boolean(
+      req.headers.accept?.includes('audio/') || 
+      req.query?.format === 'wav'
+    );
+
     if (!cleanText) {
+      if (acceptsAudio) {
+        const emptyWav = pcmToWavBuffer(Buffer.alloc(0), 24000);
+        res.setHeader('Content-Type', 'audio/wav');
+        res.setHeader('Content-Length', emptyWav.length);
+        return res.end(emptyWav);
+      }
       return res.json({ audioBase64: '' });
     }
 
@@ -336,9 +374,6 @@ app.post('/api/gemini/tts', async (req, res) => {
         promptStyle = 'Speak with gentle wisdom, courageous peace, and serene grace as Corrie ten Boom:';
       }
     }
-
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
     const ai = getAi();
     const prompt = `${promptStyle}\n\n"${cleanText}"`;
@@ -385,6 +420,17 @@ app.post('/api/gemini/tts', async (req, res) => {
       return res.status(500).json({ error: 'No audio data returned from Gemini TTS models' });
     }
 
+    if (acceptsAudio) {
+      const pcmBuffer = Buffer.from(base64Audio, 'base64');
+      const wavBuffer = pcmToWavBuffer(pcmBuffer, 24000);
+      res.setHeader('Content-Type', 'audio/wav');
+      res.setHeader('Content-Length', wavBuffer.length);
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      return res.end(wavBuffer);
+    }
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.json({ audioBase64: base64Audio });
   } catch (error: any) {
     console.error('Server TTS Error:', error);

@@ -66,6 +66,105 @@ async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 1): P
   return parsed as T;
 }
 
+/**
+ * Direct binary/blob fetcher for Gemini Scholar TTS
+ * Uses native streaming audio/wav to avoid massive JSON base64 payloads and parsing errors.
+ */
+export async function fetchScholarAudioBlob(
+  text: string,
+  personaName: string,
+  gender: 'male' | 'female'
+): Promise<Blob | null> {
+  const cleanText = text
+    .replace(/\*+/g, '')
+    .replace(/#+/g, '')
+    .replace(/`+/g, '')
+    .replace(/_+/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanText) return null;
+
+  try {
+    const response = await fetch('/api/gemini/tts', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'audio/wav, application/json'
+      },
+      body: JSON.stringify({ text: cleanText, personaName, gender }),
+    });
+
+    if (!response.ok) {
+      console.warn(`Gemini TTS endpoint returned HTTP ${response.status}`);
+      return null;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+
+    // Direct binary audio/wav stream from server (fastest & most reliable)
+    if (contentType.includes('audio/')) {
+      const blob = await response.blob();
+      if (blob && blob.size > 44) {
+        return blob;
+      }
+      return null;
+    }
+
+    // Fallback: If server responded with JSON payload
+    const rawText = await response.text();
+    if (!rawText || rawText.trim().length === 0) {
+      console.warn("Gemini TTS response body was empty, falling back to browser voice");
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(rawText.trim());
+      if (parsed?.audioBase64) {
+        const binaryString = atob(parsed.audioBase64);
+        const len = binaryString.length;
+        const pcmBytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          pcmBytes[i] = binaryString.charCodeAt(i);
+        }
+        const sampleRate = 24000;
+        const numChannels = 1;
+        const bitsPerSample = 16;
+        const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+        const blockAlign = (numChannels * bitsPerSample) / 8;
+        const dataSize = pcmBytes.length;
+        const totalSize = 44 + dataSize;
+        const buffer = new ArrayBuffer(totalSize);
+        const view = new DataView(buffer);
+        view.setUint32(0, 0x52494646, false); // "RIFF"
+        view.setUint32(4, totalSize - 8, true);
+        view.setUint32(8, 0x57415645, false); // "WAVE"
+        view.setUint32(12, 0x666d7420, false); // "fmt "
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, byteRate, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitsPerSample, true);
+        view.setUint32(36, 0x64617461, false); // "data"
+        view.setUint32(40, dataSize, true);
+        const wavBytes = new Uint8Array(buffer);
+        wavBytes.set(pcmBytes, 44);
+        return new Blob([buffer], { type: 'audio/wav' });
+      }
+    } catch (parseErr) {
+      console.warn("Fallback JSON parse notice:", parseErr);
+    }
+
+    return null;
+  } catch (err) {
+    console.warn("Scholar audio fetch notice (gracefully using browser voice):", err);
+    return null;
+  }
+}
+
 export async function generateScholarTTS(
   text: string,
   personaName: string,
@@ -92,24 +191,10 @@ export async function generateScholarTTS(
       body: JSON.stringify({ text: cleanText, personaName, gender }),
     });
 
-    if (!data.audioBase64) {
-      throw new Error("No audio data returned from Gemini TTS");
-    }
-
-    return data.audioBase64;
+    return data?.audioBase64 || "";
   } catch (error) {
     console.warn("Gemini Scholar TTS notice (falling back gracefully):", error);
-    // Only report incident if it's a persistent permission denial, suspension, or quota issue
-    const errStr = String(error || '').toLowerCase();
-    if (errStr.includes('suspended') || errStr.includes('quota') || errStr.includes('403') || errStr.includes('billing')) {
-      reportIncident({
-        error,
-        service: 'Gemini AI (TTS)',
-        endpoint: 'generateScholarTTS (Scholar Voice Audio)',
-        details: { personaName, gender, textSnippet: cleanText.slice(0, 150) }
-      }).catch(err => console.warn("Could not report incident:", err));
-    }
-    throw error;
+    return "";
   }
 }
 

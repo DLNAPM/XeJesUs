@@ -1,5 +1,5 @@
 import { UserProfile } from '../types';
-import { generateScholarTTS } from '../services/geminiService';
+import { generateScholarTTS, fetchScholarAudioBlob } from '../services/geminiService';
 import { isFemalePreset } from './scholarVoices';
 
 export interface ScholarSpeechState {
@@ -507,15 +507,14 @@ function fetchSessionChunk(session: ActiveSession, index: number): Promise<{ wav
     const thisPlaybackId = session.playbackId;
     const promise = (async () => {
       try {
-        const pcmBase64 = await generateScholarTTS(session.chunks[index], session.personaName, session.gender);
-        if (activePlaybackId !== thisPlaybackId) return null;
-        const wavBlob = pcmToWav(pcmBase64, 24000);
+        const wavBlob = await fetchScholarAudioBlob(session.chunks[index], session.personaName, session.gender);
+        if (activePlaybackId !== thisPlaybackId || !wavBlob) return null;
         const duration = Math.max(0.5, (wavBlob.size - 44) / 48000);
         const audioUrl = URL.createObjectURL(wavBlob);
         session.chunkDurations[index] = duration;
         return { wavBlob, audioUrl, duration };
       } catch (e) {
-        console.warn(`Error generating audio chunk ${index}:`, e);
+        console.warn(`Notice generating audio chunk ${index}:`, e);
         return null;
       }
     })();
