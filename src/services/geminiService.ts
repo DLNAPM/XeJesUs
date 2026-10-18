@@ -2,13 +2,28 @@ import { Inquiry, LiteraryWorkExport } from "../types";
 import { reportIncident } from "./incidentService";
 
 // Robust helper that avoids "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
-async function safeFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+// and handles HTML fallbacks, transient network truncations, and clear diagnostics
+async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 1): Promise<T> {
   const response = await fetch(url, init);
+  const contentType = response.headers.get('content-type') || '';
   let rawText = '';
   try {
     rawText = await response.text();
   } catch (err: any) {
     throw new Error(`Failed to read response from ${url}: ${err?.message || ''}`);
+  }
+
+  // Detect HTML response masquerading with 200 OK (e.g. SPA index.html fallback)
+  if (
+    contentType.includes('text/html') || 
+    rawText.trim().startsWith('<!doctype') || 
+    rawText.trim().startsWith('<html')
+  ) {
+    if (retries > 0 && init?.method === 'POST') {
+      await new Promise(r => setTimeout(r, 600));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
+    throw new Error(`Server returned HTML document instead of JSON (${response.status}). The service route may be unconfigured.`);
   }
 
   let parsed: any = null;
@@ -39,7 +54,13 @@ async function safeFetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   }
 
   if (parsed === null) {
-    throw new Error(`Invalid response received from server (${response.status})`);
+    // If parse failed due to a transient stream truncation, retry once
+    if (retries > 0) {
+      await new Promise(r => setTimeout(r, 500));
+      return safeFetchJson<T>(url, init, retries - 1);
+    }
+    const snippet = rawText ? rawText.slice(0, 100).replace(/\s+/g, ' ') : '<empty>';
+    throw new Error(`Invalid JSON received from server (${response.status}): ${snippet}`);
   }
 
   return parsed as T;
@@ -64,7 +85,10 @@ export async function generateScholarTTS(
   try {
     const data = await safeFetchJson<{ audioBase64?: string }>('/api/gemini/tts', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify({ text: cleanText, personaName, gender }),
     });
 
@@ -74,13 +98,17 @@ export async function generateScholarTTS(
 
     return data.audioBase64;
   } catch (error) {
-    console.error("Gemini Scholar TTS Error:", error);
-    reportIncident({
-      error,
-      service: 'Gemini AI (TTS)',
-      endpoint: 'generateScholarTTS (Scholar Voice Audio)',
-      details: { personaName, gender, textSnippet: cleanText.slice(0, 150) }
-    }).catch(err => console.warn("Could not report incident:", err));
+    console.warn("Gemini Scholar TTS notice (falling back gracefully):", error);
+    // Only report incident if it's a persistent permission denial, suspension, or quota issue
+    const errStr = String(error || '').toLowerCase();
+    if (errStr.includes('suspended') || errStr.includes('quota') || errStr.includes('403') || errStr.includes('billing')) {
+      reportIncident({
+        error,
+        service: 'Gemini AI (TTS)',
+        endpoint: 'generateScholarTTS (Scholar Voice Audio)',
+        details: { personaName, gender, textSnippet: cleanText.slice(0, 150) }
+      }).catch(err => console.warn("Could not report incident:", err));
+    }
     throw error;
   }
 }

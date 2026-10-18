@@ -536,9 +536,10 @@ async function playScholarChunk(index: number, startTime = 0) {
     return;
   }
 
-  // Pre-fetch next 2 chunks in parallel
-  fetchSessionChunk(session, index + 1);
-  fetchSessionChunk(session, index + 2);
+  // Pipelined pre-fetch: fetch next chunk in queue while current is playing
+  if (index + 1 < session.chunks.length) {
+    fetchSessionChunk(session, index + 1);
+  }
 
   // Stop previous audio
   if (currentAudio) {
@@ -691,10 +692,6 @@ export function speakWithScholarVoice(
     return;
   }
 
-  // Pre-fetch initial chunks immediately
-  fetchSessionChunk(session, 0);
-  fetchSessionChunk(session, 1);
-  fetchSessionChunk(session, 2);
-
+  // Start pipelined playback with chunk 0
   playScholarChunk(0, 0);
 }

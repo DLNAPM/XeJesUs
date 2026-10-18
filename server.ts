@@ -337,23 +337,52 @@ app.post('/api/gemini/tts', async (req, res) => {
       }
     }
 
-    const ai = getAi();
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash-tts',
-      contents: [{ parts: [{ text: `${promptStyle}\n\n"${cleanText}"` }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName },
-          },
-        },
-      },
-    });
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    const ai = getAi();
+    const prompt = `${promptStyle}\n\n"${cleanText}"`;
+    const speechConfig = {
+      voiceConfig: {
+        prebuiltVoiceConfig: { voiceName },
+      },
+    };
+
+    let base64Audio = '';
+
+    // Tier 1: Try high-throughput gemini-3.8-flash-lite-tts (optimal for paragraph reading)
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash-lite-tts',
+        contents: [{ parts: [{ text: prompt }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig,
+        },
+      });
+      base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
+    } catch (err1: any) {
+      console.warn('TTS Primary (gemini-3.8-flash-lite-tts) failed:', String(err1?.message || '').slice(0, 150));
+      
+      // Tier 2: Fallback to gemini-3.8-flash-tts
+      try {
+        const response2 = await ai.models.generateContent({
+          model: 'gemini-3.8-flash-tts',
+          contents: [{ parts: [{ text: prompt }] }],
+          config: {
+            responseModalities: [Modality.AUDIO],
+            speechConfig,
+          },
+        });
+        base64Audio = response2.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
+      } catch (err2: any) {
+        console.error('TTS Fallback (gemini-3.8-flash-tts) failed:', err2);
+        throw err2;
+      }
+    }
+
     if (!base64Audio) {
-      return res.status(500).json({ error: 'No audio data returned from Gemini TTS' });
+      return res.status(500).json({ error: 'No audio data returned from Gemini TTS models' });
     }
 
     res.json({ audioBase64: base64Audio });
@@ -534,6 +563,11 @@ Return ONLY valid JSON.`;
       status: error?.status,
     });
   }
+});
+
+// Explicit 404 handler for all unhandled /api/* routes so they NEVER fall through to HTML
+app.all('/api/*', (_req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
 // Global Express Error-Handling Middleware for JSON APIs
