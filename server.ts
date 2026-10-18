@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { GoogleGenAI, Type, Modality } from '@google/genai';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +34,25 @@ app.use('/api', (_req, res, next) => {
   res.header('Expires', '0');
   res.header('Surrogate-Control', 'no-store');
   next();
+});
+
+// Favicon explicit route to prevent 404s on browser requests
+app.get('/favicon.ico', (_req, res) => {
+  const icoPath = path.resolve(__dirname, 'public', 'favicon.ico');
+  if (fs.existsSync(icoPath)) {
+    res.setHeader('Content-Type', 'image/x-icon');
+    return res.sendFile(icoPath);
+  }
+  res.sendStatus(204);
+});
+
+app.get('/favicon.svg', (_req, res) => {
+  const svgPath = path.resolve(__dirname, 'public', 'favicon.svg');
+  if (fs.existsSync(svgPath)) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    return res.sendFile(svgPath);
+  }
+  res.sendStatus(204);
 });
 
 app.use(express.json({ limit: '10mb' }));

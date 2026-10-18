@@ -86,7 +86,10 @@ async function safeFetchJson<T>(url: string, init?: RequestInit, retries = 2): P
       await new Promise(r => setTimeout(r, 500));
       return safeFetchJson<T>(url, init, retries - 1);
     }
-    const snippet = rawText ? rawText.slice(0, 100).replace(/\s+/g, ' ') : '<empty>';
+    if (!rawText || rawText.trim().length === 0) {
+      throw new Error(`The backend service returned an empty response (${response.status}). On hosts like Render, ensure the app is deployed as a Node.js "Web Service" with GEMINI_API_KEY configured, rather than a "Static Site".`);
+    }
+    const snippet = rawText.slice(0, 100).replace(/\s+/g, ' ');
     throw new Error(`Invalid JSON received from server (${response.status}): ${snippet}`);
   }
 
