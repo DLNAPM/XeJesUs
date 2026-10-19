@@ -397,38 +397,40 @@ app.post('/api/gemini/tts', async (req, res) => {
     }
 
     let voiceName = gender === 'female' ? 'Kore' : 'Charon';
-    let promptStyle = `Speak clearly and reverently as ${personaName || 'Biblical Scholar'}:`;
+    let styleDirective = `Clear, reverent, solemn biblical scholar delivery`;
 
     const lowerPersona = String(personaName || '').toLowerCase();
     if (gender === 'male') {
       if (lowerPersona.includes('osteen')) {
         voiceName = 'Puck';
-        promptStyle = 'Speak in a warm, encouraging, smiling, bright and optimistic tone as Joel Osteen:';
+        styleDirective = 'Warm, encouraging, smiling, bright and optimistic pastoral delivery';
       } else if (lowerPersona.includes('spurgeon')) {
         voiceName = 'Charon';
-        promptStyle = 'Speak in a majestic, deep, resonant, 19th-century British prince of preachers voice as Charles Spurgeon:';
+        styleDirective = 'Majestic, deep, resonant 19th-century British preacher delivery';
       } else if (lowerPersona.includes('lewis')) {
         voiceName = 'Fenrir';
-        promptStyle = 'Speak in an articulate, scholarly, warm Oxbridge professor cadence as C.S. Lewis:';
+        styleDirective = 'Articulate, scholarly, warm Oxbridge professor delivery';
       } else if (lowerPersona.includes('luther')) {
         voiceName = 'Charon';
-        promptStyle = 'Speak in a bold, passionate, strong reformational voice as Martin Luther:';
+        styleDirective = 'Bold, passionate, strong reformational delivery';
       } else if (lowerPersona.includes('keller')) {
         voiceName = 'Fenrir';
-        promptStyle = 'Speak in a calm, intellectual, compassionate, pastoral cadence as Timothy Keller:';
+        styleDirective = 'Calm, intellectual, compassionate, pastoral cadence';
       } else if (lowerPersona.includes('wilson') || lowerPersona.includes('asher')) {
         voiceName = 'Charon';
-        promptStyle = 'Speak in a dignified, ancient Ethiopian canonical authority and prophetic clarity as Asher Wilson:';
+        styleDirective = 'Dignified, ancient Ethiopian canonical authority and prophetic clarity';
       }
     } else {
       if (lowerPersona.includes('ten boom') || lowerPersona.includes('corrie')) {
         voiceName = 'Kore';
-        promptStyle = 'Speak with gentle wisdom, courageous peace, and serene grace as Corrie ten Boom:';
+        styleDirective = 'Gentle wisdom, courageous peace, and serene grace';
+      } else {
+        voiceName = 'Kore';
+        styleDirective = 'Warm, insightful, articulate scholar delivery';
       }
     }
 
     const ai = getAi();
-    const prompt = `${promptStyle}\n\n"${cleanText}"`;
     const speechConfig = {
       voiceConfig: {
         prebuiltVoiceConfig: { voiceName },
@@ -441,12 +443,7 @@ app.post('/api/gemini/tts', async (req, res) => {
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-3.8-flash-lite-tts',
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: cleanText,
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig,
@@ -460,12 +457,7 @@ app.post('/api/gemini/tts', async (req, res) => {
       try {
         const response2 = await ai.models.generateContent({
           model: 'gemini-3.8-flash-tts',
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }],
-            },
-          ],
+          contents: cleanText,
           config: {
             responseModalities: [Modality.AUDIO],
             speechConfig,
