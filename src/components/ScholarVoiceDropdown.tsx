@@ -19,6 +19,7 @@ import {
   FEMALE_VOICE_PRESETS, 
   getCurrentScholarVoice, 
   persistScholarVoice,
+  getAuditionQuote,
   ScholarVoicePreset 
 } from '../lib/scholarVoices';
 import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
@@ -109,9 +110,7 @@ export default function ScholarVoiceDropdown({
     }
 
     stopScholarSpeech();
-    setAuditioningVoice(voiceName);
-
-    const auditionText = `Greetings, pilgrim. I am your Sanctuary Scholar voice, modeled in the spirit of ${voiceName}. May peace, wisdom, and truth guide your seeking.`;
+    const auditionText = getAuditionQuote(voiceName, gender);
 
     speakWithScholarVoice(auditionText, {
       gender,

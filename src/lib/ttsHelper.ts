@@ -345,8 +345,11 @@ function pcmToWav(pcmBase64: string, sampleRate = 24000): Blob {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
-function splitTextIntoChunks(text: string, firstChunkMax = 120, standardMax = 220): string[] {
-  const clean = text
+function cleanTtsString(text: string): string {
+  return text
+    .replace(/\bSpeak clearly and reverently (?:like|as|in the style of)?\s*[^:.\n]*[:.]?\s*/gi, '')
+    .replace(/\bSpeak (?:clearly|reverently|solemnly)\b[^:.\n]*[:.]\s*/gi, '')
+    .replace(/\[?\s*Speak clearly and reverently[^\]\n]*\]?:?\s*/gi, '')
     .replace(/\*+/g, '')
     .replace(/#+/g, '')
     .replace(/`+/g, '')
@@ -354,6 +357,10 @@ function splitTextIntoChunks(text: string, firstChunkMax = 120, standardMax = 22
     .replace(/\[(.*?)\]\(.*?\)/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function splitTextIntoChunks(text: string, firstChunkMax = 120, standardMax = 220): string[] {
+  const clean = cleanTtsString(text);
 
   if (!clean) return [];
 
@@ -363,12 +370,15 @@ function splitTextIntoChunks(text: string, firstChunkMax = 120, standardMax = 22
   let maxLen = firstChunkMax;
 
   for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > maxLen && currentChunk.trim()) {
+    const cleanSentence = cleanTtsString(sentence);
+    if (!cleanSentence) continue;
+
+    if ((currentChunk + ' ' + cleanSentence).length > maxLen && currentChunk.trim()) {
       chunks.push(currentChunk.trim());
-      currentChunk = sentence;
+      currentChunk = cleanSentence;
       maxLen = standardMax;
     } else {
-      currentChunk += sentence;
+      currentChunk = currentChunk ? `${currentChunk} ${cleanSentence}` : cleanSentence;
     }
   }
 
@@ -394,14 +404,11 @@ function speakWithBrowserFallback(
     return;
   }
 
-  const cleanText = text
-    .replace(/\*+/g, '')
-    .replace(/#+/g, '')
-    .replace(/`+/g, '')
-    .replace(/_+/g, '')
-    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-    .replace(/\s+/g, ' ')
-    .trim();
+  const cleanText = cleanTtsString(text);
+  if (!cleanText) {
+    options?.onEnd?.();
+    return;
+  }
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
   currentUtterance = utterance;
@@ -409,26 +416,29 @@ function speakWithBrowserFallback(
   const voices = window.speechSynthesis.getVoices();
   const lowerName = personaName.toLowerCase();
 
-  // Distinct pitch & rate profiles for each scholar persona in browser fallback
+  // Distinct pitch & rate profiles matching each scholar persona sound and style of speaking
   if (gender === 'male') {
     if (lowerName.includes('osteen')) {
-      utterance.pitch = 1.08;
-      utterance.rate = 1.02;
+      utterance.pitch = 1.12;
+      utterance.rate = 1.04;
     } else if (lowerName.includes('spurgeon')) {
-      utterance.pitch = 0.72;
-      utterance.rate = 0.88;
+      utterance.pitch = 0.70;
+      utterance.rate = 0.86;
     } else if (lowerName.includes('lewis')) {
-      utterance.pitch = 0.85;
-      utterance.rate = 0.92;
+      utterance.pitch = 0.84;
+      utterance.rate = 0.90;
     } else if (lowerName.includes('luther')) {
-      utterance.pitch = 0.68;
-      utterance.rate = 0.95;
+      utterance.pitch = 0.72;
+      utterance.rate = 0.96;
     } else if (lowerName.includes('keller')) {
       utterance.pitch = 0.88;
-      utterance.rate = 0.95;
+      utterance.rate = 0.93;
     } else if (lowerName.includes('graham')) {
-      utterance.pitch = 0.80;
-      utterance.rate = 1.0;
+      utterance.pitch = 0.82;
+      utterance.rate = 1.02;
+    } else if (lowerName.includes('wilson') || lowerName.includes('asher')) {
+      utterance.pitch = 0.75;
+      utterance.rate = 0.88;
     } else {
       utterance.pitch = 0.85;
       utterance.rate = 0.95;
@@ -441,22 +451,22 @@ function speakWithBrowserFallback(
   } else {
     if (lowerName.includes('oprah') || lowerName.includes('winfrey')) {
       utterance.pitch = 0.92;
-      utterance.rate = 0.92;
+      utterance.rate = 0.90;
     } else if (lowerName.includes('moore')) {
       utterance.pitch = 1.18;
       utterance.rate = 1.05;
     } else if (lowerName.includes('meyer')) {
-      utterance.pitch = 1.10;
+      utterance.pitch = 1.08;
       utterance.rate = 1.02;
     } else if (lowerName.includes('shirer')) {
       utterance.pitch = 1.12;
-      utterance.rate = 1.0;
+      utterance.rate = 1.00;
     } else if (lowerName.includes('arthur')) {
-      utterance.pitch = 1.0;
+      utterance.pitch = 0.98;
       utterance.rate = 0.88;
     } else if (lowerName.includes('ten boom') || lowerName.includes('corrie')) {
       utterance.pitch = 1.02;
-      utterance.rate = 0.85;
+      utterance.rate = 0.84;
     } else {
       utterance.pitch = 1.05;
       utterance.rate = 0.95;

@@ -243,9 +243,36 @@ export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: Ch
 
     stopSpeech();
 
+    const sanitizeChatText = (str: string) => {
+      if (!str) return '';
+      return str
+        .replace(/\bSpeak clearly and reverently (?:like|as|in the style of)?\s*[^:.\n]*[:.]?\s*/gi, '')
+        .replace(/\bSpeak (?:clearly|reverently|solemnly)\b[^:.\n]*[:.]\s*/gi, '')
+        .replace(/\[?\s*Speak clearly and reverently[^\]\n]*\]?:?\s*/gi, '')
+        .replace(/^Sanctuary Scholar says:\s*/gi, '')
+        .replace(/^Pilgrim asked:\s*/gi, '')
+        .replace(/\*+/g, '')
+        .replace(/#+/g, '')
+        .replace(/`+/g, '')
+        .replace(/_+/g, '')
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
+    const sessionTitle = sanitizeChatText(session.name) || 'Sanctuary Dialogue';
+    const messageParts = (session.messages || [])
+      .map(m => {
+        const cleaned = sanitizeChatText(m.text);
+        if (!cleaned) return null;
+        const speaker = m.role === 'model' ? 'Scholar' : 'Pilgrim';
+        return `${speaker}: ${cleaned}`;
+      })
+      .filter(Boolean);
+
     const fullScript = [
-      `Saved session titled ${session.name}.`,
-      ...session.messages.map(m => `${m.role === 'model' ? 'Sanctuary Scholar says: ' : 'Pilgrim asked: '} ${m.text}`)
+      `Saved session titled ${sessionTitle}.`,
+      ...messageParts
     ].join('. ');
 
     if (!fullScript.trim()) return;
@@ -280,7 +307,15 @@ export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: Ch
 
     stopSpeech();
 
-    speakWithScholarVoice(text, {
+    const clean = text
+      .replace(/\bSpeak clearly and reverently (?:like|as|in the style of)?\s*[^:.\n]*[:.]?\s*/gi, '')
+      .replace(/\bSpeak (?:clearly|reverently|solemnly)\b[^:.\n]*[:.]\s*/gi, '')
+      .replace(/\[?\s*Speak clearly and reverently[^\]\n]*\]?:?\s*/gi, '')
+      .trim();
+
+    if (!clean) return;
+
+    speakWithScholarVoice(clean, {
       profile: userProfile,
       onStart: () => {
         setSpeakingMessageText(text);

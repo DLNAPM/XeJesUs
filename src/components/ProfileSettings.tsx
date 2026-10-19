@@ -4,25 +4,20 @@ import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crow
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
+import { 
+  MALE_VOICE_PRESETS as BASE_MALE_PRESETS, 
+  FEMALE_VOICE_PRESETS as BASE_FEMALE_PRESETS, 
+  getAuditionQuote 
+} from '../lib/scholarVoices';
 
 const MALE_VOICE_PRESETS = [
-  { name: 'Joel Osteen', style: 'Warm, Inspirational & Encouraging' },
-  { name: 'Charles Spurgeon', style: 'Classic Prince of Preachers & Regal' },
-  { name: 'C.S. Lewis', style: 'Scholarly, Oxbridge & Intellectually Rich' },
-  { name: 'Martin Luther', style: 'Bold, Resonant & Reformational' },
-  { name: 'Tim Keller', style: 'Thoughtful, Exegetical & Urban' },
-  { name: 'Billy Graham', style: 'Evangelistic, Authoritative & Clear' },
-  { name: 'Custom', style: 'Enter your custom male scholar name' }
+  ...BASE_MALE_PRESETS,
+  { name: 'Custom', style: 'Enter your custom male scholar name', gender: 'male' as const, cadence: '', soundProfile: '', geminiVoice: 'Charon' as const, auditionQuote: '' }
 ];
 
 const FEMALE_VOICE_PRESETS = [
-  { name: 'Oprah Winfrey', style: 'Empathetic, Warm & Resonant' },
-  { name: 'Beth Moore', style: 'Passionate, Dynamic & Exegetical' },
-  { name: 'Joyce Meyer', style: 'Direct, Practical & Uplifting' },
-  { name: 'Priscilla Shirer', style: 'Faith-Filled, Energetic & Direct' },
-  { name: 'Kay Arthur', style: 'Inductive, Reverent & Methodical' },
-  { name: 'Corrie ten Boom', style: 'Gracious, Courageous & Wise' },
-  { name: 'Custom', style: 'Enter your custom female scholar name' }
+  ...BASE_FEMALE_PRESETS,
+  { name: 'Custom', style: 'Enter your custom female scholar name', gender: 'female' as const, cadence: '', soundProfile: '', geminiVoice: 'Kore' as const, auditionQuote: '' }
 ];
 
 interface ProfileSettingsProps {
@@ -117,9 +112,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
     const effectiveFemale = femaleScholarVoice === 'Custom' ? customFemaleVoice || 'Custom Female Scholar' : femaleScholarVoice;
 
     const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
-    const sampleText = gender === 'male'
-      ? `Greetings, pilgrim. I am your male scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`
-      : `Greetings, pilgrim. I am your female scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`;
+    const sampleText = getAuditionQuote(personaName, gender);
 
     speakWithScholarVoice(sampleText, {
       gender,

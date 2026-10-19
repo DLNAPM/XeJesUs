@@ -371,7 +371,11 @@ app.post('/api/gemini/tts', async (req, res) => {
       return res.status(400).json({ error: 'Text is required for TTS' });
     }
 
+    // 1. Scrub any prompt instructions and directions from TTS text
     const cleanText = String(text)
+      .replace(/\bSpeak clearly and reverently (?:like|as|in the style of)?\s*[^:.\n]*[:.]?\s*/gi, '')
+      .replace(/\bSpeak (?:clearly|reverently|solemnly)\b[^:.\n]*[:.]\s*/gi, '')
+      .replace(/\[?\s*Speak clearly and reverently[^\]\n]*\]?:?\s*/gi, '')
       .replace(/\*+/g, '')
       .replace(/#+/g, '')
       .replace(/`+/g, '')
@@ -396,38 +400,69 @@ app.post('/api/gemini/tts', async (req, res) => {
       return res.json({ audioBase64: '' });
     }
 
-    let voiceName = gender === 'female' ? 'Kore' : 'Charon';
-    let styleDirective = `Clear, reverent, solemn biblical scholar delivery`;
-
+    // 2. Select prebuilt Gemini voice matching scholar persona sound and pitch
+    let voiceName: 'Puck' | 'Charon' | 'Fenrir' | 'Kore' | 'Zephyr' = gender === 'female' ? 'Kore' : 'Charon';
     const lowerPersona = String(personaName || '').toLowerCase();
+
     if (gender === 'male') {
       if (lowerPersona.includes('osteen')) {
-        voiceName = 'Puck';
-        styleDirective = 'Warm, encouraging, smiling, bright and optimistic pastoral delivery';
+        voiceName = 'Puck'; // Warm, upbeat, smiling inspirational tenor
       } else if (lowerPersona.includes('spurgeon')) {
-        voiceName = 'Charon';
-        styleDirective = 'Majestic, deep, resonant 19th-century British preacher delivery';
+        voiceName = 'Charon'; // Deep, resonant, majestic 19th-century British pulpit orator baritone
       } else if (lowerPersona.includes('lewis')) {
-        voiceName = 'Fenrir';
-        styleDirective = 'Articulate, scholarly, warm Oxbridge professor delivery';
+        voiceName = 'Fenrir'; // Articulate, lucid Oxford professor tutorial cadence
       } else if (lowerPersona.includes('luther')) {
-        voiceName = 'Charon';
-        styleDirective = 'Bold, passionate, strong reformational delivery';
+        voiceName = 'Charon'; // Bold, resonant, commanding reformational baritone
       } else if (lowerPersona.includes('keller')) {
-        voiceName = 'Fenrir';
-        styleDirective = 'Calm, intellectual, compassionate, pastoral cadence';
+        voiceName = 'Fenrir'; // Calm, intellectual, compassionate urban pastoral mid-tone
+      } else if (lowerPersona.includes('graham')) {
+        voiceName = 'Puck'; // Sonorous, ringing proclamation tenor
       } else if (lowerPersona.includes('wilson') || lowerPersona.includes('asher')) {
+        voiceName = 'Charon'; // Dignified, ancient Ethiopian canonical authority and prophetic clarity
+      } else {
         voiceName = 'Charon';
-        styleDirective = 'Dignified, ancient Ethiopian canonical authority and prophetic clarity';
       }
     } else {
-      if (lowerPersona.includes('ten boom') || lowerPersona.includes('corrie')) {
-        voiceName = 'Kore';
-        styleDirective = 'Gentle wisdom, courageous peace, and serene grace';
+      if (lowerPersona.includes('oprah') || lowerPersona.includes('winfrey')) {
+        voiceName = 'Kore'; // Warm, soulful, empathetic alto storyteller
+      } else if (lowerPersona.includes('moore')) {
+        voiceName = 'Zephyr'; // Vibrant, passionate Southern exegetical crescendo
+      } else if (lowerPersona.includes('meyer')) {
+        voiceName = 'Zephyr'; // Crisp, punchy, direct practical Midwestern clarity
+      } else if (lowerPersona.includes('shirer')) {
+        voiceName = 'Zephyr'; // Melodic, commanding spiritual authority and dynamic power
+      } else if (lowerPersona.includes('arthur')) {
+        voiceName = 'Kore'; // Precise, steady, reverent inductive teaching cadence
+      } else if (lowerPersona.includes('ten boom') || lowerPersona.includes('corrie')) {
+        voiceName = 'Kore'; // Soft, intimate, gentle serene European elder peace
       } else {
         voiceName = 'Kore';
-        styleDirective = 'Warm, insightful, articulate scholar delivery';
       }
+    }
+
+    // 3. Cadence and inflection styling via natural punctuation pauses (without verbal directives)
+    let styledText = cleanText;
+    if (lowerPersona.includes('spurgeon') || lowerPersona.includes('asher') || lowerPersona.includes('wilson')) {
+      styledText = styledText
+        .replace(/;\s*/g, '... ')
+        .replace(/\bHearken\b/gi, 'Hearken,')
+        .replace(/\bBehold\b/gi, 'Behold,');
+    } else if (lowerPersona.includes('lewis') || lowerPersona.includes('keller') || lowerPersona.includes('arthur')) {
+      styledText = styledText
+        .replace(/;\s*/g, ' — ')
+        .replace(/\bNotice\b/gi, 'Notice,');
+    } else if (lowerPersona.includes('osteen') || lowerPersona.includes('graham') || lowerPersona.includes('moore')) {
+      styledText = styledText
+        .replace(/!\s*/g, '! ')
+        .replace(/\bRemember\b/gi, 'Remember,');
+    } else if (lowerPersona.includes('meyer') || lowerPersona.includes('luther') || lowerPersona.includes('shirer')) {
+      styledText = styledText
+        .replace(/;\s*/g, '. ')
+        .replace(/\bNow\b/gi, 'Now,');
+    } else if (lowerPersona.includes('ten boom') || lowerPersona.includes('corrie')) {
+      styledText = styledText
+        .replace(/;\s*/g, '... ')
+        .replace(/,\s*/g, ', ');
     }
 
     const ai = getAi();
@@ -439,11 +474,11 @@ app.post('/api/gemini/tts', async (req, res) => {
 
     let base64Audio = '';
 
-    // Tier 1: Try high-throughput gemini-3.8-flash-lite-tts
+    // Primary: Try full gemini-3.8-flash-tts
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash-lite-tts',
-        contents: cleanText,
+        model: 'gemini-3.8-flash-tts',
+        contents: styledText,
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig,
@@ -451,13 +486,13 @@ app.post('/api/gemini/tts', async (req, res) => {
       });
       base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
     } catch (err1: any) {
-      console.warn('TTS Primary (gemini-3.8-flash-lite-tts) failed:', String(err1?.message || '').slice(0, 150));
+      console.warn('TTS Primary (gemini-3.8-flash-tts) notice:', String(err1?.message || '').slice(0, 150));
       
-      // Tier 2: Fallback to gemini-3.8-flash-tts
+      // Secondary: Try gemini-3.8-flash-lite-tts
       try {
         const response2 = await ai.models.generateContent({
-          model: 'gemini-3.8-flash-tts',
-          contents: cleanText,
+          model: 'gemini-3.8-flash-lite-tts',
+          contents: styledText,
           config: {
             responseModalities: [Modality.AUDIO],
             speechConfig,
@@ -465,7 +500,7 @@ app.post('/api/gemini/tts', async (req, res) => {
         });
         base64Audio = response2.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
       } catch (err2: any) {
-        console.error('TTS Fallback (gemini-3.8-flash-tts) failed:', err2);
+        console.error('TTS Fallback (gemini-3.8-flash-lite-tts) failed:', err2);
         throw err2;
       }
     }

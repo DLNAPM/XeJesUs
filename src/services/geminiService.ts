@@ -106,6 +106,9 @@ export async function fetchScholarAudioBlob(
   gender: 'male' | 'female'
 ): Promise<Blob | null> {
   const cleanText = text
+    .replace(/\bSpeak clearly and reverently (?:like|as|in the style of)?\s*[^:.\n]*[:.]?\s*/gi, '')
+    .replace(/\bSpeak (?:clearly|reverently|solemnly)\b[^:.\n]*[:.]\s*/gi, '')
+    .replace(/\[?\s*Speak clearly and reverently[^\]\n]*\]?:?\s*/gi, '')
     .replace(/\*+/g, '')
     .replace(/#+/g, '')
     .replace(/`+/g, '')
@@ -208,6 +211,9 @@ export async function generateScholarTTS(
   gender: 'male' | 'female'
 ): Promise<string> {
   const cleanText = text
+    .replace(/\bSpeak clearly and reverently (?:like|as|in the style of)?\s*[^:.\n]*[:.]?\s*/gi, '')
+    .replace(/\bSpeak (?:clearly|reverently|solemnly)\b[^:.\n]*[:.]\s*/gi, '')
+    .replace(/\[?\s*Speak clearly and reverently[^\]\n]*\]?:?\s*/gi, '')
     .replace(/\*+/g, '')
     .replace(/#+/g, '')
     .replace(/`+/g, '')
