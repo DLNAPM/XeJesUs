@@ -474,21 +474,30 @@ app.post('/api/gemini/tts', async (req, res) => {
 
     let base64Audio = '';
 
-    // Primary: Try full gemini-3.8-flash-tts
-    try {
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash-tts',
-        contents: styledText,
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig,
-        },
-      });
-      base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
-    } catch (err1: any) {
-      console.warn('TTS Primary (gemini-3.8-flash-tts) notice:', String(err1?.message || '').slice(0, 150));
-      
-      // Secondary: Try gemini-3.8-flash-lite-tts
+    // Primary: Try full gemini-3.8-flash-tts with automatic retry on burst rate-limiting
+    for (let attempt = 1; attempt <= 2 && !base64Audio; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.8-flash-tts',
+          contents: styledText,
+          config: {
+            responseModalities: [Modality.AUDIO],
+            speechConfig,
+          },
+        });
+        base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
+      } catch (err1: any) {
+        if (attempt === 1) {
+          // Brief 600ms backoff for pipelined prefetch burst rate-limits
+          await new Promise((r) => setTimeout(r, 600));
+        } else {
+          console.warn('TTS gemini-3.8-flash-tts attempt 2 notice:', String(err1?.message || '').slice(0, 150));
+        }
+      }
+    }
+
+    // Secondary: Try gemini-3.8-flash-lite-tts if gemini-3.8-flash-tts didn't produce audio
+    if (!base64Audio) {
       try {
         const response2 = await ai.models.generateContent({
           model: 'gemini-3.8-flash-lite-tts',
@@ -500,13 +509,12 @@ app.post('/api/gemini/tts', async (req, res) => {
         });
         base64Audio = response2.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || '';
       } catch (err2: any) {
-        console.error('TTS Fallback (gemini-3.8-flash-lite-tts) failed:', err2);
-        throw err2;
+        console.warn('TTS Fallback (gemini-3.8-flash-lite-tts) notice:', String(err2?.message || '').slice(0, 150));
       }
     }
 
     if (!base64Audio) {
-      return res.status(500).json({ error: 'No audio data returned from Gemini TTS models' });
+      return res.status(503).json({ error: 'TTS service momentarily unavailable, please fallback to browser speech' });
     }
 
     if (acceptsAudio) {

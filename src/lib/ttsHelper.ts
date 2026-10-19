@@ -106,7 +106,11 @@ function getCurrentProgressState(): ScholarSpeechState {
   }
   if (totalDuration < elapsed) totalDuration = elapsed;
 
-  const percent = totalDuration > 0 ? Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)) : 0;
+  let percent = totalDuration > 0 ? Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)) : 0;
+  // If not on the final chunk, never report >= 88% to prevent premature completion triggers
+  if (activeSession.currentChunkIndex < activeSession.chunks.length - 1) {
+    percent = Math.min(88, percent);
+  }
 
   return {
     isPlaying: activeSession.isPlaying,
@@ -478,16 +482,28 @@ function speakWithBrowserFallback(
     if (femaleVoice) utterance.voice = femaleVoice;
   }
 
+  let keepAliveInterval: any = null;
+
   utterance.onstart = () => {
     if (activeSession) {
       activeSession.isPlaying = true;
       activeSession.isPaused = false;
     }
+    // Chrome keep-alive: pause & resume every 10s to bypass Chromium 15-second speech synthesis pause bug
+    keepAliveInterval = setInterval(() => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      } else {
+        if (keepAliveInterval) clearInterval(keepAliveInterval);
+      }
+    }, 10000);
     options?.onStart?.();
     notifySubscribers(getCurrentProgressState());
   };
 
   utterance.onend = () => {
+    if (keepAliveInterval) clearInterval(keepAliveInterval);
     currentUtterance = null;
     if (activeSession) {
       activeSession.isPlaying = false;
@@ -498,7 +514,8 @@ function speakWithBrowserFallback(
   };
 
   utterance.onerror = (e) => {
-    console.error(`Browser speech synthesis error (${personaName}):`, e);
+    if (keepAliveInterval) clearInterval(keepAliveInterval);
+    console.warn(`Browser speech synthesis notice (${personaName}):`, e);
     currentUtterance = null;
     if (activeSession) {
       activeSession.isPlaying = false;
@@ -517,7 +534,13 @@ function fetchSessionChunk(session: ActiveSession, index: number): Promise<{ wav
     const thisPlaybackId = session.playbackId;
     const promise = (async () => {
       try {
-        const wavBlob = await fetchScholarAudioBlob(session.chunks[index], session.personaName, session.gender);
+        let wavBlob = await fetchScholarAudioBlob(session.chunks[index], session.personaName, session.gender);
+        if (!wavBlob) {
+          // Retry once after brief pause in case of transient burst rate-limiting or network glitch
+          await new Promise(r => setTimeout(r, 600));
+          if (activePlaybackId !== thisPlaybackId) return null;
+          wavBlob = await fetchScholarAudioBlob(session.chunks[index], session.personaName, session.gender);
+        }
         if (activePlaybackId !== thisPlaybackId || !wavBlob) return null;
         const duration = Math.max(0.5, (wavBlob.size - 44) / 48000);
         const audioUrl = URL.createObjectURL(wavBlob);
@@ -545,18 +568,12 @@ async function playScholarChunk(index: number, startTime = 0) {
     return;
   }
 
-  // Pipelined pre-fetch: fetch next chunk in queue while current is playing
+  // Dual pipelined prefetch: queue up next 2 chunks in advance for gapless playback
   if (index + 1 < session.chunks.length) {
     fetchSessionChunk(session, index + 1);
   }
-
-  // Stop previous audio
-  if (currentAudio) {
-    try {
-      currentAudio.pause();
-      currentAudio.onended = null;
-      currentAudio.onerror = null;
-    } catch (_) {}
+  if (index + 2 < session.chunks.length) {
+    fetchSessionChunk(session, index + 2);
   }
 
   try {
@@ -575,14 +592,21 @@ async function playScholarChunk(index: number, startTime = 0) {
       return;
     }
 
-    let audio: HTMLAudioElement;
-    if (index === 0 && session.unlockedAudio) {
-      session.unlockedAudio.src = chunkData.audioUrl;
-      audio = session.unlockedAudio;
-    } else {
-      audio = new Audio(chunkData.audioUrl);
+    // CRITICAL FIX: Reuse the user-gesture-unlocked HTMLAudioElement instance across ALL chunks!
+    // Creating 'new Audio()' inside asynchronous callbacks causes browsers (Safari, Chrome) to block autoplay after 19-22 seconds.
+    let audio = session.unlockedAudio;
+    if (!audio) {
+      audio = new Audio();
+      session.unlockedAudio = audio;
     }
     currentAudio = audio;
+
+    // Detach previous event handlers before changing source
+    audio.onended = null;
+    audio.onerror = null;
+
+    audio.src = chunkData.audioUrl;
+    audio.load();
 
     if (startTime > 0) {
       audio.currentTime = startTime;
@@ -590,7 +614,6 @@ async function playScholarChunk(index: number, startTime = 0) {
 
     audio.onended = () => {
       if (activePlaybackId !== session.playbackId) return;
-      currentAudio = null;
       session.currentChunkIndex = index + 1;
       playScholarChunk(index + 1, 0);
     };
@@ -598,15 +621,22 @@ async function playScholarChunk(index: number, startTime = 0) {
     audio.onerror = (e) => {
       console.warn(`Audio playback error on chunk ${index}, fallback to browser TTS:`, e);
       if (activePlaybackId !== session.playbackId) return;
-      currentAudio = null;
       const remainingText = session.chunks.slice(index).join(" ");
       session.isBrowserFallback = true;
       speakWithBrowserFallback(remainingText, session.personaName, session.gender, session.options);
     };
 
     if (!session.isPaused) {
-      await audio.play();
-      session.isPlaying = true;
+      try {
+        await audio.play();
+        session.isPlaying = true;
+      } catch (playErr) {
+        console.warn(`audio.play() error on chunk ${index}, fallback to browser TTS:`, playErr);
+        const remainingText = session.chunks.slice(index).join(" ");
+        session.isBrowserFallback = true;
+        speakWithBrowserFallback(remainingText, session.personaName, session.gender, session.options);
+        return;
+      }
     }
 
     notifySubscribers(getCurrentProgressState());
@@ -652,15 +682,16 @@ export function speakWithScholarVoice(
   const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
   const personaName = options?.voiceName || (genderToUse === 'male' ? maleVoiceName : femaleVoiceName);
 
-  const chunks = splitTextIntoChunks(text, 100, 200);
+  // Use larger chunks (180 initial, 320 standard) for fluid continuous discourse and fewer network hops
+  const chunks = splitTextIntoChunks(text, 180, 320);
   if (chunks.length === 0) return;
 
   const thisPlaybackId = activePlaybackId;
 
-  // Initialize chunk duration estimates (approx. 14 characters per second or 3 sec minimum)
-  const initialDurations = chunks.map(c => Math.max(2.5, c.length / 14));
+  // Initialize realistic chunk duration estimates (approx. 10 characters per second or 3 sec minimum)
+  const initialDurations = chunks.map(c => Math.max(3.0, c.length / 10));
 
-  // iOS / Safari Audio unlock on user gesture
+  // iOS / Safari / Chrome Audio unlock on user gesture - keep this single element alive for the entire session!
   const unlockedAudio = new Audio();
   unlockedAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
   const silentPromise = unlockedAudio.play();

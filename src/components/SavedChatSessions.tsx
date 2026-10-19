@@ -98,8 +98,12 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
       setSpeechState(state);
       setIsPaused(state.isPaused);
       if (!state.isPlaying && !state.isPaused) {
-        // Stopped or completed
-        setSpeakingSessionId((prev) => (state.percent >= 99 || (!state.isPlaying && !state.isPaused) ? null : prev));
+        // Only clear speakingSessionId if all chunks finished or explicitly stopped
+        if (state.totalChunks > 0 && state.currentChunkIndex >= state.totalChunks) {
+          setSpeakingSessionId(null);
+        } else if (state.currentTime === 0 && state.duration === 0) {
+          setSpeakingSessionId(null);
+        }
       }
     });
     return () => {

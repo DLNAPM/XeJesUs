@@ -104,8 +104,13 @@ export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: Ch
       setSpeechState(state);
       setIsPaused(state.isPaused);
       if (!state.isPlaying && !state.isPaused) {
-        setSpeakingSessionId((prev) => (state.percent >= 99 || (!state.isPlaying && !state.isPaused) ? null : prev));
-        setSpeakingMessageText((prev) => (state.percent >= 99 || (!state.isPlaying && !state.isPaused) ? null : prev));
+        if (state.totalChunks > 0 && state.currentChunkIndex >= state.totalChunks) {
+          setSpeakingSessionId(null);
+          setSpeakingMessageText(null);
+        } else if (state.currentTime === 0 && state.duration === 0) {
+          setSpeakingSessionId(null);
+          setSpeakingMessageText(null);
+        }
       }
     });
     return () => {
