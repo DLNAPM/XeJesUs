@@ -160,3 +160,70 @@ export interface LiteraryWorkExport {
   }[];
 }
 
+export interface DemographicSect {
+  name: string;
+  percentageThen: number;
+  percentageNow: number;
+  descriptionThen: string;
+  descriptionNow: string;
+  color?: string;
+}
+
+export interface ThenVsNowData {
+  id?: string;
+  query: string;
+  category: 'place' | 'people' | 'event' | 'phrase';
+  userId?: string;
+  createdAt?: any;
+
+  // 1. Historical meaning & God's intent to the Body of Christ
+  title: string;
+  originalName: string;
+  etymology: string;
+  historicalMeaning: string;
+  godsIntentForBodyOfChrist: string;
+  keyScriptures: { ref: string; text: string }[];
+
+  // 2. Side-by-side images / visual representation
+  thenVisual: {
+    title: string;
+    description: string;
+    imageUrl: string;
+    architecturalHighlights: string[];
+    era: string;
+  };
+  nowVisual: {
+    title: string;
+    description: string;
+    imageUrl: string;
+    modernHighlights: string[];
+    era: string;
+  };
+
+  // 3. Historical meanings vs Modern Day view
+  antiquityPerspective: string;
+  modernWorldPerspective: string;
+  theologicalEvolution: string;
+
+  // 4. Illustrated charts of sects / peoples represented then vs today
+  demographicComparison: {
+    regionName: string;
+    summaryThen: string;
+    summaryNow: string;
+    sects: DemographicSect[];
+  };
+
+  // 5. Challenges in the region today & End-Times Prophetic Destiny
+  modernRegionalChallenges: {
+    title: string;
+    challenge: string;
+    spiritualSignificance: string;
+  }[];
+  endTimesProphecy: {
+    scripturalProphecies: string[];
+    divineDestinySummary: string;
+    godsRedemptivePlan: string;
+  };
+
+  pilgrimTakeaway: string;
+}

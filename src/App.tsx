@@ -59,7 +59,8 @@ import {
   Menu,
   Globe,
   History,
-  LogIn
+  LogIn,
+  Compass
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -68,6 +69,7 @@ import { cn } from './lib/utils';
 import { UserProfile } from './types';
 import Dashboard from './components/Dashboard';
 import InquiryTool from './components/InquiryTool';
+import ThenVsNow from './components/ThenVsNow';
 import GroupsList from './components/GroupsList';
 import InquiryDetails from './components/InquiryDetails';
 import HelpModal from './components/HelpModal';
@@ -117,7 +119,7 @@ const safeLocalStorage = {
   }
 };
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin' | 'saved-chats' | 'privacy' | 'terms';
+type Page = 'dashboard' | 'inquiry' | 'then-vs-now' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin' | 'saved-chats' | 'privacy' | 'terms';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -744,6 +746,13 @@ export default function App() {
              <Users className="w-5 h-5" />
            </button>
            <button 
+             onClick={() => navigateToPage('then-vs-now', 'Then vs Now')} 
+             className={cn("p-2 transition-colors", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary/60")}
+             title="Then vs Now"
+           >
+             <Compass className="w-5 h-5" />
+           </button>
+           <button 
              onClick={openSavedChatSessions} 
              className="p-2 transition-colors text-text-primary/60 hover:text-accent"
              title="Saved Chat Sessions"
@@ -835,6 +844,12 @@ export default function App() {
           {[
             { id: 'dashboard', label: 'Exegesis Library', icon: BookOpen },
             { id: 'inquiry', label: 'Seek the Word', icon: Search },
+            { 
+              id: 'then-vs-now', 
+              label: 'Then vs Now', 
+              icon: Compass,
+              badge: !isPremium ? 'PREMIUM' : undefined 
+            },
             { id: 'groups', label: 'My Study Groups', icon: Users },
             { id: 'saved-chats', label: 'Saved Chat Sessions', icon: History, onClick: openSavedChatSessions },
             { id: 'reports', label: 'Reports Menu', icon: FileText },
@@ -939,6 +954,13 @@ export default function App() {
           >
             {currentPage === 'dashboard' && <Dashboard onSelectInquiry={navigateToDetails} onNewInquiry={() => setCurrentPage('inquiry')} />}
             {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} isPremium={isPremium} />}
+            {currentPage === 'then-vs-now' && (
+              <ThenVsNow 
+                isPremium={isPremium} 
+                onUpgradeRequest={() => setPremiumModal({ isOpen: true, feature: 'Then vs Now Antiquity & Modern Reality' })}
+                userProfile={userProfile}
+              />
+            )}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
             {currentPage === 'saved-chats' && (
@@ -1077,6 +1099,13 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
+                  <button 
+                    onClick={() => navigateToPage('then-vs-now', 'Then vs Now')}
+                    className="flex flex-col items-center justify-center p-6 bg-accent/10 rounded-2xl border border-accent/30 gap-3 text-accent hover:bg-accent/20 transition-all col-span-2 shadow-sm"
+                  >
+                    <Compass className="w-6 h-6 text-accent" />
+                    <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary">Then vs Now (Antiquity vs Modern)</span>
+                  </button>
                   <button 
                     onClick={openSavedChatSessions}
                     className="flex flex-col items-center justify-center p-6 bg-accent/5 rounded-2xl border border-accent/20 gap-3 text-accent hover:bg-accent/10 transition-all col-span-2"

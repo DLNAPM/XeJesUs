@@ -200,3 +200,101 @@ export async function exportElementToPdf(
     }
   }
 }
+
+/**
+ * Robustly exports two dedicated DOM elements into an exact 2-Page (Front & Back) A4 PDF file.
+ * Page 1 renders onto the front page, and Page 2 renders onto the back page.
+ */
+export async function exportTwoPagePdf(
+  page1Element: HTMLElement,
+  page2Element: HTMLElement,
+  filename: string
+): Promise<boolean> {
+  let clone1: HTMLElement | null = null;
+  let clone2: HTMLElement | null = null;
+
+  try {
+    // 1. Create clean off-screen clones
+    const setupClone = (el: HTMLElement) => {
+      const c = el.cloneNode(true) as HTMLElement;
+      c.style.position = 'absolute';
+      c.style.left = '-9999px';
+      c.style.top = '0px';
+      c.style.width = '800px';
+      c.style.height = 'auto';
+      c.style.overflow = 'visible';
+      c.style.maxHeight = 'none';
+      c.style.transform = 'none';
+      c.style.backgroundColor = '#ffffff';
+      c.style.boxSizing = 'border-box';
+      document.body.appendChild(c);
+      return c;
+    };
+
+    clone1 = setupClone(page1Element);
+    clone2 = setupClone(page2Element);
+
+    // 2. Pre-inline images to prevent CORS failures
+    await Promise.all([inlineImages(clone1), inlineImages(clone2)]);
+
+    await new Promise((res) => setTimeout(res, 250));
+
+    // 3. Render canvases
+    const [canvas1, canvas2] = await Promise.all([
+      html2canvas(clone1, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1200
+      }),
+      html2canvas(clone2, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 1200
+      })
+    ]);
+
+    // 4. Construct 2-Page A4 PDF (Front and Back)
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 8;
+    const printableWidth = pageWidth - margin * 2;
+    const printableHeight = pageHeight - margin * 2;
+
+    // --- Page 1 (Front) ---
+    const destHeight1 = Math.min(printableHeight, (canvas1.height * printableWidth) / canvas1.width);
+    const imgData1 = canvas1.toDataURL('image/jpeg', 0.95);
+    pdf.addImage(imgData1, 'JPEG', margin, margin, printableWidth, destHeight1);
+    pdf.setFontSize(8);
+    pdf.setTextColor(140, 140, 140);
+    pdf.text("Page 1 of 2 (Front) • XeJesUs Sanctuary Publication • Biblical Antiquity & Sacred Origins", margin, pageHeight - 4);
+
+    // --- Page 2 (Back) ---
+    pdf.addPage();
+    const destHeight2 = Math.min(printableHeight, (canvas2.height * printableWidth) / canvas2.width);
+    const imgData2 = canvas2.toDataURL('image/jpeg', 0.95);
+    pdf.addImage(imgData2, 'JPEG', margin, margin, printableWidth, destHeight2);
+    pdf.setFontSize(8);
+    pdf.setTextColor(140, 140, 140);
+    pdf.text("Page 2 of 2 (Back) • XeJesUs Sanctuary Publication • Demographics, Challenges & Prophetic Destiny", margin, pageHeight - 4);
+
+    const cleanFileName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+    pdf.save(cleanFileName);
+
+    return true;
+  } catch (err) {
+    console.error("2-Page PDF Export failed, triggering print fallback:", err);
+    window.print();
+    return false;
+  } finally {
+    if (clone1 && clone1.parentNode) clone1.parentNode.removeChild(clone1);
+    if (clone2 && clone2.parentNode) clone2.parentNode.removeChild(clone2);
+  }
+}
+

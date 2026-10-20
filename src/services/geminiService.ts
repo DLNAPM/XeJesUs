@@ -1,4 +1,4 @@
-import { Inquiry, LiteraryWorkExport } from "../types";
+import { Inquiry, LiteraryWorkExport, ThenVsNowData } from "../types";
 import { reportIncident } from "./incidentService";
 
 // Robust helper that avoids "Failed to execute 'json' on 'Response': Unexpected end of JSON input"
@@ -720,5 +720,33 @@ export async function generateLiteraryWorkExport(
   }
 
   return fallbackData;
+}
+
+/**
+ * Generates an in-depth "Then vs Now" archaeological, theological, and regional study
+ * comparing biblical antiquity to contemporary modern reality.
+ */
+export async function generateThenVsNowStudy(
+  query: string,
+  category: 'place' | 'people' | 'event' | 'phrase' = 'place'
+): Promise<ThenVsNowData> {
+  try {
+    const result = await safeFetchJson<ThenVsNowData>('/api/gemini/then-vs-now', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, category }),
+    });
+
+    return result;
+  } catch (err: any) {
+    console.error("Failed to generate Then vs Now study:", err);
+    reportIncident({
+      error: err,
+      service: 'Gemini AI',
+      endpoint: 'generateThenVsNowStudy',
+      details: { query, category }
+    }).catch(e => console.warn("Could not report incident:", e));
+    throw err;
+  }
 }
 

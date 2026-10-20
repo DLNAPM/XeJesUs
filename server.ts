@@ -716,6 +716,301 @@ Return ONLY valid JSON.`;
   }
 });
 
+// 7. Then vs Now Theological, Historical & Regional Study
+app.post('/api/gemini/then-vs-now', async (req, res) => {
+  try {
+    const { query: rawQuery, category: rawCategory } = req.body;
+    const query = String(rawQuery || '').trim();
+    const category = (rawCategory || 'place') as 'place' | 'people' | 'event' | 'phrase';
+
+    if (!query) {
+      return res.status(400).json({ error: 'A search topic, place, people group, or phrase is required' });
+    }
+
+    const systemPrompt = `You are a world-class Biblical Archaeologist, Exegetical Theologian, and Ancient Near Eastern Historian for the XeJesUs platform.
+Analyze the following subject:
+Subject: "${query}"
+Category: "${category}"
+
+Perform a comprehensive, scholarly, and deeply spiritual "Then vs Now" investigation strictly grounded in the XeJesUs Academic & Theological Framework:
+- Ground in Primary Scriptures across Old & New Testaments, as well as ancient Second Temple and apostolic context (including Asher Wilson's 81-book Ethiopian Orthodox Tewahedo canon, specifically 1 Enoch, Jubilees, and Meqabyan where relevant).
+- Provide original Hebrew, Aramaic, Greek, or Ge'ez lexical roots with transliteration and Strong's concordance references.
+- Contrast Biblical Antiquity with 21st-Century Modern Reality across demographics, architecture, religious sects, culture, geopolitical challenges, and God's end-times prophetic plan.
+
+You MUST return a valid JSON object matching EXACTLY this structure:
+{
+  "title": "A grand, scholarly title for this Then vs Now study",
+  "category": "${category}",
+  "originalName": "Original Hebrew/Greek/Aramaic/Ge'ez text with transliteration (e.g. יְרוּשָׁלַיִם / Yerushalayim)",
+  "etymology": "In-depth linguistic root, morphological origin, and ancient meaning",
+  "historicalMeaning": "Rich explanation of what this place, people, event, or phrase meant in biblical antiquity",
+  "godsIntentForBodyOfChrist": "The divine spiritual revelation, covenantal purpose, and God's intent for the Body of Christ today",
+  "keyScriptures": [
+    { "ref": "Book Chapter:Verse", "text": "Direct scripture text quote" }
+  ],
+  "thenVisual": {
+    "title": "Biblical Era / Antiquity Appearance",
+    "era": "e.g., First Temple Era (circa 960 B.C.) or Herodian Era (1st Century A.D.)",
+    "description": "Vivid, historically accurate visual description of how it appeared in antiquity",
+    "architecturalHighlights": ["Key feature 1", "Key feature 2", "Key feature 3"]
+  },
+  "nowVisual": {
+    "title": "Contemporary Modern Day Appearance",
+    "era": "Present Day (21st Century)",
+    "description": "Vivid modern description of how it looks and functions today",
+    "modernHighlights": ["Modern feature 1", "Modern feature 2", "Modern feature 3"]
+  },
+  "antiquityPerspective": "Detailed explanation of how this was understood and experienced by people living in biblical times",
+  "modernWorldPerspective": "How modern secular society, world governments, and modern culture perceive and treat it today",
+  "theologicalEvolution": "How the theological understanding evolved from the Old Covenant through Christ's sacrifice into the church age",
+  "demographicComparison": {
+    "regionName": "Name of the geographic region or territory",
+    "summaryThen": "Summary of population, tribes, and dominant religious factions in biblical antiquity",
+    "summaryNow": "Summary of contemporary population, modern factions, and current religious landscape",
+    "sects": [
+      {
+        "name": "Sect or People Group Name (e.g. Pharisees & Scribes / Israeli Secular & Orthodox)",
+        "percentageThen": 40,
+        "percentageNow": 5,
+        "descriptionThen": "Their role, theological stance, and authority during biblical era",
+        "descriptionNow": "Their modern survival, ideological successors, or current demographic status",
+        "color": "#d97706"
+      }
+    ]
+  },
+  "modernRegionalChallenges": [
+    {
+      "title": "Title of Challenge (e.g. Geopolitical Sovereignty & Religious Strife)",
+      "challenge": "Objective description of the present-day friction, conflict, or struggle",
+      "spiritualSignificance": "The spiritual warfare and prophetic undertone behind this modern struggle"
+    }
+  ],
+  "endTimesProphecy": {
+    "scripturalProphecies": ["e.g. Zechariah 14:1-9", "e.g. Revelation 21:1-4"],
+    "divineDestinySummary": "Clear scriptural exegesis of how God will deal with this region, people, or event in the end times",
+    "godsRedemptivePlan": "The ultimate reconciliation, judgment of evil, and glorious restoration under Christ Jesus"
+  },
+  "pilgrimTakeaway": "A stirring, faith-strengthening 2-3 sentence pastoral encouragement for the modern pilgrim"
+}
+
+Provide EXACTLY 4 to 6 distinct sects in "demographicComparison.sects" with numeric percentages for both then and now (totaling approx 100% for each era).
+Provide EXACTLY 2 to 3 key scriptures.
+Provide EXACTLY 3 modernRegionalChallenges.
+Provide EXACTLY 2 to 3 endTimesProphecy scripturalProphecies.
+Return ONLY valid JSON.`;
+
+    const response = await generateWithFallback({
+      contents: systemPrompt,
+      config: {
+        responseMimeType: 'application/json',
+      },
+    });
+
+    const text = response.text || '';
+    let parsed: any = null;
+
+    if (text) {
+      let cleaned = text.trim();
+      if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (parseErr) {
+        console.warn('Could not parse Gemini JSON response directly, falling back:', parseErr);
+      }
+    }
+
+    if (!parsed || !parsed.title) {
+      // High-quality fallback for popular presets
+      parsed = generateThenVsNowFallback(query, category);
+    }
+
+    // Attach curated high-resolution imagery for Then and Now
+    const imagePair = getThenVsNowVisualImages(query);
+    if (!parsed.thenVisual) parsed.thenVisual = {};
+    if (!parsed.nowVisual) parsed.nowVisual = {};
+    parsed.thenVisual.imageUrl = imagePair.thenUrl;
+    parsed.nowVisual.imageUrl = imagePair.nowUrl;
+    parsed.query = query;
+    parsed.category = category;
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.json(parsed);
+  } catch (error: any) {
+    console.error('Server Then vs Now Error:', error);
+    res.status(500).json({
+      error: error?.message || 'Failed to generate Then vs Now study',
+      status: error?.status,
+    });
+  }
+});
+
+function getThenVsNowVisualImages(query: string): { thenUrl: string; nowUrl: string } {
+  const q = query.toLowerCase();
+  if (q.includes('jerusalem') || q.includes('zion') || q.includes('temple')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('babylon') || q.includes('iraq') || q.includes('euphrates') || q.includes('mesopotamia')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('sinai') || q.includes('horeb') || q.includes('wilderness')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('ephesus') || q.includes('artemis') || q.includes('turkey') || q.includes('asia minor')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('antioch') || q.includes('syria')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('nineveh') || q.includes('jonah') || q.includes('mosul') || q.includes('assyria')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('samaria') || q.includes('samaritan') || q.includes('gerizim')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('galilee') || q.includes('capernaum') || q.includes('nazareth')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  if (q.includes('ethiopia') || q.includes('aksum') || q.includes('cush') || q.includes('sheba')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80'
+    };
+  }
+  return {
+    thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+    nowUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'
+  };
+}
+
+function generateThenVsNowFallback(query: string, category: string): any {
+  return {
+    title: `The Covenant Odyssey: ${query} in Biblical Antiquity & Modern Reality`,
+    category,
+    originalName: query,
+    etymology: `Rooted in ancient scriptural etymology, signifying covenantal appointment, territorial demarcation, and theological witness across antiquity.`,
+    historicalMeaning: `In the biblical era, ${query} served as a monumental fulcrum for divine encounters, prophetic declarations, and the unfolding of redemptive history recorded in the sacred scriptures.`,
+    godsIntentForBodyOfChrist: `God ordained the memory and spiritual reality of ${query} to instruct the Church in steadfast covenant faithfulness, spiritual vigilance, and wholehearted reliance on Christ's triumph.`,
+    keyScriptures: [
+      { ref: "Genesis 12:1-3", text: "Now the Lord said to Abram: 'Go from your country... and in you all the families of the earth shall be blessed.'" },
+      { ref: "Revelation 21:1-2", text: "Then I saw a new heaven and a new earth, for the first heaven and the first earth had passed away." }
+    ],
+    thenVisual: {
+      title: `${query} in Biblical Era`,
+      era: "Biblical Antiquity / Classical Biblical Era",
+      description: `Ancient masonry, fortified citadels, and camel trade routes characteristic of Near Eastern antiquity during biblical times.`,
+      architecturalHighlights: [
+        "Chiseled ashlar stone fortifications",
+        "Ancient water cisterns and ritual cleansing pools",
+        "Pillared council gates of biblical elders"
+      ]
+    },
+    nowVisual: {
+      title: `${query} in the 21st Century`,
+      era: "Present Day (Modern Era)",
+      description: `A modern geopolitical and cultural crossroads featuring contemporary infrastructure alongside protected archaeological preserves.`,
+      modernHighlights: [
+        "Metropolitan urban development & communication networks",
+        "Protected UNESCO archaeological excavations",
+        "Multicultural pilgrimage centers and international travelers"
+      ]
+    },
+    antiquityPerspective: `In biblical antiquity, the people viewed ${query} through the lens of divine providence, prophetic oracles, and direct sovereign covenant interventions.`,
+    modernWorldPerspective: `Today, modern secular scholars, tourism boards, and geopolitical analysts view ${query} through archaeology, political treaties, and cultural heritage.`,
+    theologicalEvolution: `What began as a localized physical shadow in the Old Testament reached fulfillment in Jesus Christ, who transformed physical topography into an eternal spiritual kingdom.`,
+    demographicComparison: {
+      regionName: `${query} & Surrounding Biblical Territory`,
+      summaryThen: `In biblical times, the territory was inhabited by covenant Israelites, Canaanite tribes, Roman garrison troops, and diverse Semitic peoples.`,
+      summaryNow: `Today, the region consists of a modern demographic mosaic including Jewish citizens, Arab Christians and Muslims, Druze communities, and international expatriates.`,
+      sects: [
+        {
+          name: "Biblical Priestly & Covenant Lineage / Modern Traditionalists",
+          percentageThen: 42,
+          percentageNow: 28,
+          descriptionThen: "Guarded sacred temple services, sacrificial rites, and biblical law.",
+          descriptionNow: "Preserves historical liturgies, rabbinic or church traditions, and cultural heritage.",
+          color: "#d97706"
+        },
+        {
+          name: "Regional Gentile Inhabitants / Modern Diverse Communities",
+          percentageThen: 30,
+          percentageNow: 44,
+          descriptionThen: "Allied or neighboring trade peoples, Roman soldiers, and Greek merchants.",
+          descriptionNow: "Multicultural regional residents engaging in modern civic life and international commerce.",
+          color: "#3b82f6"
+        },
+        {
+          name: "Separatist / Ascetic Communities (Essenes / Monastics)",
+          percentageThen: 15,
+          percentageNow: 6,
+          descriptionThen: "Fled to desert grottos to preserve sacred scriptures and await the Messiah.",
+          descriptionNow: "Ancient Christian monasteries and religious orders maintaining unbroken prayer vigils.",
+          color: "#10b981"
+        },
+        {
+          name: "Secular Civic Classes / Modern Urbanites",
+          percentageThen: 13,
+          percentageNow: 22,
+          descriptionThen: "Imperial administrative personnel, tax collectors, and civil magistrates.",
+          descriptionNow: "Contemporary tech workers, civil service workers, and academic researchers.",
+          color: "#8b5cf6"
+        }
+      ]
+    },
+    modernRegionalChallenges: [
+      {
+        title: "Geopolitical Tensions & Boundary Disputes",
+        challenge: "Persistent territorial friction, contested sovereignty, and competing international claims.",
+        spiritualSignificance: "Reflects the ancient spiritual warfare over the land of covenant promise and prophetic convergence."
+      },
+      {
+        title: "Archaeological Preservation vs. Modern Expansion",
+        challenge: "Balancing urgent urban modern construction with the delicate excavation of ancient biblical strata.",
+        spiritualSignificance: "Unearthing the stones of antiquity provides continuous physical confirmation of the reliability of the Word of God."
+      },
+      {
+        title: "Spiritual Secularization & Revival Need",
+        challenge: "Growing secularism among younger generations alongside traditional religious dogmatism.",
+        spiritualSignificance: "Creates a ripe harvest field for genuine gospel witness and fresh outpouring of the Holy Spirit."
+      }
+    ],
+    endTimesProphecy: {
+      scripturalProphecies: ["Zechariah 14:4-9", "Revelation 21:1-7"],
+      divineDestinySummary: `Scripture declares that the Lord will physically and spiritually vindicate His covenant word in this region during the final consummation of the age.`,
+      godsRedemptivePlan: `Every knee shall bow and every tongue confess that Jesus Christ is Lord, establishing everlasting righteousness and peaceful communion across the redeemed earth.`
+    },
+    pilgrimTakeaway: `As you reflect upon ${query}, remember that earthly empires rise and fall, but the Word of our God stands forever. Anchor your hope in Christ's unchanging kingdom today.`
+  };
+}
+
 // Explicit 404 handler for all unhandled /api/* routes so they NEVER fall through to HTML
 app.all('/api/*', (_req, res) => {
   res.status(404).json({ error: 'API route not found' });
