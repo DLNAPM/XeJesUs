@@ -29,7 +29,8 @@ import {
   GitBranch,
   Image as ImageIcon,
   RotateCcw,
-  RotateCw
+  RotateCw,
+  Star
 } from 'lucide-react';
 import { getAuthService, getDbService, collection, query, where, orderBy, limit, getDocs, setDoc, doc, serverTimestamp, deleteDoc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { chatWithSanctuary, generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
@@ -914,11 +915,12 @@ export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: Ch
                               e.stopPropagation();
                               handleExportLiteraryWork(session);
                             }}
-                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 bg-text-primary text-bg-primary hover:opacity-90 transition-all"
-                            title="Export Session as Professional Literary Work (PDF)"
+                            className="px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 bg-text-primary text-bg-primary hover:opacity-90 transition-all cursor-pointer"
+                            title="Export Session as Professional Literary Work (PDF) - Requires Premium Access"
                           >
                             <FileText className="w-3.5 h-3.5 text-accent" />
                             <span className="text-[10px] uppercase tracking-wider">PDF</span>
+                            <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)] shrink-0" />
                           </button>
 
                           {/* Delete Session Button */}

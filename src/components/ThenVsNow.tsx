@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Landmark, 
   Search, 
@@ -25,7 +25,18 @@ import {
   Compass,
   Maximize2,
   X,
-  Layers
+  Layers,
+  Star,
+  Bookmark,
+  BookmarkCheck,
+  BookmarkPlus,
+  Trash2,
+  Edit3,
+  Library,
+  Save,
+  Check,
+  ExternalLink,
+  RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -41,6 +52,19 @@ import { ThenVsNowData, UserProfile } from '../types';
 import { generateThenVsNowStudy } from '../services/geminiService';
 import { exportElementToPdf, exportTwoPagePdf } from '../utils/pdfExporter';
 import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
+import { 
+  getAuthService, 
+  getDbService, 
+  collection, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  query as fsQuery, 
+  where, 
+  serverTimestamp 
+} from '../lib/firebase';
 
 interface ThenVsNowProps {
   isPremium: boolean;
@@ -71,9 +95,227 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
   const [viewMode, setViewMode] = useState<'study' | 'two-pager'>('study');
   const [docPage, setDocPage] = useState<'both' | 'front' | 'back'>('both');
 
+  // Saved Antiquities State
+  const [savedAntiquities, setSavedAntiquities] = useState<ThenVsNowData[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showArchiveDrawer, setShowArchiveDrawer] = useState(false);
+  const [customNameInput, setCustomNameInput] = useState('');
+  const [isSavingAntiquity, setIsSavingAntiquity] = useState(false);
+  const [saveSuccessNotice, setSaveSuccessNotice] = useState<string | null>(null);
+  const [renameTarget, setRenameTarget] = useState<{ id: string; currentName: string } | null>(null);
+  const [renameInput, setRenameInput] = useState('');
+  const [archiveSearchTerm, setArchiveSearchTerm] = useState('');
+  const [archiveFilterCat, setArchiveFilterCat] = useState<'all' | 'place' | 'people' | 'event' | 'phrase'>('all');
+
   const page1Ref = useRef<HTMLDivElement>(null);
   const page2Ref = useRef<HTMLDivElement>(null);
   const studyTopRef = useRef<HTMLDivElement>(null);
+
+  // Fetch Saved Antiquities (Firestore + localStorage)
+  const fetchSavedAntiquities = async () => {
+    setLoadingSaved(true);
+    let items: ThenVsNowData[] = [];
+
+    // Local storage cache
+    try {
+      const local = localStorage.getItem('xejesus_saved_antiquities');
+      if (local) {
+        items = JSON.parse(local);
+      }
+    } catch (e) {
+      console.warn("Failed to load local saved antiquities", e);
+    }
+
+    // Firestore
+    try {
+      const auth = getAuthService();
+      const db = getDbService();
+      if (auth && auth.currentUser && db) {
+        const q = fsQuery(
+          collection(db, 'then_vs_now'),
+          where('userId', '==', auth.currentUser.uid)
+        );
+        const snapshot = await getDocs(q);
+        const remoteItems: ThenVsNowData[] = snapshot.docs.map(docSnap => ({
+          ...docSnap.data() as ThenVsNowData,
+          id: docSnap.id
+        }));
+
+        const mergedMap = new Map<string, ThenVsNowData>();
+        items.forEach(it => {
+          const key = it.id || (it.customName + '-' + it.query);
+          mergedMap.set(key, it);
+        });
+        remoteItems.forEach(it => {
+          if (it.id) mergedMap.set(it.id, it);
+        });
+
+        items = Array.from(mergedMap.values());
+        items.sort((a, b) => {
+          const timeA = new Date(a.savedAt || a.createdAt?.toDate?.() || a.createdAt || 0).getTime();
+          const timeB = new Date(b.savedAt || b.createdAt?.toDate?.() || b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
+
+        localStorage.setItem('xejesus_saved_antiquities', JSON.stringify(items));
+      }
+    } catch (err) {
+      console.error("Failed to fetch remote saved antiquities:", err);
+    } finally {
+      setSavedAntiquities(items);
+      setLoadingSaved(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSavedAntiquities();
+  }, [userProfile]);
+
+  const handleOpenSaveModal = () => {
+    if (!isPremium) {
+      onUpgradeRequest();
+      return;
+    }
+    if (!study) return;
+    const defaultName = study.customName || `${study.title} Exegesis`;
+    setCustomNameInput(defaultName);
+    setShowSaveModal(true);
+  };
+
+  const handleSaveAntiquity = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!study) return;
+    if (!isPremium) {
+      onUpgradeRequest();
+      return;
+    }
+    const finalName = customNameInput.trim() || `${study.title} Exegesis`;
+    setIsSavingAntiquity(true);
+
+    try {
+      const auth = getAuthService();
+      const db = getDbService();
+      const nowIso = new Date().toISOString();
+
+      let savedId = study.id || `antiquity-${Date.now()}`;
+      const payload: ThenVsNowData = {
+        ...study,
+        customName: finalName,
+        savedAt: nowIso,
+        userId: auth?.currentUser?.uid || 'guest'
+      };
+
+      if (auth && auth.currentUser && db) {
+        if (study.id && !study.id.startsWith('antiquity-')) {
+          await updateDoc(doc(db, 'then_vs_now', study.id), {
+            customName: finalName,
+            savedAt: nowIso
+          });
+          savedId = study.id;
+        } else {
+          const docRef = await addDoc(collection(db, 'then_vs_now'), {
+            ...payload,
+            createdAt: serverTimestamp()
+          });
+          savedId = docRef.id;
+        }
+      }
+
+      payload.id = savedId;
+      setStudy(payload);
+
+      const updatedList = [payload, ...savedAntiquities.filter(s => s.id !== savedId)];
+      setSavedAntiquities(updatedList);
+      localStorage.setItem('xejesus_saved_antiquities', JSON.stringify(updatedList));
+
+      setShowSaveModal(false);
+      setSaveSuccessNotice(`Antiquity successfully saved as "${finalName}"!`);
+      setTimeout(() => setSaveSuccessNotice(null), 4000);
+    } catch (err: any) {
+      console.error("Failed to save antiquity to Firestore:", err);
+      const fallbackPayload: ThenVsNowData = {
+        ...study,
+        id: study.id || `antiquity-${Date.now()}`,
+        customName: finalName,
+        savedAt: new Date().toISOString()
+      };
+      setStudy(fallbackPayload);
+      const updatedList = [fallbackPayload, ...savedAntiquities.filter(s => s.id !== fallbackPayload.id)];
+      setSavedAntiquities(updatedList);
+      localStorage.setItem('xejesus_saved_antiquities', JSON.stringify(updatedList));
+      setShowSaveModal(false);
+      setSaveSuccessNotice(`Antiquity preserved locally as "${finalName}"!`);
+      setTimeout(() => setSaveSuccessNotice(null), 4000);
+    } finally {
+      setIsSavingAntiquity(false);
+    }
+  };
+
+  const handleDeleteAntiquity = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm("Remove this antiquity from your sacred archive?")) return;
+    try {
+      const auth = getAuthService();
+      const db = getDbService();
+      if (auth && auth.currentUser && db && !id.startsWith('antiquity-')) {
+        await deleteDoc(doc(db, 'then_vs_now', id));
+      }
+    } catch (err) {
+      console.warn("Remote delete error, falling back to local deletion", err);
+    }
+    const updated = savedAntiquities.filter(a => a.id !== id);
+    setSavedAntiquities(updated);
+    localStorage.setItem('xejesus_saved_antiquities', JSON.stringify(updated));
+    if (study?.id === id) {
+      setStudy(prev => prev ? { ...prev, id: undefined, customName: undefined } : null);
+    }
+  };
+
+  const handleRenameAntiquity = async (id: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    try {
+      const auth = getAuthService();
+      const db = getDbService();
+      if (auth && auth.currentUser && db && !id.startsWith('antiquity-')) {
+        await updateDoc(doc(db, 'then_vs_now', id), {
+          customName: trimmed
+        });
+      }
+    } catch (err) {
+      console.warn("Remote rename failed, saving local update", err);
+    }
+    const updated = savedAntiquities.map(a => a.id === id ? { ...a, customName: trimmed } : a);
+    setSavedAntiquities(updated);
+    localStorage.setItem('xejesus_saved_antiquities', JSON.stringify(updated));
+    if (study?.id === id) {
+      setStudy(prev => prev ? { ...prev, customName: trimmed } : null);
+    }
+    setRenameTarget(null);
+  };
+
+  const handleLoadAntiquity = (saved: ThenVsNowData) => {
+    setStudy(saved);
+    setQuery(saved.query);
+    setCategory(saved.category);
+    setShowArchiveDrawer(false);
+    setViewMode('study');
+    setTimeout(() => {
+      studyTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  };
+
+  const filteredSavedAntiquities = useMemo(() => {
+    return savedAntiquities.filter(item => {
+      const matchesSearch = !archiveSearchTerm || 
+        (item.customName || '').toLowerCase().includes(archiveSearchTerm.toLowerCase()) ||
+        item.query.toLowerCase().includes(archiveSearchTerm.toLowerCase()) ||
+        item.title.toLowerCase().includes(archiveSearchTerm.toLowerCase());
+      const matchesCat = archiveFilterCat === 'all' || item.category === archiveFilterCat;
+      return matchesSearch && matchesCat;
+    });
+  }, [savedAntiquities, archiveSearchTerm, archiveFilterCat]);
 
   const handleSearch = async (targetQuery?: string, targetCategory?: 'place' | 'people' | 'event' | 'phrase') => {
     const q = (targetQuery || query).trim();
@@ -169,6 +411,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-sans font-black uppercase tracking-[0.2em] shadow-sm">
           <Crown className="w-3.5 h-3.5" />
           <span>Premium Pilgrim Exegesis</span>
+          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
         </div>
         <h1 className="text-4xl md:text-5xl font-serif font-bold text-text-primary italic tracking-tight">
           Then vs Now
@@ -176,6 +419,19 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
         <p className="text-text-secondary font-serif italic text-base md:text-lg leading-relaxed">
           Traverse biblical antiquity and 21st-century reality. Investigate sacred places, generations of people, monumental events, and divine origins alongside their contemporary representation and prophetic destiny.
         </p>
+
+        {/* Quick Archive Access Button */}
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => setShowArchiveDrawer(true)}
+            className="px-4 py-2 rounded-xl bg-ui-card border border-ui-border hover:border-accent text-text-primary text-xs font-sans font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer hover:bg-accent/10"
+            title="Open Saved Antiquities Archive"
+          >
+            <Bookmark className="w-4 h-4 text-accent" />
+            <span>Saved Antiquities Archive ({savedAntiquities.length})</span>
+            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)]" />
+          </button>
+        </div>
       </div>
 
       {/* Premium Lock Banner for Basic Pilgrims */}
@@ -267,7 +523,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
           <button
             onClick={() => handleSearch()}
             disabled={loading || !query.trim()}
-            className="px-8 py-4 bg-accent text-bg-primary rounded-2xl font-sans font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shrink-0"
+            className="px-8 py-4 bg-accent text-bg-primary rounded-2xl font-sans font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shrink-0 cursor-pointer"
           >
             {loading ? (
               <>
@@ -278,6 +534,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
               <>
                 <Compass className="w-4 h-4" />
                 <span>Examine Then vs Now</span>
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)]" />
               </>
             )}
           </button>
@@ -285,9 +542,22 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
 
         {/* Quick Presets */}
         <div className="space-y-2 pt-2 border-t border-ui-border/50">
-          <p className="text-[10px] font-sans font-black uppercase tracking-[0.2em] text-text-secondary/70">
-            Curated Excavations:
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-sans font-black uppercase tracking-[0.2em] text-text-secondary/70">
+              Curated Excavations:
+            </p>
+            {savedAntiquities.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowArchiveDrawer(true)}
+                className="text-xs font-sans font-bold text-accent hover:underline flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookmarkCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{savedAntiquities.length} Saved Antiquities in Archive</span>
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {PRESET_TOPICS.map(preset => (
               <button
@@ -330,21 +600,53 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
         <div ref={studyTopRef} className="space-y-8">
           
           {/* Top Actions Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-ui-sidebar p-4 rounded-2xl border border-ui-border">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-ui-sidebar p-4 rounded-2xl border border-ui-border shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="px-3 py-1 rounded-lg bg-accent/20 border border-accent/40 text-accent text-[11px] font-sans font-bold uppercase tracking-wider">
                 {study.category.toUpperCase()}
               </span>
               <span className="text-xs text-text-secondary font-serif italic">
                 Subject: <strong className="text-text-primary not-italic">{study.query}</strong>
               </span>
+              {study.customName && (
+                <span className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-sans font-bold flex items-center gap-1.5 shadow-inner">
+                  <BookmarkCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Archive: "{study.customName}"</span>
+                </span>
+              )}
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Save Antiquity Button */}
+              <button
+                onClick={handleOpenSaveModal}
+                className={`px-4 py-2 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all border cursor-pointer shadow-sm ${
+                  study.customName 
+                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25' 
+                    : 'bg-accent/15 border-accent/40 text-accent hover:bg-accent/25'
+                }`}
+                title={study.customName ? "Update Antiquity Name in Archive" : "Save this Antiquity to your Sacred Archive"}
+              >
+                {study.customName ? <BookmarkCheck className="w-4 h-4 text-emerald-400" /> : <BookmarkPlus className="w-4 h-4 text-accent" />}
+                <span>{study.customName ? 'Saved Antiquity' : 'Save Antiquity'}</span>
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)] shrink-0" />
+              </button>
+
+              {/* Antiquities Archive Drawer Button */}
+              <button
+                onClick={() => setShowArchiveDrawer(true)}
+                className="px-4 py-2 rounded-xl bg-ui-card border border-ui-border hover:bg-accent/10 text-text-primary text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                title="View Saved Antiquities Archive"
+              >
+                <Library className="w-4 h-4 text-accent" />
+                <span>Archive ({savedAntiquities.length})</span>
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+              </button>
+
               {/* Scholar Audio Read-Aloud */}
               <button
                 onClick={toggleScholarSpeech}
-                className={`px-4 py-2 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all border ${
+                className={`px-4 py-2 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all border cursor-pointer ${
                   isSpeaking 
                     ? 'bg-accent text-bg-primary border-accent animate-pulse shadow-md' 
                     : 'bg-ui-card text-text-primary border-ui-border hover:bg-accent/10'
@@ -353,12 +655,13 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
               >
                 {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-accent" />}
                 <span>{isSpeaking ? 'Halt Voice' : 'Scholar Narration'}</span>
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
               </button>
 
               {/* View 2-Pager Document Toggle */}
               <button
                 onClick={() => setViewMode(prev => prev === 'study' ? 'two-pager' : 'study')}
-                className={`px-4 py-2 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all border ${
+                className={`px-4 py-2 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all border cursor-pointer ${
                   viewMode === 'two-pager'
                     ? 'bg-accent text-bg-primary border-accent shadow-md'
                     : 'bg-ui-card text-text-primary border-ui-border hover:bg-accent/10'
@@ -366,23 +669,25 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
               >
                 <Layers className="w-4 h-4" />
                 <span>{viewMode === 'two-pager' ? 'Study Exegesis' : '2-Pager Document (Front & Back)'}</span>
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
               </button>
 
               {/* Print Document */}
               <button
                 onClick={handlePrint}
-                className="px-4 py-2 rounded-xl bg-ui-card border border-ui-border text-text-primary text-xs font-sans font-bold uppercase tracking-wider hover:bg-accent/10 transition-all flex items-center gap-2"
+                className="px-4 py-2 rounded-xl bg-ui-card border border-ui-border text-text-primary text-xs font-sans font-bold uppercase tracking-wider hover:bg-accent/10 transition-all flex items-center gap-2 cursor-pointer"
                 title="Print 2-Pager Document (Front & Back)"
               >
                 <Printer className="w-4 h-4 text-accent" />
                 <span>Print 2-Pager</span>
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
               </button>
 
               {/* Download PDF */}
               <button
                 onClick={handleDownloadPdf}
                 disabled={isExportingPdf}
-                className="px-4 py-2 rounded-xl bg-accent text-bg-primary text-xs font-sans font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 rounded-xl bg-accent text-bg-primary text-xs font-sans font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
               >
                 {isExportingPdf ? (
                   <>
@@ -393,11 +698,35 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                   <>
                     <Download className="w-4 h-4" />
                     <span>Download PDF</span>
+                    <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
                   </>
                 )}
               </button>
             </div>
           </div>
+
+          {/* Save Success Notice Banner */}
+          <AnimatePresence>
+            {saveSuccessNotice && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-between text-xs font-sans font-bold shadow-md"
+              >
+                <div className="flex items-center gap-2.5">
+                  <BookmarkCheck className="w-5 h-5 shrink-0 text-emerald-400" />
+                  <span>{saveSuccessNotice}</span>
+                </div>
+                <button 
+                  onClick={() => setShowArchiveDrawer(true)} 
+                  className="underline hover:text-emerald-300 ml-4 cursor-pointer"
+                >
+                  Open Archive
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* MODE A: FULL INTERACTIVE EXEGESIS VIEW */}
           {viewMode === 'study' && (
@@ -882,16 +1211,26 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
 
               <div className="flex items-center gap-2.5">
                 <button
+                  onClick={handleOpenSaveModal}
+                  className="px-4 py-2 rounded-xl bg-ui-sidebar border border-ui-border text-text-primary font-sans font-bold text-xs uppercase tracking-wider hover:bg-accent/10 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Save or Rename Antiquity in Archive"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5 text-accent" />
+                  <span>{study.customName ? 'Saved' : 'Save Antiquity'}</span>
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                </button>
+                <button
                   onClick={handlePrint}
-                  className="px-4 py-2 rounded-xl bg-ui-sidebar border border-ui-border text-text-primary font-sans font-bold text-xs uppercase tracking-wider hover:bg-accent/10 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-ui-sidebar border border-ui-border text-text-primary font-sans font-bold text-xs uppercase tracking-wider hover:bg-accent/10 transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5 text-accent" />
                   <span>Print 2-Pager</span>
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
                 </button>
                 <button 
                   onClick={handleDownloadPdf}
                   disabled={isExportingPdf}
-                  className="px-5 py-2 rounded-xl bg-accent text-bg-primary font-sans font-bold uppercase tracking-wider text-xs hover:opacity-90 disabled:opacity-50 transition-all shadow-md flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-xl bg-accent text-bg-primary font-sans font-bold uppercase tracking-wider text-xs hover:opacity-90 disabled:opacity-50 transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
                   {isExportingPdf ? (
                     <>
@@ -902,6 +1241,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                     <>
                       <Download className="w-3.5 h-3.5" />
                       <span>Save 2-Page PDF</span>
+                      <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
                     </>
                   )}
                 </button>
@@ -953,7 +1293,10 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                 <div className="border-b-2 border-amber-700/30 pb-4 text-center space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
-                      <p className="text-[10px] font-sans uppercase font-bold tracking-[0.2em] text-amber-800">XeJesUs Sanctuary Exegesis</p>
+                      <p className="text-[10px] font-sans uppercase font-bold tracking-[0.2em] text-amber-800 flex items-center gap-1">
+                        XeJesUs Sanctuary Exegesis
+                        <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                      </p>
                       <p className="text-xs text-zinc-500 font-sans">Part I: Sacred Antiquity & Divine Intent</p>
                     </div>
                     <div className="w-12 h-12 rounded-full border-2 border-amber-700/40 flex items-center justify-center font-bold text-amber-800 text-sm italic font-serif shadow-sm">
@@ -964,6 +1307,13 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                       <p className="text-xs text-zinc-500 font-sans">{new Date().toLocaleDateString()}</p>
                     </div>
                   </div>
+
+                  {study.customName && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-800/30 text-amber-900 text-[10px] font-sans font-bold uppercase tracking-wider mt-1 shadow-sm">
+                      <Star className="w-3 h-3 text-amber-600 fill-amber-600" />
+                      <span>Antiquity Archive Record: "{study.customName}"</span>
+                    </div>
+                  )}
 
                   <h1 className="text-3xl font-serif font-black italic text-amber-950 pt-2 tracking-tight">
                     {study.title}
@@ -1107,7 +1457,10 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                 <div className="border-b-2 border-amber-700/30 pb-4 text-center space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
-                      <p className="text-[10px] font-sans uppercase font-bold tracking-[0.2em] text-amber-800">XeJesUs Sanctuary Exegesis</p>
+                      <p className="text-[10px] font-sans uppercase font-bold tracking-[0.2em] text-amber-800 flex items-center gap-1">
+                        XeJesUs Sanctuary Exegesis
+                        <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                      </p>
                       <p className="text-xs text-zinc-500 font-sans">Part II: Demographics & Consummation</p>
                     </div>
                     <div className="w-12 h-12 rounded-full border-2 border-amber-700/40 flex items-center justify-center font-bold text-amber-800 text-sm italic font-serif shadow-sm">
@@ -1118,6 +1471,13 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                       <p className="text-xs text-zinc-500 font-sans">{new Date().toLocaleDateString()}</p>
                     </div>
                   </div>
+
+                  {study.customName && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/15 border border-amber-800/20 text-amber-900 text-[9px] font-sans font-bold uppercase tracking-wider mt-1 shadow-sm">
+                      <Star className="w-2.5 h-2.5 text-amber-600 fill-amber-600" />
+                      <span>Antiquity Archive: "{study.customName}"</span>
+                    </div>
+                  )}
 
                   <h2 className="text-2xl font-serif font-black italic text-amber-950 pt-2 tracking-tight">
                     {study.title} (Part II)
@@ -1287,6 +1647,339 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                 <h3 className="text-xl font-serif font-bold text-text-primary italic">
                   {selectedImageModal.title}
                 </h3>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* SAVE ANTIQUITY MODAL */}
+      <AnimatePresence>
+        {showSaveModal && study && (
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative max-w-lg w-full bg-ui-card border border-ui-border rounded-3xl p-6 md:p-8 shadow-2xl space-y-6"
+            >
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-ui-sidebar border border-ui-border text-text-secondary flex items-center justify-center hover:text-text-primary transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent">
+                    Antiquities Archive Preservation
+                  </span>
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-text-primary italic">
+                  Save Then vs Now Antiquity
+                </h3>
+                <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
+                  Give this comparative exegesis a memorable name to preserve it in your personal sanctuary archive, print on your 2-Pager, and access anytime.
+                </p>
+              </div>
+
+              {/* Study Summary Tag */}
+              <div className="p-3.5 rounded-2xl bg-ui-sidebar/60 border border-ui-border space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-accent font-bold uppercase tracking-wider text-[10px]">Subject: {study.query}</span>
+                  <span className="text-text-secondary uppercase text-[10px] font-sans">Category: {study.category}</span>
+                </div>
+                <p className="font-serif italic text-text-primary text-sm font-semibold truncate">
+                  {study.title}
+                </p>
+                <p className="text-[11px] text-text-secondary font-mono truncate">
+                  Root: {study.originalName}
+                </p>
+              </div>
+
+              <form onSubmit={handleSaveAntiquity} className="space-y-5">
+                <div className="space-y-2">
+                  <label className="block text-xs font-sans font-bold uppercase tracking-wider text-text-primary">
+                    Custom Antiquity Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customNameInput}
+                    onChange={(e) => setCustomNameInput(e.target.value)}
+                    placeholder="Enter a descriptive study title..."
+                    autoFocus
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-bg-primary border border-ui-border text-text-primary text-sm font-serif italic focus:outline-none focus:border-accent shadow-inner transition-colors"
+                  />
+                  <p className="text-[10px] text-text-secondary font-sans">
+                    This name will appear on your Antiquities shelf and on your printed 2-Pager front header.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSaveModal(false)}
+                    className="px-5 py-2.5 rounded-xl bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary text-xs font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingAntiquity || !customNameInput.trim()}
+                    className="px-6 py-2.5 rounded-xl bg-accent text-bg-primary text-xs font-sans font-bold uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 shadow-md cursor-pointer"
+                  >
+                    {isSavingAntiquity ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-bg-primary border-t-transparent rounded-full animate-spin" />
+                        <span>Preserving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <BookmarkPlus className="w-4 h-4" />
+                        <span>Save Antiquity</span>
+                        <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* SAVED ANTIQUITIES ARCHIVE DRAWER / MODAL */}
+      <AnimatePresence>
+        {showArchiveDrawer && (
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative max-w-4xl w-full max-h-[90vh] bg-ui-card border border-ui-border rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            >
+              {/* Archive Top Header */}
+              <div className="p-6 md:p-8 border-b border-ui-border bg-ui-sidebar flex items-start justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent">
+                      Sanctuary Archive
+                    </span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-serif font-bold text-text-primary italic">
+                    My Saved Antiquities
+                  </h3>
+                  <p className="text-xs text-text-secondary font-serif italic">
+                    Browse, reopen, print, or manage your preserved 'Then vs Now' comparative exegesis studies.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowArchiveDrawer(false)}
+                  className="w-9 h-9 rounded-full bg-ui-card border border-ui-border text-text-secondary flex items-center justify-center hover:text-text-primary transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Archive Filter & Search Toolbar */}
+              <div className="p-4 md:px-8 border-b border-ui-border bg-bg-primary/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                {/* Search */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-secondary" />
+                  <input
+                    type="text"
+                    value={archiveSearchTerm}
+                    onChange={(e) => setArchiveSearchTerm(e.target.value)}
+                    placeholder="Search saved antiquities by name, subject, or title..."
+                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-ui-card border border-ui-border text-xs font-serif italic text-text-primary focus:outline-none focus:border-accent"
+                  />
+                  {archiveSearchTerm && (
+                    <button
+                      onClick={() => setArchiveSearchTerm('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'place', label: 'Places' },
+                    { id: 'people', label: 'Peoples' },
+                    { id: 'event', label: 'Events' },
+                    { id: 'phrase', label: 'Phrases' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setArchiveFilterCat(tab.id as any)}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-sans font-bold transition-all shrink-0 cursor-pointer ${
+                        archiveFilterCat === tab.id
+                          ? 'bg-accent text-bg-primary shadow-sm'
+                          : 'bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Archive Items List */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-4">
+                {loadingSaved ? (
+                  <div className="text-center py-16 space-y-3">
+                    <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-xs text-text-secondary font-serif italic">Accessing sacred archive vaults...</p>
+                  </div>
+                ) : filteredSavedAntiquities.length === 0 ? (
+                  <div className="text-center py-16 space-y-4 max-w-md mx-auto">
+                    <div className="w-16 h-16 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto border border-accent/20">
+                      <Bookmark className="w-8 h-8" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-lg font-serif font-bold text-text-primary italic">
+                        {savedAntiquities.length === 0 ? "No Antiquities Preserved Yet" : "No Matching Antiquities"}
+                      </h4>
+                      <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
+                        {savedAntiquities.length === 0 
+                          ? "When you examine a biblical place, people group, monumental event, or sacred phrase, click 'Save Antiquity' to name and store it here in your sacred archive." 
+                          : "Try searching with a different keyword or select 'All' categories."}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredSavedAntiquities.map((item) => (
+                      <div
+                        key={item.id}
+                        className="bg-ui-sidebar/60 border border-ui-border rounded-2xl p-5 hover:border-accent/40 transition-all space-y-3 flex flex-col justify-between shadow-sm group"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="px-2.5 py-0.5 rounded-md bg-accent/20 text-accent text-[9px] font-sans font-bold uppercase tracking-wider">
+                              {item.category}
+                            </span>
+                            <span className="text-[10px] text-text-secondary/60 font-sans">
+                              {(() => {
+                                try {
+                                  const d = item.savedAt ? new Date(item.savedAt) : new Date();
+                                  return d.toLocaleDateString();
+                                } catch {
+                                  return '';
+                                }
+                              })()}
+                            </span>
+                          </div>
+
+                          <div>
+                            <h4 className="text-base font-serif font-bold text-text-primary italic group-hover:text-accent transition-colors line-clamp-1">
+                              {item.customName || item.title}
+                            </h4>
+                            <p className="text-xs text-text-secondary font-serif italic line-clamp-1">
+                              Subject: <strong className="not-italic text-text-primary">{item.query}</strong> • {item.originalName}
+                            </p>
+                          </div>
+
+                          <p className="text-xs text-text-secondary italic line-clamp-2 bg-bg-primary/50 p-2.5 rounded-xl border border-ui-border/50 font-serif">
+                            "{item.godsIntentForBodyOfChrist || item.historicalMeaning}"
+                          </p>
+                        </div>
+
+                        {/* Card Action Buttons */}
+                        <div className="pt-3 border-t border-ui-border/60 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                setRenameTarget({ id: item.id!, currentName: item.customName || item.title });
+                                setRenameInput(item.customName || item.title);
+                              }}
+                              className="p-1.5 text-text-secondary hover:text-accent rounded-lg hover:bg-ui-card transition-colors cursor-pointer"
+                              title="Rename Antiquity"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteAntiquity(item.id!, e)}
+                              className="p-1.5 text-text-secondary/60 hover:text-red-400 rounded-lg hover:bg-ui-card transition-colors cursor-pointer"
+                              title="Delete Antiquity"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() => handleLoadAntiquity(item)}
+                            className="px-4 py-2 rounded-xl bg-accent text-bg-primary text-xs font-sans font-bold uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                          >
+                            <span>Open Study & 2-Pager</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* RENAME ANTIQUITY MODAL */}
+      <AnimatePresence>
+        {renameTarget && (
+          <div className="fixed inset-0 z-[230] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative max-w-md w-full bg-ui-card border border-ui-border rounded-3xl p-6 shadow-2xl space-y-5"
+            >
+              <div className="space-y-1">
+                <h4 className="text-xl font-serif font-bold text-text-primary italic">
+                  Rename Antiquity
+                </h4>
+                <p className="text-xs text-text-secondary font-serif italic">
+                  Update the archive title for this comparative study.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={renameInput}
+                  onChange={(e) => setRenameInput(e.target.value)}
+                  placeholder="New antiquity name..."
+                  autoFocus
+                  className="w-full px-4 py-3 rounded-xl bg-bg-primary border border-ui-border text-text-primary text-sm font-serif italic focus:outline-none focus:border-accent shadow-inner"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRenameTarget(null)}
+                  className="px-4 py-2 rounded-xl bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary text-xs font-sans font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRenameAntiquity(renameTarget.id, renameInput)}
+                  disabled={!renameInput.trim()}
+                  className="px-5 py-2 rounded-xl bg-accent text-bg-primary text-xs font-sans font-bold uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Update Name</span>
+                </button>
               </div>
             </motion.div>
           </div>

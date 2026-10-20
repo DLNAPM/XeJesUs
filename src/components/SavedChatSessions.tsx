@@ -36,9 +36,9 @@ import {
   Pause,
   Square,
   Crown,
-  ChevronRight,
   RotateCcw,
-  RotateCw
+  RotateCw,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PremiumOverlay from './PremiumOverlay';
@@ -632,10 +632,11 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                 <button 
                   onClick={() => handleExportLiteraryWork(session)}
                   className="py-2 px-3 bg-text-primary text-bg-primary hover:opacity-90 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Export Session as Professional Literary Work (PDF)"
+                  title="Export Session as Professional Literary Work (PDF) - Requires Premium Access"
                 >
                   <FileText className="w-3.5 h-3.5 text-accent" />
                   <span>Export PDF</span>
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)] shrink-0" />
                 </button>
               </div>
             </div>

@@ -222,6 +222,14 @@
       "schema": "Discussion",
       "description": "Shared inquiries within a group"
     },
+    "/users/{userId}/then_vs_now/{antiquityId}": {
+      "schema": { "type": "object", "properties": { "customName": { "type": "string" }, "query": { "type": "string" }, "title": { "type": "string" }, "category": { "type": "string" } } },
+      "description": "User saved Then vs Now antiquities"
+    },
+    "/then_vs_now/{antiquityId}": {
+      "schema": { "type": "object", "properties": { "customName": { "type": "string" }, "query": { "type": "string" }, "title": { "type": "string" }, "category": { "type": "string" } } },
+      "description": "Root saved Then vs Now antiquities"
+    },
     "/groups/{groupId}/discussions/{discussionId}/messages/{messageId}": {
       "schema": "Message",
       "description": "Conversation messages"

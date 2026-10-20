@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, collection, addDoc, handleFirestoreError, OperationType, serverTimestamp, getDoc, doc } from '../lib/firebase';
 import { generateExegesis, searchScriptureBySubject } from '../lib/gemini';
-import { Search, Loader2, Sparkles, BookOpen, Fingerprint } from 'lucide-react';
+import { Search, Loader2, Sparkles, BookOpen, Fingerprint, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PremiumOverlay from './PremiumOverlay';
 import { UserProfile } from '../types';
@@ -107,10 +107,12 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
               <button
                 type="button"
                 onClick={handleSubjectToggle}
-                className="text-xs font-sans font-black uppercase tracking-widest text-text-secondary hover:text-accent flex items-center gap-2 transition-colors border-b border-transparent hover:border-accent"
+                className="text-xs font-sans font-black uppercase tracking-widest text-text-secondary hover:text-accent flex items-center gap-1.5 transition-colors border-b border-transparent hover:border-accent"
+                title="Search Scripture by Subject (Requires Premium Access)"
               >
-                <Fingerprint className="w-3 h-3" />
-                {showSubjectSearch ? "Hide Subject Search" : "Don't know the scripture?"}
+                <Fingerprint className="w-3.5 h-3.5" />
+                <span>{showSubjectSearch ? "Hide Subject Search" : "Don't know the scripture?"}</span>
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)] shrink-0" />
               </button>
             </div>
 

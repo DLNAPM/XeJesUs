@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { getDbService, getAuthService, collection, query, orderBy, getDocs, deleteDoc, doc, addDoc, serverTimestamp, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Book, Search, Trash2, Loader2, ChevronRight, Lightbulb, Sparkles, Filter, X, Plus, AlertTriangle, ShieldCheck, CheckCircle2, Check } from 'lucide-react';
+import { Book, Search, Trash2, Loader2, ChevronRight, Lightbulb, Sparkles, Filter, X, Plus, AlertTriangle, ShieldCheck, CheckCircle2, Check, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface GlossaryEntry {
@@ -301,6 +301,10 @@ export default function Glossary() {
       <header className="mb-4 sm:mb-6 shrink-0">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-2">
           <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-sans font-bold uppercase tracking-wider mb-2 shadow-sm">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+              <span>Premium Lexicon Feature</span>
+            </div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-3xl sm:text-4xl font-serif text-text-primary italic font-bold">Lexicon of Truth</h1>
               {totalEntriesCount > 0 && (

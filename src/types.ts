@@ -171,6 +171,8 @@ export interface DemographicSect {
 
 export interface ThenVsNowData {
   id?: string;
+  customName?: string;
+  savedAt?: any;
   query: string;
   category: 'place' | 'people' | 'event' | 'phrase';
   userId?: string;

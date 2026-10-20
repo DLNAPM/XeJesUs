@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService, deleteDoc } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
-import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2, AlertTriangle, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { fetchDefinition } from '../lib/gemini';
@@ -547,10 +547,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       {/* Mobile & Notebook Ribbon of consolidated buttons at the top of the page */}
       <div className="xl:hidden grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-8">
         {[
-          { id: 'faith', label: "God's Intent", icon: Sparkles, emoji: '✨' },
-          { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
-          { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
-          { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
+          { id: 'faith', label: "God's Intent", icon: Sparkles, emoji: '✨', isPremium: false },
+          { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜', isPremium: false },
+          { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️', isPremium: false },
+          { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥', isPremium: true },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -562,7 +562,12 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
             }`}
           >
             <span className="text-base sm:text-lg">{tab.emoji}</span>
-            <span className="tracking-wide leading-tight">{tab.label}</span>
+            <span className="tracking-wide leading-tight flex items-center gap-1">
+              {tab.label}
+              {tab.isPremium && (
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400 drop-shadow-[0_0_3px_rgba(251,191,36,0.8)] shrink-0" />
+              )}
+            </span>
           </button>
         ))}
         <button
@@ -624,22 +629,29 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
           <div className="hidden xl:flex flex-col gap-2">
             {[
-              { id: 'faith', label: 'God\'s Intent', icon: Sparkles, emoji: '✨' },
-              { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜' },
-              { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️' },
-              { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥' },
+              { id: 'faith', label: 'God\'s Intent', icon: Sparkles, emoji: '✨', isPremium: false },
+              { id: 'academic', label: 'Exegesis & Context', icon: BookOpen, emoji: '📜', isPremium: false },
+              { id: 'geo', label: 'Geographical Journey', icon: Map, emoji: '🗺️', isPremium: false },
+              { id: 'video', label: 'Living Word Media', icon: Video, emoji: '🎥', isPremium: true },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id, tab.label)}
-                className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-left font-sans text-sm font-semibold border ${
+                className={`flex items-center justify-between px-6 py-4 rounded-xl transition-all text-left font-sans text-sm font-semibold border ${
                   activeTab === tab.id 
                     ? 'bg-text-primary text-bg-primary shadow-lg border-text-primary' 
                     : 'bg-ui-card hover:bg-ui-sidebar text-text-secondary border-ui-border'
                 }`}
               >
-                <span className="text-lg">{tab.emoji}</span>
-                <span className="tracking-wide">{tab.label}</span>
+                <div className="flex items-center gap-4">
+                  <span className="text-lg">{tab.emoji}</span>
+                  <span className="tracking-wide">{tab.label}</span>
+                </div>
+                {tab.isPremium && (
+                  <span title="Premium Access" className="inline-flex items-center">
+                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)] shrink-0" />
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -1244,7 +1256,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                 className="flex items-center gap-2 px-3.5 py-1.5 hover:bg-white/10 active:bg-white/20 rounded-xl transition-all group cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-accent group-hover:rotate-12 transition-transform" />
-                <span className="text-xs font-sans font-bold uppercase tracking-wider text-accent">Ask for Meaning</span>
+                <span className="text-xs font-sans font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
+                  Ask for Meaning
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                </span>
               </button>
             )}
             

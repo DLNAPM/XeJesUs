@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getDbService, getAuthService, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType, doc, getDoc } from '../lib/firebase';
 import { Inquiry } from '../types';
-import { FileText, Download, Printer, Loader2, ChevronRight, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Download, Printer, Loader2, ChevronRight, BookOpen, Clock, AlertCircle, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { exportElementToPdf } from '../utils/pdfExporter';
@@ -109,6 +109,10 @@ export default function Reports() {
   return (
     <div className="max-w-6xl mx-auto">
       <header className="mb-12">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-sans font-bold uppercase tracking-wider mb-3 shadow-sm">
+          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+          <span>Premium Sanctuary Exegesis</span>
+        </div>
         <h1 className="text-4xl font-serif text-text-primary mb-2 italic font-bold">Scholar's Registry</h1>
         <p className="text-text-secondary italic">Transform your spiritual seekings into professional exegesis reports.</p>
       </header>

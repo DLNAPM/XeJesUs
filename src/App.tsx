@@ -60,7 +60,8 @@ import {
   Globe,
   History,
   LogIn,
-  Compass
+  Compass,
+  Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -747,10 +748,11 @@ export default function App() {
            </button>
            <button 
              onClick={() => navigateToPage('then-vs-now', 'Then vs Now')} 
-             className={cn("p-2 transition-colors", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary/60")}
-             title="Then vs Now"
+             className={cn("p-2 transition-colors relative", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary/60")}
+             title="Then vs Now (Premium)"
            >
              <Compass className="w-5 h-5" />
+             <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 absolute top-1 right-1 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
            </button>
            <button 
              onClick={openSavedChatSessions} 
@@ -761,10 +763,11 @@ export default function App() {
            </button>
            <button 
              onClick={() => navigateToPage('reports', 'Reports Menu')} 
-             className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-primary/60")}
-             title="Reports"
+             className={cn("p-2 transition-colors relative", currentPage === 'reports' ? "text-accent" : "text-text-primary/60")}
+             title="Reports (Premium)"
            >
              <FileText className="w-5 h-5" />
+             <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 absolute top-1 right-1 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
            </button>
            <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
            {hasInquiries === false && (
@@ -848,12 +851,13 @@ export default function App() {
               id: 'then-vs-now', 
               label: 'Then vs Now', 
               icon: Compass,
+              isPremiumFeature: true,
               badge: !isPremium ? 'PREMIUM' : undefined 
             },
             { id: 'groups', label: 'My Study Groups', icon: Users },
             { id: 'saved-chats', label: 'Saved Chat Sessions', icon: History, onClick: openSavedChatSessions },
-            { id: 'reports', label: 'Reports Menu', icon: FileText },
-            { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap },
+            { id: 'reports', label: 'Reports Menu', icon: FileText, isPremiumFeature: true },
+            { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap, isPremiumFeature: true },
             { id: 'settings', label: 'Sanctuary Settings', icon: SettingsIcon },
             ...(isAdmin ? [{ 
               id: 'admin', 
@@ -873,8 +877,17 @@ export default function App() {
               )}
             >
               <div className="flex items-center gap-3">
-                <item.icon className="w-4 h-4" />
-                <span className="tracking-wide text-left">{item.label}</span>
+                <item.icon className="w-4 h-4 shrink-0" />
+                <span className="tracking-wide text-left flex items-center gap-1.5">
+                  {item.label}
+                  {item.isPremiumFeature && (
+                    <span title="Requires Premium Access" className="inline-flex items-center">
+                      <Star 
+                        className="w-3.5 h-3.5 text-amber-400 fill-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)] shrink-0" 
+                      />
+                    </span>
+                  )}
+                </span>
               </div>
               {item.badge && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-500 text-bg-primary text-[9px] font-black animate-pulse shadow-sm">
@@ -1104,7 +1117,10 @@ export default function App() {
                     className="flex flex-col items-center justify-center p-6 bg-accent/10 rounded-2xl border border-accent/30 gap-3 text-accent hover:bg-accent/20 transition-all col-span-2 shadow-sm"
                   >
                     <Compass className="w-6 h-6 text-accent" />
-                    <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary">Then vs Now (Antiquity vs Modern)</span>
+                    <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]" />
+                      Then vs Now (Antiquity vs Modern)
+                    </span>
                   </button>
                   <button 
                     onClick={openSavedChatSessions}
@@ -1114,15 +1130,28 @@ export default function App() {
                     <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary">Saved Chat Sessions</span>
                   </button>
                   <button 
+                    onClick={() => navigateToPage('reports', 'Reports Menu')}
+                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"
+                  >
+                    <FileText className="w-6 h-6" />
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />
+                      Reports
+                    </span>
+                  </button>
+                  <button 
                     onClick={() => navigateToPage('glossary', 'Lexicon Glossary')}
                     className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"
                   >
                     <GraduationCap className="w-6 h-6" />
-                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest">Glossary</span>
+                    <span className="text-[10px] font-sans font-bold uppercase tracking-widest flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />
+                      Glossary
+                    </span>
                   </button>
                   <button 
                     onClick={() => navigateToPage('settings', 'Sanctuary Settings')}
-                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all"
+                    className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-secondary hover:text-accent transition-all col-span-2"
                   >
                     <SettingsIcon className="w-6 h-6" />
                     <span className="text-[10px] font-sans font-bold uppercase tracking-widest">Settings</span>
