@@ -73,6 +73,7 @@ interface ThenVsNowProps {
 }
 
 const PRESET_TOPICS = [
+  { name: 'Golgotha & Calvary', category: 'place' as const, label: 'The Place of the Skull', era: 'Herodian Era (c. 30–33 A.D.) to Holy Sepulchre & Garden Tomb' },
   { name: 'Jerusalem', category: 'place' as const, label: 'Holy City of Zion', era: 'First Temple to 21st Century' },
   { name: 'Babylon & Euphrates', category: 'place' as const, label: 'Empire of Captivity', era: 'Neo-Babylonian to Modern Iraq' },
   { name: 'Mount Sinai & Wilderness', category: 'place' as const, label: 'Mountain of the Covenant', era: 'Exodus to Egyptian Desert' },
@@ -94,6 +95,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
   const [selectedImageModal, setSelectedImageModal] = useState<{ url: string; title: string; era: string } | null>(null);
   const [viewMode, setViewMode] = useState<'study' | 'two-pager'>('study');
   const [docPage, setDocPage] = useState<'both' | 'front' | 'back'>('both');
+  const [selectedModernSite, setSelectedModernSite] = useState<'primary' | 'secondary' | 'both'>('primary');
 
   // Saved Antiquities State
   const [savedAntiquities, setSavedAntiquities] = useState<ThenVsNowData[]>([]);
@@ -878,42 +880,204 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
 
                   {/* NOW: 21ST CENTURY MODERN REALITY */}
                   <div className="bg-ui-card border border-ui-border rounded-3xl overflow-hidden shadow-xl flex flex-col group hover:border-accent/40 transition-all">
-                    <div className="relative aspect-video bg-black/40 overflow-hidden">
-                      <img 
-                        src={study.nowVisual.imageUrl} 
-                        alt={study.nowVisual.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        crossOrigin="anonymous"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-                      
-                      <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-sans font-black uppercase tracking-widest shadow-md">
-                          Now: 21st Century Reality
+                    
+                    {/* Multi-Site Selector Tabs (e.g. Holy Sepulchre & Garden Tomb) */}
+                    {study.nowVisual.secondaryImageUrl && (
+                      <div className="p-3 bg-ui-sidebar/80 border-b border-ui-border flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 bg-ui-card p-1 rounded-xl border border-ui-border">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedModernSite('primary')}
+                            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-all cursor-pointer ${
+                              selectedModernSite === 'primary'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                          >
+                            1. {study.nowVisual.title}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedModernSite('secondary')}
+                            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-all cursor-pointer ${
+                              selectedModernSite === 'secondary'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                          >
+                            2. {study.nowVisual.secondaryTitle || 'The Garden Tomb'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedModernSite('both')}
+                            className={`px-3 py-1 rounded-lg text-xs font-sans font-bold transition-all cursor-pointer ${
+                              selectedModernSite === 'both'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-text-secondary hover:text-text-primary'
+                            }`}
+                          >
+                            Dual View (Both Sites)
+                          </button>
+                        </div>
+                        <span className="text-[10px] font-sans font-black text-blue-400 uppercase tracking-widest hidden sm:inline">
+                          2 Authenticated Relic Sites
                         </span>
                       </div>
+                    )}
 
-                      <button 
-                        onClick={() => setSelectedImageModal({ url: study.nowVisual.imageUrl, title: study.nowVisual.title, era: study.nowVisual.era })}
-                        className="absolute top-4 right-4 p-2 rounded-xl bg-black/60 text-white/80 hover:text-white transition-colors"
-                        title="Zoom Image"
-                      >
-                        <Maximize2 className="w-4 h-4" />
-                      </button>
+                    {/* Image Area */}
+                    {selectedModernSite === 'both' && study.nowVisual.secondaryImageUrl ? (
+                      /* Dual View: Both Modern Relic Sites */
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 bg-black/60 p-1">
+                        {/* Site 1: Holy Sepulchre */}
+                        <div className="relative aspect-video sm:aspect-square bg-black/40 overflow-hidden rounded-xl group/img">
+                          <img 
+                            src={study.nowVisual.imageUrl} 
+                            alt={study.nowVisual.title} 
+                            className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+                            crossOrigin="anonymous"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20" />
+                          <div className="absolute top-2 left-2">
+                            <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-sans font-black uppercase tracking-wider shadow">
+                              Site 1: Basilica
+                            </span>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => setSelectedImageModal({ url: study.nowVisual.imageUrl, title: study.nowVisual.title, era: study.nowVisual.era })}
+                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white/80 hover:text-white transition-colors cursor-pointer"
+                            title="Zoom Image"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <h5 className="text-sm font-serif font-bold text-white italic drop-shadow-md leading-tight">
+                              {study.nowVisual.title}
+                            </h5>
+                            <p className="text-[10px] font-sans text-blue-300">
+                              {study.nowVisual.era}
+                            </p>
+                          </div>
+                        </div>
 
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h4 className="text-lg font-serif font-bold text-white italic drop-shadow-md">
-                          {study.nowVisual.title}
-                        </h4>
-                        <p className="text-xs font-sans text-blue-300 uppercase tracking-wider">
-                          {study.nowVisual.era}
-                        </p>
+                        {/* Site 2: Garden Tomb */}
+                        <div className="relative aspect-video sm:aspect-square bg-black/40 overflow-hidden rounded-xl group/img">
+                          <img 
+                            src={study.nowVisual.secondaryImageUrl} 
+                            alt={study.nowVisual.secondaryTitle || 'The Garden Tomb'} 
+                            className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
+                            crossOrigin="anonymous"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20" />
+                          <div className="absolute top-2 left-2">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-sans font-black uppercase tracking-wider shadow">
+                              Site 2: Garden Tomb
+                            </span>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => setSelectedImageModal({ 
+                              url: study.nowVisual.secondaryImageUrl!, 
+                              title: study.nowVisual.secondaryTitle || 'The Garden Tomb', 
+                              era: study.nowVisual.secondaryEra || '21st Century Reality' 
+                            })}
+                            className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-white/80 hover:text-white transition-colors cursor-pointer"
+                            title="Zoom Image"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                          </button>
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <h5 className="text-sm font-serif font-bold text-white italic drop-shadow-md leading-tight">
+                              {study.nowVisual.secondaryTitle || 'The Garden Tomb'}
+                            </h5>
+                            <p className="text-[10px] font-sans text-emerald-300">
+                              {study.nowVisual.secondaryEra || '21st Century Reality (outside Damascus Gate)'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : selectedModernSite === 'secondary' && study.nowVisual.secondaryImageUrl ? (
+                      /* Single View: Secondary Site (e.g. Garden Tomb) */
+                      <div className="relative aspect-video bg-black/40 overflow-hidden">
+                        <img 
+                          src={study.nowVisual.secondaryImageUrl} 
+                          alt={study.nowVisual.secondaryTitle || 'The Garden Tomb'} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          crossOrigin="anonymous"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                        
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-sans font-black uppercase tracking-widest shadow-md">
+                            Now: The Garden Tomb Reality
+                          </span>
+                        </div>
+
+                        <button 
+                          type="button"
+                          onClick={() => setSelectedImageModal({ 
+                            url: study.nowVisual.secondaryImageUrl!, 
+                            title: study.nowVisual.secondaryTitle || 'The Garden Tomb', 
+                            era: study.nowVisual.secondaryEra || '21st Century Reality' 
+                          })}
+                          className="absolute top-4 right-4 p-2 rounded-xl bg-black/60 text-white/80 hover:text-white transition-colors cursor-pointer"
+                          title="Zoom Image"
+                        >
+                          <Maximize2 className="w-4 h-4" />
+                        </button>
+
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h4 className="text-lg font-serif font-bold text-white italic drop-shadow-md">
+                            {study.nowVisual.secondaryTitle || 'The Garden Tomb (Gordon\'s Calvary)'}
+                          </h4>
+                          <p className="text-xs font-sans text-emerald-300 uppercase tracking-wider">
+                            {study.nowVisual.secondaryEra || '21st Century Reality (outside Damascus Gate)'}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Single View: Primary Site (e.g. Holy Sepulchre) */
+                      <div className="relative aspect-video bg-black/40 overflow-hidden">
+                        <img 
+                          src={study.nowVisual.imageUrl} 
+                          alt={study.nowVisual.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          crossOrigin="anonymous"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                        
+                        <div className="absolute top-4 left-4">
+                          <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-sans font-black uppercase tracking-widest shadow-md">
+                            Now: 21st Century Reality
+                          </span>
+                        </div>
+
+                        <button 
+                          type="button"
+                          onClick={() => setSelectedImageModal({ url: study.nowVisual.imageUrl, title: study.nowVisual.title, era: study.nowVisual.era })}
+                          className="absolute top-4 right-4 p-2 rounded-xl bg-black/60 text-white/80 hover:text-white transition-colors cursor-pointer"
+                          title="Zoom Image"
+                        >
+                          <Maximize2 className="w-4 h-4" />
+                        </button>
+
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h4 className="text-lg font-serif font-bold text-white italic drop-shadow-md">
+                            {study.nowVisual.title}
+                          </h4>
+                          <p className="text-xs font-sans text-blue-300 uppercase tracking-wider">
+                            {study.nowVisual.era}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="p-6 md:p-8 space-y-4 flex-1 flex flex-col justify-between">
                       <p className="text-text-secondary font-serif italic text-sm leading-relaxed">
-                        {study.nowVisual.description}
+                        {selectedModernSite === 'secondary' && study.nowVisual.secondaryDescription 
+                          ? study.nowVisual.secondaryDescription 
+                          : study.nowVisual.description}
                       </p>
 
                       <div className="space-y-2 pt-3 border-t border-ui-border">
@@ -921,7 +1085,10 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                           Contemporary Infrastructure & Archaeological Reality:
                         </p>
                         <ul className="space-y-1.5">
-                          {study.nowVisual.modernHighlights?.map((item, i) => (
+                          {(selectedModernSite === 'secondary' && study.nowVisual.secondaryHighlights
+                            ? study.nowVisual.secondaryHighlights
+                            : study.nowVisual.modernHighlights
+                          )?.map((item, i) => (
                             <li key={i} className="flex items-start gap-2 text-xs text-text-primary font-serif">
                               <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
                               <span>{item}</span>
@@ -1376,28 +1543,78 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
 
                   {/* Now Image */}
                   <div className="border border-blue-800/20 rounded-xl overflow-hidden bg-blue-50/50 p-2.5 text-center space-y-2">
-                    <div className="aspect-[16/10] overflow-hidden rounded-lg bg-zinc-200">
-                      <img 
-                        src={study.nowVisual.imageUrl} 
-                        alt="Now" 
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous" 
-                      />
-                    </div>
-                    <div className="text-left px-1 space-y-1">
-                      <span className="text-[9px] font-sans font-black uppercase tracking-wider text-blue-800 block">
-                        Now: {study.nowVisual.era}
-                      </span>
-                      <p className="text-xs font-serif italic text-zinc-800 line-clamp-3">
-                        {study.nowVisual.description}
-                      </p>
-                      <div className="pt-1 border-t border-blue-800/10">
-                        <p className="text-[8px] font-sans font-bold uppercase text-blue-900">Modern Highlights:</p>
-                        <p className="text-[10px] text-zinc-700 italic">
-                          {study.nowVisual.modernHighlights?.slice(0, 2).join(' • ')}
-                        </p>
+                    {study.nowVisual.secondaryImageUrl ? (
+                      /* Dual-site layout for Golgotha (Holy Sepulchre + Garden Tomb) */
+                      <div className="space-y-1.5">
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <div className="aspect-[16/10] overflow-hidden rounded-md bg-zinc-200 relative">
+                            <img 
+                              src={study.nowVisual.imageUrl} 
+                              alt="Basilica of Holy Sepulchre" 
+                              className="w-full h-full object-cover"
+                              crossOrigin="anonymous" 
+                            />
+                            <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[7px] text-white font-sans font-bold">
+                              1. Holy Sepulchre
+                            </span>
+                          </div>
+                          <div className="aspect-[16/10] overflow-hidden rounded-md bg-zinc-200 relative">
+                            <img 
+                              src={study.nowVisual.secondaryImageUrl} 
+                              alt="The Garden Tomb" 
+                              className="w-full h-full object-cover"
+                              crossOrigin="anonymous" 
+                            />
+                            <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/70 text-[7px] text-white font-sans font-bold">
+                              2. The Garden Tomb
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-left px-1 space-y-1">
+                          <span className="text-[9px] font-sans font-black uppercase tracking-wider text-blue-800 block">
+                            Now: {study.nowVisual.era}
+                          </span>
+                          <p className="text-[10px] font-sans font-bold text-zinc-900 leading-tight">
+                            The Basilica of the Holy Sepulchre & The Garden Tomb
+                          </p>
+                          <p className="text-xs font-serif italic text-zinc-800 line-clamp-2">
+                            {study.nowVisual.description}
+                          </p>
+                          <div className="pt-1 border-t border-blue-800/10">
+                            <p className="text-[8px] font-sans font-bold uppercase text-blue-900">21st-Century Relics & Preserves:</p>
+                            <p className="text-[10px] text-zinc-700 italic">
+                              {study.nowVisual.modernHighlights?.slice(0, 2).join(' • ')}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      /* Standard single site layout */
+                      <>
+                        <div className="aspect-[16/10] overflow-hidden rounded-lg bg-zinc-200">
+                          <img 
+                            src={study.nowVisual.imageUrl} 
+                            alt="Now" 
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous" 
+                          />
+                        </div>
+                        <div className="text-left px-1 space-y-1">
+                          <span className="text-[9px] font-sans font-black uppercase tracking-wider text-blue-800 block">
+                            Now: {study.nowVisual.era}
+                          </span>
+                          <p className="text-xs font-serif italic text-zinc-800 line-clamp-3">
+                            {study.nowVisual.description}
+                          </p>
+                          <div className="pt-1 border-t border-blue-800/10">
+                            <p className="text-[8px] font-sans font-bold uppercase text-blue-900">Modern Highlights:</p>
+                            <p className="text-[10px] text-zinc-700 italic">
+                              {study.nowVisual.modernHighlights?.slice(0, 2).join(' • ')}
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 

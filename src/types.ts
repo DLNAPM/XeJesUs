@@ -191,6 +191,8 @@ export interface ThenVsNowData {
     title: string;
     description: string;
     imageUrl: string;
+    secondaryImageUrl?: string;
+    secondaryTitle?: string;
     architecturalHighlights: string[];
     era: string;
   };
@@ -198,6 +200,11 @@ export interface ThenVsNowData {
     title: string;
     description: string;
     imageUrl: string;
+    secondaryImageUrl?: string;
+    secondaryTitle?: string;
+    secondaryEra?: string;
+    secondaryDescription?: string;
+    secondaryHighlights?: string[];
     modernHighlights: string[];
     era: string;
   };

@@ -185,17 +185,19 @@ export default function Reports() {
               <button 
                 onClick={generatePDF}
                 disabled={isGenerating}
-                className="w-full bg-accent text-bg-primary py-4 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                className="w-full bg-accent text-bg-primary py-4 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Save as PDF
+                <span>Save as PDF</span>
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
               </button>
               <button 
                 onClick={handlePrint}
-                className="w-full bg-bg-primary/10 border border-bg-primary/20 text-bg-primary py-4 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-bg-primary/20 transition-all"
+                className="w-full bg-bg-primary/10 border border-bg-primary/20 text-bg-primary py-4 rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-bg-primary/20 transition-all cursor-pointer"
               >
                 <Printer className="w-4 h-4" />
-                Print Registry
+                <span>Print Registry</span>
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
               </button>
             </div>
           )}

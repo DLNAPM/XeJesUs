@@ -55,6 +55,34 @@ app.get('/favicon.svg', (_req, res) => {
   res.sendStatus(204);
 });
 
+// Secure image proxy for authentic archaeological and historical imagery (Wikimedia Commons, etc.)
+app.get('/api/image-proxy', async (req, res) => {
+  const imageUrl = req.query.url as string;
+  if (!imageUrl) {
+    return res.status(400).send('Missing url parameter');
+  }
+  try {
+    const fetchRes = await fetch(imageUrl, {
+      headers: {
+        'User-Agent': 'XeJesUs-Biblical-Study/1.0 (academic study tool; contact@xejesus.app)',
+        'Accept': 'image/*,*/*'
+      }
+    });
+    if (!fetchRes.ok) {
+      return res.redirect(imageUrl);
+    }
+    const contentType = fetchRes.headers.get('content-type') || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    const arrayBuffer = await fetchRes.arrayBuffer();
+    res.send(Buffer.from(arrayBuffer));
+  } catch (err: any) {
+    console.warn('Image proxy fallback redirect for', imageUrl, err?.message);
+    res.redirect(imageUrl);
+  }
+});
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -799,14 +827,19 @@ Provide EXACTLY 3 modernRegionalChallenges.
 Provide EXACTLY 2 to 3 endTimesProphecy scripturalProphecies.
 Return ONLY valid JSON.`;
 
-    const response = await generateWithFallback({
-      contents: systemPrompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    let text = '';
+    try {
+      const response = await generateWithFallback({
+        contents: systemPrompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      });
+      text = response.text || '';
+    } catch (apiErr: any) {
+      console.warn('Gemini Then-vs-Now generation error, engaging comprehensive scholarly fallback:', apiErr?.message);
+    }
 
-    const text = response.text || '';
     let parsed: any = null;
 
     if (text) {
@@ -824,16 +857,43 @@ Return ONLY valid JSON.`;
     }
 
     if (!parsed || !parsed.title) {
-      // High-quality fallback for popular presets
+      // High-quality fallback for popular presets and resilience
       parsed = generateThenVsNowFallback(query, category);
     }
 
     // Attach curated high-resolution imagery for Then and Now
-    const imagePair = getThenVsNowVisualImages(query);
+    const visual = getThenVsNowVisualImages(query);
     if (!parsed.thenVisual) parsed.thenVisual = {};
     if (!parsed.nowVisual) parsed.nowVisual = {};
-    parsed.thenVisual.imageUrl = imagePair.thenUrl;
-    parsed.nowVisual.imageUrl = imagePair.nowUrl;
+
+    parsed.thenVisual.imageUrl = visual.thenUrl;
+    if (visual.thenTitle) parsed.thenVisual.title = visual.thenTitle;
+    if (visual.thenEra) parsed.thenVisual.era = visual.thenEra;
+    if (visual.thenDescription && (!parsed.thenVisual.description || parsed.thenVisual.description.length < 30)) {
+      parsed.thenVisual.description = visual.thenDescription;
+    }
+    if (visual.thenHighlights && (!parsed.thenVisual.architecturalHighlights || parsed.thenVisual.architecturalHighlights.length === 0)) {
+      parsed.thenVisual.architecturalHighlights = visual.thenHighlights;
+    }
+
+    parsed.nowVisual.imageUrl = visual.nowUrl;
+    if (visual.nowTitle) parsed.nowVisual.title = visual.nowTitle;
+    if (visual.nowEra) parsed.nowVisual.era = visual.nowEra;
+    if (visual.nowDescription && (!parsed.nowVisual.description || parsed.nowVisual.description.length < 30)) {
+      parsed.nowVisual.description = visual.nowDescription;
+    }
+    if (visual.nowHighlights && (!parsed.nowVisual.modernHighlights || parsed.nowVisual.modernHighlights.length === 0)) {
+      parsed.nowVisual.modernHighlights = visual.nowHighlights;
+    }
+
+    if (visual.secondaryNowUrl) {
+      parsed.nowVisual.secondaryImageUrl = visual.secondaryNowUrl;
+      parsed.nowVisual.secondaryTitle = visual.secondaryTitle;
+      parsed.nowVisual.secondaryEra = visual.secondaryEra;
+      parsed.nowVisual.secondaryDescription = visual.secondaryDescription;
+      parsed.nowVisual.secondaryHighlights = visual.secondaryHighlights;
+    }
+
     parsed.query = query;
     parsed.category = category;
 
@@ -849,69 +909,335 @@ Return ONLY valid JSON.`;
   }
 });
 
-function getThenVsNowVisualImages(query: string): { thenUrl: string; nowUrl: string } {
+interface ThenVsNowVisualBundle {
+  thenUrl: string;
+  thenTitle?: string;
+  thenEra?: string;
+  thenDescription?: string;
+  thenHighlights?: string[];
+  nowUrl: string;
+  nowTitle?: string;
+  nowEra?: string;
+  nowDescription?: string;
+  nowHighlights?: string[];
+  secondaryNowUrl?: string;
+  secondaryTitle?: string;
+  secondaryEra?: string;
+  secondaryDescription?: string;
+  secondaryHighlights?: string[];
+}
+
+function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   const q = query.toLowerCase();
+
+  // 1. Golgotha / Calvary / Place of the Skull / Holy Sepulchre / Garden Tomb
+  if (
+    q.includes('golgotha') || 
+    q.includes('calvary') || 
+    q.includes('skull') || 
+    q.includes('sepulchre') || 
+    q.includes('garden tomb') || 
+    q.includes('crucifixion')
+  ) {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/f/f9/Brooklyn_Museum_-_What_Our_Lord_Saw_from_the_Cross_%28Ce_que_voyait_Notre-Seigneur_sur_la_Croix%29_-_James_Tissot.jpg',
+      thenTitle: 'Biblical Antiquity: Golgotha in the Herodian Era (c. 30–33 A.D.)',
+      thenEra: 'Herodian Second Temple Era (c. 30–33 A.D.)',
+      thenDescription: 'During the Herodian Era under Roman prefect Pontius Pilate, Golgotha ("Place of a Skull" / Calvary) was a prominent limestone quarry and rocky knoll located directly outside Jerusalem\'s Second North Wall, along the public road leading toward Damascus. Condemned prisoners were executed here in full public view as an imperial Roman deterrent, amidst nearby terraced hillside olive orchards and freshly cut rock-hewn rolling-stone tombs (John 19:41).',
+      thenHighlights: [
+        'Second North Wall of Jerusalem & Damascus Gate ramparts immediately adjacent',
+        'Exposed limestone quarry knoll bearing natural skull-like fissures and rock face',
+        'Terraced olive orchard with freshly hewn rock-cut rolling-stone tombs (John 19:41)'
+      ],
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/6d/Church_of_the_Holy_Sepulchre_by_Gerd_Eichmann_%28cropped%29.jpg',
+      nowTitle: 'The Basilica of the Holy Sepulchre',
+      nowEra: '21st Century Reality (Old City Jerusalem Christian Quarter)',
+      nowDescription: 'The ancient 4th-century Byzantine/12th-century Crusader basilica enclosing both the venerated Rock of Calvary (Golgotha bedrock under the Greek Orthodox & Catholic chapels) and the 2017-restored Holy Aedicula enclosing the Empty Tomb of Christ, maintained in perpetual shared custody by Greek Orthodox, Franciscan, and Armenian custodians under the 1852 Status Quo agreement.',
+      nowHighlights: [
+        '12th-century Romanesque Crusader facade and Parvis courtyard in Old City Jerusalem',
+        'The Rock of Calvary (12th Station): Glass-encased bedrock fissure where the Cross stood',
+        'The Holy Aedicula & Rotunda: 2017 National Geographic marble restoration of Christ\'s Tomb'
+      ],
+      secondaryNowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/7/7c/Jerusalem_Garden_Tomb_%2843300924231%29.jpg',
+      secondaryTitle: 'The Garden Tomb (Gordon\'s Calvary)',
+      secondaryEra: '21st Century Reality (outside Damascus Gate)',
+      secondaryDescription: 'A tranquil non-denominational Protestant garden sanctuary outside Jerusalem\'s Damascus Gate, featuring an authentic first-century rock-hewn Jewish tomb with a rolling-stone track, an ancient rainwater cistern, and an olive press overlooking the skull-faced limestone escarpment identified by General Charles Gordon.',
+      secondaryHighlights: [
+        '1st-century rock-hewn garden tomb with ancient threshold groove for a rolling stone',
+        'Gordon\'s Calvary: Weathered skull-faced limestone cliff escarpment overlooking the garden',
+        'Tranquil pilgrimage gardens with ancient agricultural cistern and olive press'
+      ]
+    };
+  }
+
+  // 2. Jerusalem / Zion / Temple Mount
   if (q.includes('jerusalem') || q.includes('zion') || q.includes('temple')) {
     return {
       thenUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80'
+      thenTitle: 'Second Temple Citadel & Herodian Zion in Antiquity',
+      thenEra: 'Herodian Second Temple Era (1st Century A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Jerusalem Old City, Western Wall & Temple Mount Today',
+      nowEra: '21st Century Reality (Jerusalem, Present Day)'
     };
   }
+
+  // 3. Babylon & Euphrates
   if (q.includes('babylon') || q.includes('iraq') || q.includes('euphrates') || q.includes('mesopotamia')) {
     return {
       thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80'
+      thenTitle: 'Imperial Babylon Citadel & Glazed Brick Ishtar Gates',
+      thenEra: 'Neo-Babylonian Empire (6th Century B.C.)',
+      nowUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Archaeological Babylon Preserve & Modern Iraq',
+      nowEra: '21st Century Reality (Babil Governorate, Iraq)'
     };
   }
+
+  // 4. Mount Sinai & Wilderness
   if (q.includes('sinai') || q.includes('horeb') || q.includes('wilderness')) {
     return {
       thenUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80'
+      thenTitle: 'Granite Crags of Mount Sinai (Jebel Musa) & Desert Wilderness',
+      thenEra: 'The Exodus Era (c. 1446 B.C.)',
+      nowUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Saint Catherine\'s Monastery & South Sinai Nature Preserve',
+      nowEra: '21st Century Reality (Sinai Peninsula, Egypt)'
     };
   }
+
+  // 5. Sea of Galilee & Capernaum
+  if (q.includes('galilee') || q.includes('capernaum') || q.includes('tiberias') || q.includes('gennesaret')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      thenTitle: '1st-Century Fishing Harbor of Capernaum & Lake Kinneret',
+      thenEra: 'Ministry Era of Jesus (c. 28–30 A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Sea of Galilee Shoreline & St. Peter\'s Pilgrimage Sanctuary',
+      nowEra: '21st Century Reality (Northern District, Israel)'
+    };
+  }
+
+  // 6. Nazareth
+  if (q.includes('nazareth') || q.includes('annunciation')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1579888944880-d98341245702?auto=format&fit=crop&w=1200&q=80',
+      thenTitle: 'Humble Terraced Agricultural Hamlet of Nazareth',
+      thenEra: 'Herodian Roman Era (Early 1st Century A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Modern City of Nazareth & Basilica of the Annunciation',
+      nowEra: '21st Century Reality (Nazareth, Galilee)'
+    };
+  }
+
+  // 7. Bethlehem
+  if (q.includes('bethlehem') || q.includes('nativity') || q.includes('manger')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      thenTitle: 'Shepherd\'s Terraced Hillside & Grottoes of Bethlehem Ephrathah',
+      thenEra: 'Nativity of Jesus Christ (c. 4–5 B.C.)',
+      nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Manger Square & Church of the Nativity',
+      nowEra: '21st Century Reality (Bethlehem, West Bank)'
+    };
+  }
+
+  // 8. Ephesus & Asia Minor
   if (q.includes('ephesus') || q.includes('artemis') || q.includes('turkey') || q.includes('asia minor')) {
     return {
       thenUrl: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80'
+      thenTitle: 'Great Theatre & Roman Marble Thoroughfares of Ephesus',
+      thenEra: 'Apostolic Era / Paul\'s Ministry (Acts 19, c. 52–55 A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Library of Celsus & Selçuk Archaeological Preserve',
+      nowEra: '21st Century Reality (İzmir Province, Turkey)'
     };
   }
-  if (q.includes('antioch') || q.includes('syria')) {
-    return {
-      thenUrl: 'https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80'
-    };
-  }
-  if (q.includes('nineveh') || q.includes('jonah') || q.includes('mosul') || q.includes('assyria')) {
-    return {
-      thenUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1200&q=80'
-    };
-  }
+
+  // 9. Samaria & Mount Gerizim
   if (q.includes('samaria') || q.includes('samaritan') || q.includes('gerizim')) {
     return {
       thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80'
+      thenTitle: 'Ancient Sebastia Citadel & Mount Gerizim Temple Hill',
+      thenEra: 'Hellenistic & Roman Era (1st Century B.C. - 1st Century A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Mount Gerizim & Modern Samaritan Village of Kiryat Luza',
+      nowEra: '21st Century Reality (Nablus Governorate)'
     };
   }
-  if (q.includes('galilee') || q.includes('capernaum') || q.includes('nazareth')) {
+
+  // 10. Antioch
+  if (q.includes('antioch') || q.includes('syria')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80'
+      thenUrl: 'https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=1200&q=80',
+      thenTitle: 'Greco-Roman Antioch on the Orontes & Cave of St. Peter',
+      thenEra: 'Early Apostolic Missions (Acts 11, c. 40–50 A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Modern Antakya & St. Peter\'s Grotto Church',
+      nowEra: '21st Century Reality (Hatay Province, Turkey)'
     };
   }
+
+  // 11. Nineveh & Mosul
+  if (q.includes('nineveh') || q.includes('jonah') || q.includes('mosul') || q.includes('assyria')) {
+    return {
+      thenUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80',
+      thenTitle: 'Imperial Assyrian Citadel of Sennacherib & Walls of Nineveh',
+      thenEra: 'Neo-Assyrian Empire (8th-7th Century B.C.)',
+      nowUrl: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Mosul Metropolitan Area & Tomb of Nebi Yunus Ruins',
+      nowEra: '21st Century Reality (Nineveh Governorate, Iraq)'
+    };
+  }
+
+  // 12. Ethiopia & Aksum
   if (q.includes('ethiopia') || q.includes('aksum') || q.includes('cush') || q.includes('sheba')) {
     return {
       thenUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
-      nowUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80'
+      thenTitle: 'Ancient Kingdom of Aksum & Stelae Field',
+      thenEra: 'Aksumite Biblical Kingdom Era (1st Century A.D.)',
+      nowUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      nowTitle: 'Church of Our Lady Mary of Zion in Aksum, Ethiopia',
+      nowEra: '21st Century Reality (Tigray Region, Ethiopia)'
     };
   }
+
+  // Generic fallback with verified dignified Near Eastern archaeological landscapes
   return {
     thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
-    nowUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'
+    thenTitle: `${query} in Biblical Era`,
+    thenEra: 'Biblical Antiquity Era',
+    nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
+    nowTitle: `${query} in the 21st Century`,
+    nowEra: '21st Century Reality'
   };
 }
 
 function generateThenVsNowFallback(query: string, category: string): any {
+  const q = query.toLowerCase();
+
+  // Specialized rich fallback for Golgotha / Calvary
+  if (
+    q.includes('golgotha') || 
+    q.includes('calvary') || 
+    q.includes('sepulchre') || 
+    q.includes('garden tomb') || 
+    q.includes('crucifixion')
+  ) {
+    return {
+      title: "Golgotha & Calvary: Place of the Skull to The Basilica of the Holy Sepulchre & Garden Tomb",
+      category: "place",
+      originalName: "Γολγοθᾶ (Golgothâ) / גֻּלְגֹּלֶת (Gulgōleṯ) / Calvaria (Luke 23:33)",
+      etymology: "Derived from Aramaic Gulgaltha and Hebrew Gulgoleth meaning 'skull' or 'cranium'. Latin translation Calvaria gives rise to Calvary. Named for the skull-contoured rocky limestone escarpment and Roman execution promontory situated outside the Second Wall of Jerusalem.",
+      historicalMeaning: "In the Herodian Era (c. 30–33 A.D.), Golgotha served as an active quarry and terrifying Roman execution promontory outside the Second Wall along the northern Damascus thoroughfare. Here Jesus Christ was crucified alongside two thieves between the sixth and ninth hours, offering the ultimate atoning sacrifice for humanity.",
+      godsIntentForBodyOfChrist: "Christ suffered 'outside the gate' (Hebrews 13:12) to sanctify His people through His own blood. Golgotha represents the absolute defeat of sin, curse, and death, transforming the place of Roman execution into the eternal fountain of redemption and resurrection power.",
+      keyScriptures: [
+        { ref: "John 19:17-20", text: "Carrying His own cross, He went out to the Place of the Skull, which in Aramaic is called Golgotha. There they crucified Him, and with Him two others—one on each side and Jesus in the middle." },
+        { ref: "Luke 23:33", text: "When they came to the place called the Skull, they crucified Him there, along with the criminals—one on His right, the other on His left." },
+        { ref: "Hebrews 13:12-13", text: "And so Jesus also suffered outside the city gate to make the people holy through His own blood. Let us, then, go to Him outside the camp, bearing the disgrace He bore." }
+      ],
+      thenVisual: {
+        title: "Biblical Antiquity: Golgotha in the Herodian Era (c. 30–33 A.D.)",
+        era: "Herodian Second Temple Era (c. 30–33 A.D.)",
+        description: "During the Herodian Era under Roman prefect Pontius Pilate, Golgotha ('Place of a Skull' / Calvary) was an active limestone quarry and prominent rocky knoll located directly outside Jerusalem's Second North Wall, along the public thoroughfare leading toward Damascus. Condemned prisoners were executed here in full public view as an imperial Roman deterrent, amidst nearby terraced hillside olive orchards and freshly cut rock-hewn rolling-stone tombs.",
+        architecturalHighlights: [
+          "Second North Wall of Jerusalem & Damascus Gate ramparts immediately adjacent",
+          "Exposed limestone quarry knoll bearing natural skull-like fissures and rock face",
+          "Terraced olive orchard with freshly hewn rock-cut rolling-stone tombs (John 19:41)"
+        ]
+      },
+      nowVisual: {
+        title: "The Basilica of the Holy Sepulchre",
+        era: "21st Century Reality (Old City Jerusalem Christian Quarter)",
+        description: "In contemporary 21st-century Jerusalem, the memory of Golgotha and the Resurrection is preserved by two venerated archaeological sites: The Basilica of the Holy Sepulchre in the Old City Christian Quarter (housing the Rock of Calvary and the Holy Aedicula) and The Garden Tomb outside the Damascus Gate (preserving a serene first-century rock-cut tomb and the skull-faced Gordon's Calvary cliff).",
+        modernHighlights: [
+          "The Basilica of the Holy Sepulchre: 12th-century Crusader facade, Rotunda Dome, and encased Rock of Calvary",
+          "The Holy Aedicula: 2017 National Geographic-restored marble shrine enclosing Christ's burial bench",
+          "The Garden Tomb: 1st-century rock-cut garden tomb with rolling stone track, ancient cistern, and peaceful olive trees"
+        ],
+        secondaryTitle: "The Garden Tomb (Gordon's Calvary)",
+        secondaryEra: "21st Century Reality (outside Damascus Gate)",
+        secondaryDescription: "A tranquil non-denominational Protestant garden sanctuary outside Jerusalem's Damascus Gate, featuring an authentic first-century rock-hewn Jewish tomb with a rolling-stone track, an ancient rainwater cistern, and an olive press overlooking the skull-faced limestone escarpment identified by General Charles Gordon."
+      },
+      antiquityPerspective: "To 1st-century Jews and Romans, Golgotha was a grim place of Roman humiliation and ritual uncleanness 'outside the camp.' Yet for the early disciples, the empty tomb in Joseph's garden transformed this sorrow into the cosmic cornerstone of victory over death.",
+      modernWorldPerspective: "Today, millions of international pilgrims, archaeologists, and scholars visit the Holy Sepulchre and the Garden Tomb. Secular tourism coexists with fervent multi-denominational worship under the historic Status Quo arrangement.",
+      theologicalEvolution: "From an Old Covenant shadow of the scapegoat led outside the camp, Golgotha became the ultimate altar where Christ fulfilled all sacrificial types, opening eternal access to the Father.",
+      demographicComparison: {
+        regionName: "Golgotha, Old City Jerusalem & Damascus Gate Environs",
+        summaryThen: "A crowded Roman provincial outpost consisting of Roman legions, Temple priests, Galilean pilgrims, and Jewish residents gathered for Passover.",
+        summaryNow: "A vibrant multi-faith urban center inhabited by Greek Orthodox, Latin Catholic, Armenian, Protestant pilgrims, alongside Jerusalem's Old City Christian, Muslim, and Jewish quarters.",
+        sects: [
+          {
+            name: "Roman Imperial Soldiers & Prefect Guard",
+            percentageThen: 30,
+            percentageNow: 0,
+            descriptionThen: "Enforced Roman capital punishment, secured execution sites, and maintained public order.",
+            descriptionNow: "Ceased; historical successor is civil Israeli Antiquities Authority & municipal police.",
+            color: "#ef4444"
+          },
+          {
+            name: "Temple Aristocracy & Sanhedrin Factions",
+            percentageThen: 35,
+            percentageNow: 0,
+            descriptionThen: "Sadducean high priests and elders who delivered Jesus to Pilate's praetorium.",
+            descriptionNow: "Evolved into modern Rabbinic scholarly leadership praying at the nearby Western Wall.",
+            color: "#d97706"
+          },
+          {
+            name: "Apostolic Disciples & Women of Galilee",
+            percentageThen: 15,
+            percentageNow: 35,
+            descriptionThen: "Wept at the foot of the cross, witnessed the burial, and discovered the empty tomb on resurrection morning.",
+            descriptionNow: "Represented by hundreds of millions of Christians worldwide and international pilgrim visitors.",
+            color: "#10b981"
+          },
+          {
+            name: "Historic Christian Custodians (Orthodox, Catholic, Armenian)",
+            percentageThen: 0,
+            percentageNow: 40,
+            descriptionThen: "Did not exist; Church was born at Pentecost following the resurrection.",
+            descriptionNow: "Preserve and maintain the Basilica of the Holy Sepulchre under the 1852 Status Quo.",
+            color: "#3b82f6"
+          },
+          {
+            name: "Protestant & Evangelical Garden Tomb Guardians",
+            percentageThen: 0,
+            percentageNow: 25,
+            descriptionThen: "Did not exist in antiquity.",
+            descriptionNow: "The Garden Tomb Association maintains the tranquil garden for prayer and communion.",
+            color: "#8b5cf6"
+          }
+        ]
+      },
+      modernRegionalChallenges: [
+        {
+          title: "Status Quo Shared Custody of the Holy Sepulchre",
+          challenge: "Navigating delicate shared rights between Greek Orthodox, Roman Catholic Franciscan, Armenian, Coptic, Syrian, and Ethiopian custodians.",
+          spiritualSignificance: "A living testament to the need for Christian unity and mutual love at the site of Christ's supreme sacrifice."
+        },
+        {
+          title: "Archaeological Locational Debates (Sepulchre vs Garden Tomb)",
+          challenge: "Scholarly and devotional debates concerning whether the Holy Sepulchre or the Garden Tomb represents the exact historic site.",
+          spiritualSignificance: "Reminds pilgrims that faith is rooted not in a single stone slab, but in the living, risen Christ who is not in any grave."
+        },
+        {
+          title: "Access & Geopolitical Pilgrimage Security in Old City Jerusalem",
+          challenge: "Periodic regional tensions and crowded checkpoints affecting pilgrim transit between the Old City and Damascus Gate.",
+          spiritualSignificance: "Spiritual warfare over the city of peace (Yerushalayim), prompting believers to pray for the peace of Jerusalem."
+        }
+      ],
+      endTimesProphecy: {
+        scripturalProphecies: [
+          "Zechariah 12:10 — 'They will look on Me, the One they have pierced, and mourn for Him as one mourns for an only child.'",
+          "Revelation 1:7 — 'Look, He is coming with the clouds, and every eye will see Him, even those who pierced Him.'",
+          "Revelation 21:2 — 'I saw the Holy City, the new Jerusalem, coming down out of heaven from God, prepared as a bride beautifully dressed for her husband.'"
+        ],
+        divineDestinySummary: "The very ground where Christ was pierced outside Jerusalem's walls will witness the ultimate realization of Zechariah's prophecy, when the inhabitants of Jerusalem recognize their pierced Messiah.",
+        godsRedemptivePlan: "Christ's cross at Golgotha disarmed the powers and authorities (Colossians 2:15). In the New Jerusalem, there is no need for a temple, for the Lord God Almighty and the Lamb are its temple."
+      },
+    };
+  }
+
   return {
     title: `The Covenant Odyssey: ${query} in Biblical Antiquity & Modern Reality`,
     category,

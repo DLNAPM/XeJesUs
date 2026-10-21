@@ -821,6 +821,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                           className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
                         />
+                        <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-amber-400/40 text-amber-400 shadow-md flex items-center gap-1.5 text-[10px] font-sans font-bold">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                          <span>Magnify</span>
+                        </div>
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex items-end">
                           <span className="text-white font-serif italic text-xl">In Biblical Times</span>
                         </div>
@@ -845,6 +849,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                           className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
                         />
+                        <div className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm border border-amber-400/40 text-amber-400 shadow-md flex items-center gap-1.5 text-[10px] font-sans font-bold">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400 shrink-0" />
+                          <span>Magnify</span>
+                        </div>
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex items-end">
                           <span className="text-white font-serif italic text-xl">Region Today</span>
                         </div>
