@@ -976,20 +976,20 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
       thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
       thenTitle: 'Second Temple Citadel & Herodian Zion in Antiquity',
       thenEra: 'Herodian Second Temple Era (1st Century A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
       nowTitle: 'Jerusalem Old City, Western Wall & Temple Mount Today',
-      nowEra: '21st Century Reality (Jerusalem, Present Day)'
+      nowEra: '21st Century Reality (Jerusalem Old City)'
     };
   }
 
   // 3. Babylon & Euphrates
   if (q.includes('babylon') || q.includes('iraq') || q.includes('euphrates') || q.includes('mesopotamia')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/c/cc/Pergamon_Museum_Ishtar_Gate_from_Babylon_text_8073.jpg',
       thenTitle: 'Imperial Babylon Citadel & Glazed Brick Ishtar Gates',
       thenEra: 'Neo-Babylonian Empire (6th Century B.C.)',
-      nowUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80',
-      nowTitle: 'Archaeological Babylon Preserve & Modern Iraq',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/b/b7/Processional_Way%2C_Babylon_-_Google_Art_Project.jpg',
+      nowTitle: 'Archaeological Babylon Processional Preserve & Modern Iraq',
       nowEra: '21st Century Reality (Babil Governorate, Iraq)'
     };
   }
@@ -997,10 +997,10 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 4. Mount Sinai & Wilderness
   if (q.includes('sinai') || q.includes('horeb') || q.includes('wilderness')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/6b/Katharinenkloster_Sinai_BW_2.jpg',
       thenTitle: 'Granite Crags of Mount Sinai (Jebel Musa) & Desert Wilderness',
       thenEra: 'The Exodus Era (c. 1446 B.C.)',
-      nowUrl: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/e/e2/Katharinaklooster_R01.jpg',
       nowTitle: 'Saint Catherine\'s Monastery & South Sinai Nature Preserve',
       nowEra: '21st Century Reality (Sinai Peninsula, Egypt)'
     };
@@ -1009,11 +1009,11 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 5. Sea of Galilee & Capernaum
   if (q.includes('galilee') || q.includes('capernaum') || q.includes('tiberias') || q.includes('gennesaret')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-      thenTitle: '1st-Century Fishing Harbor of Capernaum & Lake Kinneret',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
+      thenTitle: '1st-Century Fishing Waters of Capernaum & Lake Kinneret',
       thenEra: 'Ministry Era of Jesus (c. 28–30 A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80',
-      nowTitle: 'Sea of Galilee Shoreline & St. Peter\'s Pilgrimage Sanctuary',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/e/e6/ISRAEL%2C_Tabgha%2C_Sea_of_Galilee_%283%29.JPG',
+      nowTitle: 'Sea of Galilee Shoreline & Tabgha Pilgrimage Sanctuary',
       nowEra: '21st Century Reality (Northern District, Israel)'
     };
   }
@@ -1021,10 +1021,10 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 6. Nazareth
   if (q.includes('nazareth') || q.includes('annunciation')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1579888944880-d98341245702?auto=format&fit=crop&w=1200&q=80',
-      thenTitle: 'Humble Terraced Agricultural Hamlet of Nazareth',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
+      thenTitle: 'Humble Terraced Agricultural Hamlet of Nazareth in Antiquity',
       thenEra: 'Herodian Roman Era (Early 1st Century A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/c/ca/Basilica_of_the_Annunciation%2C_Nazareth%2C_Israel_11.jpg',
       nowTitle: 'Modern City of Nazareth & Basilica of the Annunciation',
       nowEra: '21st Century Reality (Nazareth, Galilee)'
     };
@@ -1033,10 +1033,10 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 7. Bethlehem
   if (q.includes('bethlehem') || q.includes('nativity') || q.includes('manger')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
       thenTitle: 'Shepherd\'s Terraced Hillside & Grottoes of Bethlehem Ephrathah',
       thenEra: 'Nativity of Jesus Christ (c. 4–5 B.C.)',
-      nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/4/46/Church_of_the_Nativity_Bethlehem.jpg',
       nowTitle: 'Manger Square & Church of the Nativity',
       nowEra: '21st Century Reality (Bethlehem, West Bank)'
     };
@@ -1045,10 +1045,10 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 8. Ephesus & Asia Minor
   if (q.includes('ephesus') || q.includes('artemis') || q.includes('turkey') || q.includes('asia minor')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1565008447742-97f6f38c985c?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/8/84/Ephesus_Celsus_Library_Fa%C3%A7ade.jpg',
       thenTitle: 'Great Theatre & Roman Marble Thoroughfares of Ephesus',
       thenEra: 'Apostolic Era / Paul\'s Ministry (Acts 19, c. 52–55 A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/8/84/Ephesus_Celsus_Library_Fa%C3%A7ade.jpg',
       nowTitle: 'Library of Celsus & Selçuk Archaeological Preserve',
       nowEra: '21st Century Reality (İzmir Province, Turkey)'
     };
@@ -1057,10 +1057,10 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 9. Samaria & Mount Gerizim
   if (q.includes('samaria') || q.includes('samaritan') || q.includes('gerizim')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
       thenTitle: 'Ancient Sebastia Citadel & Mount Gerizim Temple Hill',
       thenEra: 'Hellenistic & Roman Era (1st Century B.C. - 1st Century A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
       nowTitle: 'Mount Gerizim & Modern Samaritan Village of Kiryat Luza',
       nowEra: '21st Century Reality (Nablus Governorate)'
     };
@@ -1069,11 +1069,11 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 10. Antioch
   if (q.includes('antioch') || q.includes('syria')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1507434965515-61970f2bd7c6?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
       thenTitle: 'Greco-Roman Antioch on the Orontes & Cave of St. Peter',
       thenEra: 'Early Apostolic Missions (Acts 11, c. 40–50 A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1518684079-3c830dcef090?auto=format&fit=crop&w=1200&q=80',
-      nowTitle: 'Modern Antakya & St. Peter\'s Grotto Church',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
+      nowTitle: 'Modern Antakya & St. Peter\'s Grotto Church Environs',
       nowEra: '21st Century Reality (Hatay Province, Turkey)'
     };
   }
@@ -1081,11 +1081,11 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 11. Nineveh & Mosul
   if (q.includes('nineveh') || q.includes('jonah') || q.includes('mosul') || q.includes('assyria')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/c/cc/Pergamon_Museum_Ishtar_Gate_from_Babylon_text_8073.jpg',
       thenTitle: 'Imperial Assyrian Citadel of Sennacherib & Walls of Nineveh',
       thenEra: 'Neo-Assyrian Empire (8th-7th Century B.C.)',
-      nowUrl: 'https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=1200&q=80',
-      nowTitle: 'Mosul Metropolitan Area & Tomb of Nebi Yunus Ruins',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/b/b7/Processional_Way%2C_Babylon_-_Google_Art_Project.jpg',
+      nowTitle: 'Mosul Metropolitan Area & Mounds of Ancient Nineveh',
       nowEra: '21st Century Reality (Nineveh Governorate, Iraq)'
     };
   }
@@ -1093,23 +1093,71 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 12. Ethiopia & Aksum
   if (q.includes('ethiopia') || q.includes('aksum') || q.includes('cush') || q.includes('sheba')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/b/b0/Aksum_obelisk.jpg',
       thenTitle: 'Ancient Kingdom of Aksum & Stelae Field',
       thenEra: 'Aksumite Biblical Kingdom Era (1st Century A.D.)',
-      nowUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/b/b0/Aksum_obelisk.jpg',
       nowTitle: 'Church of Our Lady Mary of Zion in Aksum, Ethiopia',
       nowEra: '21st Century Reality (Tigray Region, Ethiopia)'
     };
   }
 
-  // Generic fallback with verified dignified Near Eastern archaeological landscapes
+  // 13. Pentecost & Upper Room / Cenacle
+  if (q.includes('pentecost') || q.includes('upper room') || q.includes('cenacle')) {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
+      thenTitle: 'Mount Zion Apostolic Assembly in Biblical Jerusalem',
+      thenEra: 'Apostolic Pentecost Era (Acts 2, c. 33 A.D.)',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
+      nowTitle: 'Mount Zion Cenacle & Old City Christian Sanctuary Today',
+      nowEra: '21st Century Reality (Mount Zion, Jerusalem)'
+    };
+  }
+
+  // 14. Pharisees & Sadducees / Scribes / Sanhedrin
+  if (q.includes('pharisee') || q.includes('sadducee') || q.includes('sanhedrin') || q.includes('scribe')) {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
+      thenTitle: 'Second Temple Courts & Sanhedrin Chamber of Hewn Stones',
+      thenEra: 'Herodian Second Temple Era (1st Century A.D.)',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
+      nowTitle: 'Western Wall Prayers & Historic Jewish Quarter Rabbinic Academies',
+      nowEra: '21st Century Reality (Old City Jewish Quarter)'
+    };
+  }
+
+  // 15. The Exodus & Red Sea
+  if (q.includes('exodus') || q.includes('red sea') || q.includes('passover')) {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/6b/Katharinenkloster_Sinai_BW_2.jpg',
+      thenTitle: 'Red Sea Crossing Shoreline & Ancient Sinai Wilderness Route',
+      thenEra: 'The Exodus Era (c. 1446 B.C.)',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/e/e2/Katharinaklooster_R01.jpg',
+      nowTitle: 'Sinai Peninsula Coastline & Mount Sinai National Preserve',
+      nowEra: '21st Century Reality (Sinai Peninsula, Egypt)'
+    };
+  }
+
+  // 16. Body of Christ / Church / Apostles
+  if (q.includes('body of christ') || q.includes('church') || q.includes('apostle') || q.includes('covenant')) {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
+      thenTitle: 'Apostolic Fellowship & Early Church Gatherings in Jerusalem',
+      thenEra: 'Apostolic Era (1st Century A.D.)',
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
+      nowTitle: 'Global Fellowship of Believers & Historic Holy Land Sanctuaries',
+      nowEra: '21st Century Reality (Global Church)'
+    };
+  }
+
+  // Generic fallback: Authentic Second Temple Herodian Jerusalem Model and Contemporary Old City Jerusalem
   return {
-    thenUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
-    thenTitle: `${query} in Biblical Era`,
-    thenEra: 'Biblical Antiquity Era',
-    nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
+    thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
+    thenTitle: `${query} in Biblical Antiquity`,
+    thenEra: 'Biblical Era / Classical Antiquity',
+    nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
     nowTitle: `${query} in the 21st Century`,
-    nowEra: '21st Century Reality'
+    nowEra: '21st Century Reality (Contemporary Holy Land)'
   };
 }
 

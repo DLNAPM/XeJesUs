@@ -324,9 +324,14 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
     const cat = targetCategory || category;
     if (!q) return;
 
-    // Premium Check: Allow free demo excavations for Jerusalem and Golgotha / Calvary
+    // Premium Check: Allow free demo excavations for all curated presets & core biblical sites
     const qLower = q.toLowerCase();
-    const isFreeDemo = qLower.includes('jerusalem') || qLower.includes('golgotha') || qLower.includes('calvary') || qLower.includes('skull');
+    const isFreeDemo = 
+      qLower.includes('jerusalem') || 
+      qLower.includes('golgotha') || 
+      qLower.includes('calvary') || 
+      qLower.includes('skull') ||
+      PRESET_TOPICS.some(p => p.name.toLowerCase().includes(qLower) || qLower.includes(p.name.toLowerCase()));
     if (!isPremium && !isFreeDemo) {
       onUpgradeRequest();
       return;
