@@ -354,12 +354,12 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
     }
   };
 
-  // Auto-load Golgotha & Calvary on initial mount so pilgrim immediately experiences Then vs Now side-by-side
-  useEffect(() => {
-    if (!study) {
-      handleSearch('Golgotha & Calvary', 'place');
-    }
-  }, []);
+  const handleClearSearch = () => {
+    stopScholarSpeech();
+    setIsSpeaking(false);
+    setStudy(null);
+    setQuery('');
+  };
 
   const handlePrint = () => {
     window.print();
@@ -533,9 +533,30 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                 category === 'event' ? "Enter a pivotal biblical event (e.g. The Exodus, Pentecost, Babylonian Exile, Council of Jerusalem)..." :
                 "Enter a biblical phrase or origin (e.g. Body of Christ, New Covenant, Holy of Holies, Maranatha)..."
               }
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-bg-primary border border-ui-border text-text-primary text-sm font-serif italic focus:outline-none focus:border-accent shadow-inner transition-colors"
+              className="w-full pl-12 pr-10 py-4 rounded-2xl bg-bg-primary border border-ui-border text-text-primary text-sm font-serif italic focus:outline-none focus:border-accent shadow-inner transition-colors"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary p-1 rounded-full hover:bg-ui-card transition-colors cursor-pointer"
+                title="Clear input text"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
+          {(study !== null || query.trim() !== '') && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="px-5 py-4 rounded-2xl bg-ui-card border border-ui-border hover:bg-red-500/10 hover:border-red-500/40 text-text-secondary hover:text-red-400 font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shrink-0"
+              title="Clear the most recent search and examination results"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Clear</span>
+            </button>
+          )}
           <button
             onClick={() => handleSearch()}
             disabled={loading || !query.trim()}
@@ -607,6 +628,55 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
             <p className="text-xs text-text-secondary font-serif italic">
               Gathering primary scriptures, archaeological records, Second Temple and Aksumite historical context, regional demographic sects, and end-times prophetic destinies...
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State / Welcome Exploration Card when no examination is active */}
+      {!study && !loading && (
+        <div className="bg-ui-card border border-ui-border rounded-3xl p-8 md:p-12 text-center space-y-6 shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 text-accent flex items-center justify-center mx-auto shadow-inner">
+            <Compass className="w-8 h-8" />
+          </div>
+          <div className="max-w-xl mx-auto space-y-2">
+            <h3 className="text-2xl font-serif font-bold text-text-primary italic">
+              Begin Your "Then vs Now" Biblical Excavation
+            </h3>
+            <p className="text-sm text-text-secondary font-serif italic leading-relaxed">
+              Select any curated excavation above or enter a sacred location, generation, pivotal event, or biblical phrase to compare original biblical antiquity with 21st-century modern reality.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto pt-2 text-left">
+            {[
+              { title: 'Golgotha & Calvary', cat: 'place' as const, desc: 'Herodian Era Place of the Skull to Holy Sepulchre & Garden Tomb' },
+              { title: 'Jerusalem', cat: 'place' as const, desc: 'Second Temple Citadel to Western Wall & Modern Old City' },
+              { title: 'Pharisees & Sadducees', cat: 'people' as const, desc: 'Temple Era Sects to Modern Rabbinic Academies' },
+              { title: 'Pentecost & Upper Room', cat: 'event' as const, desc: 'Acts 2 Apostolic Fire to Contemporary Global Body' }
+            ].map(item => (
+              <button
+                key={item.title}
+                type="button"
+                onClick={() => {
+                  setQuery(item.title);
+                  setCategory(item.cat);
+                  handleSearch(item.title, item.cat);
+                }}
+                className="p-4 rounded-2xl bg-ui-sidebar/50 border border-ui-border hover:border-accent/40 hover:bg-accent/10 transition-all text-left space-y-1.5 cursor-pointer group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">
+                    {item.cat}
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-text-secondary group-hover:text-accent transition-colors" />
+                </div>
+                <h4 className="font-serif italic font-bold text-text-primary text-sm group-hover:text-accent transition-colors">
+                  {item.title}
+                </h4>
+                <p className="text-[11px] text-text-secondary font-serif leading-snug">
+                  {item.desc}
+                </p>
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -717,6 +787,16 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                     <Star className="w-3 h-3 text-amber-400 fill-amber-400 shrink-0" />
                   </>
                 )}
+              </button>
+
+              {/* Clear Examination Button */}
+              <button
+                onClick={handleClearSearch}
+                className="px-4 py-2 rounded-xl bg-ui-card border border-ui-border hover:bg-red-500/10 hover:border-red-500/40 text-text-secondary hover:text-red-400 text-xs font-sans font-bold uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+                title="Clear current examination and reset search"
+              >
+                <RotateCcw className="w-4 h-4 text-red-400" />
+                <span>Clear Examination</span>
               </button>
             </div>
           </div>
