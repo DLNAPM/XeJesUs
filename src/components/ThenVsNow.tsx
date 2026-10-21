@@ -95,7 +95,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
   const [selectedImageModal, setSelectedImageModal] = useState<{ url: string; title: string; era: string } | null>(null);
   const [viewMode, setViewMode] = useState<'study' | 'two-pager'>('study');
   const [docPage, setDocPage] = useState<'both' | 'front' | 'back'>('both');
-  const [selectedModernSite, setSelectedModernSite] = useState<'primary' | 'secondary' | 'both'>('primary');
+  const [selectedModernSite, setSelectedModernSite] = useState<'primary' | 'secondary' | 'both'>('both');
 
   // Saved Antiquities State
   const [savedAntiquities, setSavedAntiquities] = useState<ThenVsNowData[]>([]);
@@ -324,8 +324,10 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
     const cat = targetCategory || category;
     if (!q) return;
 
-    // Premium Check: If not premium and trying to search non-demo query, prompt upgrade
-    if (!isPremium && q.toLowerCase() !== 'jerusalem') {
+    // Premium Check: Allow free demo excavations for Jerusalem and Golgotha / Calvary
+    const qLower = q.toLowerCase();
+    const isFreeDemo = qLower.includes('jerusalem') || qLower.includes('golgotha') || qLower.includes('calvary') || qLower.includes('skull');
+    if (!isPremium && !isFreeDemo) {
       onUpgradeRequest();
       return;
     }
@@ -346,6 +348,13 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
       setLoading(false);
     }
   };
+
+  // Auto-load Golgotha & Calvary on initial mount so pilgrim immediately experiences Then vs Now side-by-side
+  useEffect(() => {
+    if (!study) {
+      handleSearch('Golgotha & Calvary', 'place');
+    }
+  }, []);
 
   const handlePrint = () => {
     window.print();
@@ -1074,23 +1083,51 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                     )}
 
                     <div className="p-6 md:p-8 space-y-4 flex-1 flex flex-col justify-between">
-                      <p className="text-text-secondary font-serif italic text-sm leading-relaxed">
-                        {selectedModernSite === 'secondary' && study.nowVisual.secondaryDescription 
-                          ? study.nowVisual.secondaryDescription 
-                          : study.nowVisual.description}
-                      </p>
+                      {selectedModernSite === 'both' && study.nowVisual.secondaryDescription ? (
+                        <div className="space-y-3">
+                          <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/25 space-y-1">
+                            <span className="text-[10px] font-sans font-black uppercase tracking-wider text-blue-400 block">
+                              1. {study.nowVisual.title} ({study.nowVisual.era}):
+                            </span>
+                            <p className="text-text-secondary font-serif italic text-xs leading-relaxed">
+                              {study.nowVisual.description}
+                            </p>
+                          </div>
+                          <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-1">
+                            <span className="text-[10px] font-sans font-black uppercase tracking-wider text-emerald-400 block">
+                              2. {study.nowVisual.secondaryTitle || 'The Garden Tomb'} ({study.nowVisual.secondaryEra || '21st Century Reality'}):
+                            </span>
+                            <p className="text-text-secondary font-serif italic text-xs leading-relaxed">
+                              {study.nowVisual.secondaryDescription}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-text-secondary font-serif italic text-sm leading-relaxed">
+                          {selectedModernSite === 'secondary' && study.nowVisual.secondaryDescription 
+                            ? study.nowVisual.secondaryDescription 
+                            : study.nowVisual.description}
+                        </p>
+                      )}
 
                       <div className="space-y-2 pt-3 border-t border-ui-border">
                         <p className="text-[10px] font-sans font-black uppercase tracking-wider text-blue-500 dark:text-blue-400">
-                          Contemporary Infrastructure & Archaeological Reality:
+                          {selectedModernSite === 'both' && study.nowVisual.secondaryHighlights
+                            ? 'Archaeological Features of Both Veneration Sites:'
+                            : 'Contemporary Infrastructure & Archaeological Reality:'}
                         </p>
                         <ul className="space-y-1.5">
-                          {(selectedModernSite === 'secondary' && study.nowVisual.secondaryHighlights
-                            ? study.nowVisual.secondaryHighlights
-                            : study.nowVisual.modernHighlights
+                          {(selectedModernSite === 'both' && study.nowVisual.secondaryHighlights
+                            ? [
+                                ...(study.nowVisual.modernHighlights?.map(h => `[Holy Sepulchre] ${h}`) || []),
+                                ...(study.nowVisual.secondaryHighlights?.map(h => `[Garden Tomb] ${h}`) || [])
+                              ]
+                            : selectedModernSite === 'secondary' && study.nowVisual.secondaryHighlights
+                              ? study.nowVisual.secondaryHighlights
+                              : study.nowVisual.modernHighlights
                           )?.map((item, i) => (
                             <li key={i} className="flex items-start gap-2 text-xs text-text-primary font-serif">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+                              <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${item.startsWith('[Garden Tomb]') ? 'text-emerald-400' : 'text-blue-500'}`} />
                               <span>{item}</span>
                             </li>
                           ))}

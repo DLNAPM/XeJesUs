@@ -940,7 +940,7 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
     q.includes('crucifixion')
   ) {
     return {
-      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/f/f9/Brooklyn_Museum_-_What_Our_Lord_Saw_from_the_Cross_%28Ce_que_voyait_Notre-Seigneur_sur_la_Croix%29_-_James_Tissot.jpg',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/0/0d/Jean-L%C3%A9on_G%C3%A9r%C3%B4me_Consummatum_est.jpg',
       thenTitle: 'Biblical Antiquity: Golgotha in the Herodian Era (c. 30–33 A.D.)',
       thenEra: 'Herodian Second Temple Era (c. 30–33 A.D.)',
       thenDescription: 'During the Herodian Era under Roman prefect Pontius Pilate, Golgotha ("Place of a Skull" / Calvary) was a prominent limestone quarry and rocky knoll located directly outside Jerusalem\'s Second North Wall, along the public road leading toward Damascus. Condemned prisoners were executed here in full public view as an imperial Roman deterrent, amidst nearby terraced hillside olive orchards and freshly cut rock-hewn rolling-stone tombs (John 19:41).',
@@ -973,7 +973,7 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
   // 2. Jerusalem / Zion / Temple Mount
   if (q.includes('jerusalem') || q.includes('zion') || q.includes('temple')) {
     return {
-      thenUrl: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=1200&q=80',
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
       thenTitle: 'Second Temple Citadel & Herodian Zion in Antiquity',
       thenEra: 'Herodian Second Temple Era (1st Century A.D.)',
       nowUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=1200&q=80',
