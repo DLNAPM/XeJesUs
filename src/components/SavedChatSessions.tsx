@@ -345,7 +345,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
             <span className="font-sans font-bold text-xs uppercase tracking-[0.3em]">Sanctuary Archives</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-serif text-text-primary italic font-bold">Saved Chat Sessions</h1>
-          <p className="text-text-secondary italic text-sm mt-1">
+          <p className="text-text-secondary italic text-sm mt-1 font-medium">
             Revisit your dialogue with the Sanctuary Scholar or export any session into a published Professional Literary Work PDF.
           </p>
         </div>
@@ -725,12 +725,12 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                         <h1 className="text-3xl md:text-4xl font-black italic tracking-tight text-[#0f172a] leading-tight mb-2">
                           {literaryWork.themeTitle}
                         </h1>
-                        <p className="text-xs font-sans font-bold text-[#64748b] uppercase tracking-[0.2em]">
+                        <p className="text-xs font-sans font-bold text-[#1e293b] uppercase tracking-[0.2em]">
                           {literaryWork.subtitle}
                         </p>
                       </div>
 
-                      <div className="text-left md:text-right text-xs font-sans text-[#64748b]">
+                      <div className="text-left md:text-right text-xs font-sans text-[#1e293b] font-medium">
                         <span className="font-bold text-[#3b82f6] uppercase tracking-wider block">Archive Document</span>
                         <span>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                       </div>

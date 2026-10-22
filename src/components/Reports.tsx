@@ -114,7 +114,7 @@ export default function Reports() {
           <span>Premium Sanctuary Exegesis</span>
         </div>
         <h1 className="text-4xl font-serif text-text-primary mb-2 italic font-bold">Scholar's Registry</h1>
-        <p className="text-text-secondary italic">Transform your spiritual seekings into professional exegesis reports.</p>
+        <p className="text-text-secondary font-medium italic">Transform your spiritual seekings into professional exegesis reports.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -246,7 +246,7 @@ export default function Reports() {
                         <span className="font-sans font-black uppercase tracking-[0.3em] text-xs">XeJesUs Registry</span>
                       </div>
                       <h1 className="text-4xl font-black italic tracking-tight mb-2">Technical Exegesis Report</h1>
-                      <p className="text-sm font-sans font-medium text-[#64748b] uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
+                      <p className="text-sm font-sans font-bold text-[#1e293b] uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
                     </div>
                     <div className="text-right">
                       <div className="text-xs font-sans font-bold uppercase tracking-widest mb-1" style={{ color: '#3b82f6' }}>Date Created</div>

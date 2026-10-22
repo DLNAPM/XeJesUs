@@ -524,7 +524,7 @@ export default function App() {
           <h1 className="text-6xl md:text-8xl text-text-primary font-serif mb-2 tracking-tight">
             XeJesUs
           </h1>
-          <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-8 opacity-80 uppercase tracking-widest text-xs leading-tight">
+          <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-8 font-semibold tracking-wide text-xs leading-tight">
             The divine synthesis of Exegesis and the name of Our Savior, Jesus Christ
           </p>
           

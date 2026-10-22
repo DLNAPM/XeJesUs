@@ -20,7 +20,7 @@
   /* Default: Modern Sanctuary (Clean & Technical) */
   --bg-primary: #f8fafc;
   --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #1e293b; /* Darker off-black (Slate 800) for crisp, readable subtitles and descriptions */
   --accent: #3b82f6;
   --accent-soft: #dbeafe;
   --ui-card: #ffffff;
@@ -32,7 +32,7 @@
   /* Midnight Exegesis (Dark Mode) */
   --bg-primary: #020617;
   --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --text-secondary: #e2e8f0; /* Crisp, readable light off-white on dark midnight background */
   --accent: #f59e0b;
   --accent-soft: #451a03;
   --ui-card: #0f172a;
@@ -43,8 +43,8 @@
 [data-theme='parchment'] {
   /* Traditional Parchment (Enhanced Classics) */
   --bg-primary: #f9f4e8;
-  --text-primary: #1a1a1a;
-  --text-secondary: #5c5c5c;
+  --text-primary: #12100e;
+  --text-secondary: #26221d; /* Darker off-black warm charcoal for high-contrast readability */
   --accent: #b08d57;
   --accent-soft: #ede0c8;
   --ui-card: #fcfaf2;
@@ -63,6 +63,18 @@
   
   h1, h2, h3, h4, .serif {
     @apply font-serif font-bold italic;
+  }
+
+  /* Ensure subtitles and text immediately below titles and sub-titles are dark off-black and highly readable */
+  h1 + p,
+  h2 + p,
+  h3 + p,
+  h4 + p,
+  header p,
+  .subtitle,
+  .text-subtitle {
+    color: var(--text-secondary);
+    font-weight: 500;
   }
 
   .mono {

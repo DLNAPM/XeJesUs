@@ -269,7 +269,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-serif text-text-primary mb-2">Sanctuary Overlook</h1>
-          <p className="text-text-secondary italic">Manage the pilgrim body and monitor the divine repository.</p>
+          <p className="text-text-secondary italic font-medium">Manage the pilgrim body and monitor the divine repository.</p>
         </div>
         {isAdminEmail && (
           <button 

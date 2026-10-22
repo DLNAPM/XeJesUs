@@ -608,7 +608,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               </button>
             )}
             <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
-            <div className="text-xs text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {(() => {
+            <div className="text-xs text-text-secondary font-sans uppercase tracking-widest font-semibold">Seeked on {(() => {
               if (!inquiry?.createdAt) return 'N/A';
               try {
                 if (typeof inquiry.createdAt.toDate === 'function') {
@@ -800,7 +800,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                   <header className="flex justify-between items-end border-b border-ui-border pb-6">
                     <div>
                       <h3 className="text-4xl font-serif text-text-primary italic font-bold">{inquiry.geography.location}</h3>
-                      <p className="text-text-secondary opacity-60 italic font-serif mt-2 text-lg">Connecting the Holy Land across the ages</p>
+                      <p className="text-text-secondary font-medium italic font-serif mt-2 text-lg">Connecting the Holy Land across the ages</p>
                     </div>
                     <Map className="w-12 h-12 text-accent/20" />
                   </header>

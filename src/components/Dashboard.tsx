@@ -176,7 +176,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
     <div className="max-w-4xl mx-auto">
       <header className="mb-12">
         <h1 className="text-4xl font-serif text-text-primary mb-2">Exegesis Library</h1>
-        <p className="text-text-secondary italic">Welcome back. Continue your journey through the Word.</p>
+        <p className="text-text-secondary italic font-medium">Welcome back. Continue your journey through the Word.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

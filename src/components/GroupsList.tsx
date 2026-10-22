@@ -105,7 +105,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
       <header className="flex items-center justify-between mb-12">
         <div>
           <h1 className="text-4xl font-serif text-text-primary mb-2 italic">My Study Groups</h1>
-          <p className="text-text-secondary italic font-serif">Communion with brothers and sisters in the Word.</p>
+          <p className="text-text-secondary italic font-serif font-medium">Communion with brothers and sisters in the Word.</p>
         </div>
         <button 
           onClick={() => setShowCreateModal(true)}

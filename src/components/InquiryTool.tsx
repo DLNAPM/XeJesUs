@@ -90,7 +90,7 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
     <div className="max-w-3xl mx-auto">
       <header className="mb-12 text-center">
         <h1 className="text-4xl font-serif text-text-primary mb-4">Seek the Word</h1>
-        <p className="text-text-secondary italic max-w-lg mx-auto">
+        <p className="text-text-secondary italic max-w-lg mx-auto font-medium">
           "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you."
         </p>
       </header>

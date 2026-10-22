@@ -24,7 +24,7 @@ export default function Settings({ onNavigatePage }: SettingsProps) {
     <div className="max-w-5xl mx-auto">
       <header className="mb-12">
         <h1 className="text-4xl font-serif text-text-primary mb-2 italic font-bold">Sanctuary Settings</h1>
-        <p className="text-text-secondary italic">Adjust your pilgrimage parameters and view sacred updates.</p>
+        <p className="text-text-secondary italic font-medium">Adjust your pilgrimage parameters and view sacred updates.</p>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-8">

@@ -179,7 +179,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
     <div className="max-w-2xl mx-auto">
       <header className="mb-12">
         <h1 className="text-4xl font-serif text-text-primary mb-2 italic font-bold">Pilgrim's Profile</h1>
-        <p className="text-text-secondary italic">Customize your spiritual study environment.</p>
+        <p className="text-text-secondary italic font-medium">Customize your spiritual study environment.</p>
       </header>
 
       <div className="bg-ui-card border border-ui-border rounded-[2.5rem] p-8 md:p-12 shadow-sm relative overflow-hidden">

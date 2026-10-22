@@ -313,7 +313,7 @@ export default function Glossary() {
                 </span>
               )}
             </div>
-            <p className="text-text-secondary italic text-sm sm:text-base mt-1">
+            <p className="text-text-secondary italic text-sm sm:text-base mt-1 font-medium">
               Your personal repository of theological terms, Hebrew roots, and deep scriptural definitions.
             </p>
           </div>
