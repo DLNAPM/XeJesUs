@@ -85,6 +85,13 @@ const PRESET_TOPICS = [
   { name: 'Ephesus & Asia Minor', category: 'place' as const, label: 'Seven Churches Epicenter', era: 'Apostolic Era to Turkish Heritage' },
 ];
 
+const FLAGSHIP_TOPICS: Record<'place' | 'people' | 'event' | 'phrase', { query: string; label: string }> = {
+  place: { query: 'Golgotha & Calvary', label: 'The Place of the Skull' },
+  people: { query: 'Pharisees & Sadducees', label: 'Temple Era Sects & Modern Lineages' },
+  event: { query: 'Pentecost & Upper Room', label: 'Birth of the Church & Upper Room' },
+  phrase: { query: 'Body of Christ', label: 'Sacred Covenant Mystery' },
+};
+
 export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: ThenVsNowProps) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<'place' | 'people' | 'event' | 'phrase'>('place');
@@ -361,6 +368,13 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
     setQuery('');
   };
 
+  const handleSelectCategory = (newCat: 'place' | 'people' | 'event' | 'phrase') => {
+    setCategory(newCat);
+    const flagship = FLAGSHIP_TOPICS[newCat];
+    setQuery(flagship.query);
+    handleSearch(flagship.query, newCat);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -504,12 +518,14 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
             return (
               <button
                 key={tab.id}
-                onClick={() => setCategory(tab.id as any)}
-                className={`flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl font-sans text-xs font-bold uppercase tracking-wider transition-all border ${
+                type="button"
+                onClick={() => handleSelectCategory(tab.id as any)}
+                className={`flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl font-sans text-xs font-bold uppercase tracking-wider transition-all border cursor-pointer ${
                   active 
-                    ? 'bg-accent text-bg-primary border-accent shadow-md' 
+                    ? 'bg-accent text-bg-primary border-accent shadow-md scale-[1.02]' 
                     : 'bg-ui-sidebar/50 text-text-secondary border-ui-border hover:border-accent/40 hover:text-text-primary'
                 }`}
+                title={`Examine ${tab.label}`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
@@ -581,7 +597,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
         <div className="space-y-2 pt-2 border-t border-ui-border/50">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-sans font-black uppercase tracking-[0.2em] text-text-secondary/70">
-              Curated Excavations:
+              Curated Excavations ({category === 'place' ? 'Places' : category === 'people' ? 'Generations & People' : category === 'event' ? 'Biblical Events' : 'Phrases'} Highlighted):
             </p>
             {savedAntiquities.length > 0 && (
               <button
@@ -596,22 +612,30 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            {PRESET_TOPICS.map(preset => (
-              <button
-                key={preset.name}
-                onClick={() => {
-                  setQuery(preset.name);
-                  setCategory(preset.category);
-                  handleSearch(preset.name, preset.category);
-                }}
-                className="text-xs px-3.5 py-1.5 rounded-xl bg-ui-sidebar/60 hover:bg-accent/15 hover:border-accent/40 border border-ui-border text-text-primary transition-all flex items-center gap-1.5 group"
-              >
-                <span className="font-serif italic font-medium">{preset.name}</span>
-                <span className="text-[9px] font-sans uppercase tracking-wider text-accent opacity-80 group-hover:opacity-100">
-                  ({preset.category})
-                </span>
-              </button>
-            ))}
+            {PRESET_TOPICS.map(preset => {
+              const isMatch = preset.category === category;
+              return (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => {
+                    setQuery(preset.name);
+                    setCategory(preset.category);
+                    handleSearch(preset.name, preset.category);
+                  }}
+                  className={`text-xs px-3.5 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 group cursor-pointer ${
+                    isMatch
+                      ? 'bg-accent/20 border-accent text-text-primary font-semibold shadow-sm ring-1 ring-accent/30'
+                      : 'bg-ui-sidebar/60 border-ui-border text-text-secondary hover:border-accent/40 hover:text-text-primary'
+                  }`}
+                >
+                  <span className="font-serif italic font-medium">{preset.name}</span>
+                  <span className={`text-[9px] font-sans uppercase tracking-wider ${isMatch ? 'text-accent font-bold' : 'text-text-secondary/70 group-hover:text-accent'}`}>
+                    ({preset.category})
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -640,32 +664,28 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
           </div>
           <div className="max-w-xl mx-auto space-y-2">
             <h3 className="text-2xl font-serif font-bold text-text-primary italic">
-              Begin Your "Then vs Now" Biblical Excavation
+              Select an Examination Type to Begin
             </h3>
             <p className="text-sm text-text-secondary font-serif italic leading-relaxed">
-              Select any curated excavation above or enter a sacred location, generation, pivotal event, or biblical phrase to compare original biblical antiquity with 21st-century modern reality.
+              Explore how biblical antiquity directly compares to 21st-century modern reality across four distinct sacred lenses. Select any lens below:
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto pt-2 text-left">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto pt-2 text-left">
             {[
-              { title: 'Golgotha & Calvary', cat: 'place' as const, desc: 'Herodian Era Place of the Skull to Holy Sepulchre & Garden Tomb' },
-              { title: 'Jerusalem', cat: 'place' as const, desc: 'Second Temple Citadel to Western Wall & Modern Old City' },
-              { title: 'Pharisees & Sadducees', cat: 'people' as const, desc: 'Temple Era Sects to Modern Rabbinic Academies' },
-              { title: 'Pentecost & Upper Room', cat: 'event' as const, desc: 'Acts 2 Apostolic Fire to Contemporary Global Body' }
+              { title: 'Golgotha & Calvary', cat: 'place' as const, label: '1. Biblical Place', desc: 'Herodian Era Place of the Skull to Holy Sepulchre & Garden Tomb' },
+              { title: 'Pharisees & Sadducees', cat: 'people' as const, label: '2. Generation / People', desc: 'Second Temple Factions & Elders to Modern Living Rabbinic Communities' },
+              { title: 'Pentecost & Upper Room', cat: 'event' as const, label: '3. Biblical Event', desc: 'Acts 2 Holy Fire at Upper Room to Mount Zion & Global Church Body' },
+              { title: 'Body of Christ', cat: 'phrase' as const, label: '4. Sacred Word / Phrase', desc: 'Dead Sea Parchments & Original Lexicon to Global Worldwide Communion' }
             ].map(item => (
               <button
                 key={item.title}
                 type="button"
-                onClick={() => {
-                  setQuery(item.title);
-                  setCategory(item.cat);
-                  handleSearch(item.title, item.cat);
-                }}
-                className="p-4 rounded-2xl bg-ui-sidebar/50 border border-ui-border hover:border-accent/40 hover:bg-accent/10 transition-all text-left space-y-1.5 cursor-pointer group"
+                onClick={() => handleSelectCategory(item.cat)}
+                className="p-4 rounded-2xl bg-ui-sidebar/50 border border-ui-border hover:border-accent hover:bg-accent/10 transition-all text-left space-y-1.5 cursor-pointer group shadow-sm hover:shadow"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-accent">
-                    {item.cat}
+                    {item.label}
                   </span>
                   <ChevronRight className="w-3.5 h-3.5 text-text-secondary group-hover:text-accent transition-colors" />
                 </div>

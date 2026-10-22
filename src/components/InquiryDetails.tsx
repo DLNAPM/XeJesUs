@@ -809,14 +809,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     <div className="space-y-6">
                       <button 
                         onClick={() => handleMagnify({
-                          url: inquiry.geography.thenImageUrl || `https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=1200`,
+                          url: inquiry.geography.thenImageUrl || `/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg`,
                           title: "In Biblical Times",
                           description: inquiry.geography.thenDesc
                         })}
                         className="w-full text-left aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border transition-all hover:shadow-xl cursor-zoom-in"
                       >
                         <img 
-                          src={inquiry.geography.thenImageUrl || `https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=800`} 
+                          src={inquiry.geography.thenImageUrl || `/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg`} 
                           alt="Historical Region"
                           className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
@@ -837,14 +837,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     <div className="space-y-6">
                       <button 
                          onClick={() => handleMagnify({
-                           url: inquiry.geography.nowImageUrl || `https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=1200`,
+                           url: inquiry.geography.nowImageUrl || `/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg`,
                            title: "Region Today",
                            description: inquiry.geography.nowDesc
                          })}
                          className="w-full text-left aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border transition-all hover:shadow-xl cursor-zoom-in"
                       >
                         <img 
-                          src={inquiry.geography.nowImageUrl || `https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=800`} 
+                          src={inquiry.geography.nowImageUrl || `/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg`} 
                           alt="Modern Region"
                           className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"

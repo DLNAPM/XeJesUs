@@ -861,8 +861,8 @@ Return ONLY valid JSON.`;
       parsed = generateThenVsNowFallback(query, category);
     }
 
-    // Attach curated high-resolution imagery for Then and Now
-    const visual = getThenVsNowVisualImages(query);
+    // Attach curated high-resolution imagery tailored to the query and examination category
+    const visual = getThenVsNowVisualImages(query, category);
     if (!parsed.thenVisual) parsed.thenVisual = {};
     if (!parsed.nowVisual) parsed.nowVisual = {};
 
@@ -927,8 +927,114 @@ interface ThenVsNowVisualBundle {
   secondaryHighlights?: string[];
 }
 
-function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
+function getThenVsNowVisualImages(query: string, category: 'place' | 'people' | 'event' | 'phrase' = 'place'): ThenVsNowVisualBundle {
   const q = query.toLowerCase();
+
+  // ==========================================
+  // EXAMINATION TYPE: PHRASE (Sacred Word / Phrase)
+  // ==========================================
+  if (category === 'phrase') {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/5/5e/The_Great_Isaiah_Scroll_MS_A_%281QIsa%29_-_Google_Art_Project.jpg',
+      thenTitle: `Sacred Scriptural Manuscripts & Ancient Hebrew/Aramaic Scrolls: "${query}"`,
+      thenEra: 'Ancient Scriptural Parchments (2nd Century B.C. - 1st Century A.D.)',
+      thenDescription: `Preserved on ancient leather scrolls and papyri across Dead Sea grottoes and temple archives, original biblical phrases embodied the living covenant between God and His people, inscribed in ancient Hebrew, Aramaic, and apostolic Greek.`,
+      thenHighlights: [
+        'The Great Isaiah Scroll & Dead Sea Scrolls scriptural preservation',
+        'Ancient Hebrew and Aramaic lexical roots and sacred covenant names',
+        'Apostolic Greek manuscript papyri circulated among earliest assemblies'
+      ],
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/4/48/The_Last_Supper_-_Leonardo_Da_Vinci_-_High_Resolution_32x16.jpg',
+      nowTitle: `Living Covenant in the Global Body of Christ Today: "${query}"`,
+      nowEra: '21st Century Reality (The Universal Church & Living Word)',
+      nowDescription: `Today, this sacred phrase transcends geographic boundaries, uniting billions of believers in spiritual communion, shared sacraments, and continuous theological study across global languages and confessions.`,
+      nowHighlights: [
+        'Worldwide communion and the sacred fellowship of believers across continents',
+        'Global translation and digital access to primary biblical texts in over 3,000 languages',
+        'Contemporary liturgical worship and active application in daily discipleship'
+      ]
+    };
+  }
+
+  // ==========================================
+  // EXAMINATION TYPE: PEOPLE (Generation / People)
+  // ==========================================
+  if (category === 'people') {
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/9b/Brooklyn_Museum_-_The_Pharisees_Question_Jesus_%28Les_pharisiens_questionnent_J%C3%A9sus%29_-_James_Tissot.jpg',
+      thenTitle: `Biblical Factions, Priesthood & Generations in Antiquity: ${query}`,
+      thenEra: 'Second Temple & Apostolic Era (1st Century A.D.)',
+      thenDescription: `During biblical antiquity, distinct factions—including Pharisees, Sadducean aristocrats, Essene scribes, and apostolic disciples—held fierce theological debates in the temple courts and synagogues regarding the Law, resurrection, and the coming of Messiah.`,
+      thenHighlights: [
+        'Sanhedrin council assembly and Chamber of Hewn Stones in the Temple Mount',
+        'Pharisaic oral traditions, priestly vestments, and strict Torah observance',
+        'Apostolic eyewitnesses following Christ throughout Judea and Galilee'
+      ],
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/8/8b/Western_wall_and_its_square%2C_jerusalem.jpg',
+      nowTitle: `Modern Descendants, Rabbinic Traditions & Living Faith Communities: ${query}`,
+      nowEra: '21st Century Reality (Jerusalem & Global Faith Lineages)',
+      nowDescription: `Today, biblical theological lineages have transformed: the Pharisees gave rise to modern Rabbinic Judaism praying at the Western Wall, while the apostolic church expanded into a vibrant global body of over two billion believers.`,
+      nowHighlights: [
+        'Historic Jewish Quarter yeshivas and Western Wall prayer gatherings in Old City Jerusalem',
+        'Continuous preservation of rabbinic halakha and sacred scriptural study',
+        'Worldwide Christian community carrying forward apostolic testimony'
+      ]
+    };
+  }
+
+  // ==========================================
+  // EXAMINATION TYPE: EVENT (Biblical Event)
+  // ==========================================
+  if (category === 'event') {
+    if (q.includes('exodus') || q.includes('red sea') || q.includes('passover')) {
+      return {
+        thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/3/3d/Rembrandt_-_Moses_with_the_Ten_Commandments_-_Google_Art_Project.jpg',
+        thenTitle: 'The Exodus Deliverance from Bondage & Covenant of Sinai',
+        thenEra: 'The Exodus Era (c. 1446 B.C.)',
+        thenDescription: 'Under Moses leadership, the children of Israel were delivered from Egyptian bondage through miraculous wonders, passing through the Red Sea and receiving the Ten Commandments at Mount Sinai.',
+        thenHighlights: [
+          'Parting of the waters and pillar of cloud and fire',
+          'Giving of the Law and Ten Commandments at Mount Sinai',
+          'The Tabernacle in the wilderness and the Ark of the Covenant'
+        ],
+        nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/e/e2/Katharinaklooster_R01.jpg',
+        nowTitle: 'Saint Catherine\'s Mount Sinai Preserve & Global Passover Remembrance',
+        nowEra: '21st Century Reality (Sinai Peninsula & Global Observance)',
+        nowDescription: 'Today, Saint Catherine Monastery guards the historic wilderness of Sinai, while the Passover deliverance is commemorated annually by Jewish families and celebrated by Christians as the ultimate shadow of Christ our Passover Lamb.',
+        nowHighlights: [
+          'Ancient Justinian fortress monastery at the foot of Mount Sinai',
+          'Global Passover seders commemorating divine deliverance',
+          'Christological fulfillment celebrated in Christian Easter / Resurrection'
+        ]
+      };
+    }
+
+    // Default Biblical Event: Pentecost & Divine Covenant Interventions
+    return {
+      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/d/d3/Pentecost%C3%A9s_%28El_Greco%2C_c._1600%29_Prado.jpg',
+      thenTitle: `Pivotal Biblical Event in Antiquity: ${query}`,
+      thenEra: 'Apostolic & Biblical Covenant Era (1st Century A.D.)',
+      thenDescription: `God intervened sovereignly in human history through covenant moments, prophetic outpourings, and miraculous events recorded across the Holy Scriptures—exemplified by the birth of the Church at Pentecost in the Upper Room.`,
+      thenHighlights: [
+        'Divine tongues of fire and the empowerment of the Holy Spirit for global witness',
+        'Eyewitness testimonies recorded in the biblical canon and preserved through church history',
+        'Prophetic fulfillment pointing toward the redemption of all nations under Christ'
+      ],
+      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
+      nowTitle: `Contemporary Commemoration & Enduring Spiritual Legacy: ${query}`,
+      nowEra: '21st Century Reality (Mount Zion & Worldwide Church)',
+      nowDescription: `Centuries later, this monumental event continues to shape global theology, international law, religious observance, and the daily devotion of millions of faithful pilgrims visiting holy sanctuaries.`,
+      nowHighlights: [
+        'The Crusader-era Room of the Last Supper (Cenacle) on Mount Zion',
+        'Global annual liturgical remembrances and biblical holy days celebrated worldwide',
+        'Living faith application in contemporary Christian life and evangelism'
+      ]
+    };
+  }
+
+  // ==========================================
+  // EXAMINATION TYPE: PLACE (Biblical Place)
+  // ==========================================
 
   // 1. Golgotha / Calvary / Place of the Skull / Holy Sepulchre / Garden Tomb
   if (
@@ -1102,55 +1208,7 @@ function getThenVsNowVisualImages(query: string): ThenVsNowVisualBundle {
     };
   }
 
-  // 13. Pentecost & Upper Room / Cenacle
-  if (q.includes('pentecost') || q.includes('upper room') || q.includes('cenacle')) {
-    return {
-      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
-      thenTitle: 'Mount Zion Apostolic Assembly in Biblical Jerusalem',
-      thenEra: 'Apostolic Pentecost Era (Acts 2, c. 33 A.D.)',
-      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
-      nowTitle: 'Mount Zion Cenacle & Old City Christian Sanctuary Today',
-      nowEra: '21st Century Reality (Mount Zion, Jerusalem)'
-    };
-  }
-
-  // 14. Pharisees & Sadducees / Scribes / Sanhedrin
-  if (q.includes('pharisee') || q.includes('sadducee') || q.includes('sanhedrin') || q.includes('scribe')) {
-    return {
-      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
-      thenTitle: 'Second Temple Courts & Sanhedrin Chamber of Hewn Stones',
-      thenEra: 'Herodian Second Temple Era (1st Century A.D.)',
-      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
-      nowTitle: 'Western Wall Prayers & Historic Jewish Quarter Rabbinic Academies',
-      nowEra: '21st Century Reality (Old City Jewish Quarter)'
-    };
-  }
-
-  // 15. The Exodus & Red Sea
-  if (q.includes('exodus') || q.includes('red sea') || q.includes('passover')) {
-    return {
-      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/6b/Katharinenkloster_Sinai_BW_2.jpg',
-      thenTitle: 'Red Sea Crossing Shoreline & Ancient Sinai Wilderness Route',
-      thenEra: 'The Exodus Era (c. 1446 B.C.)',
-      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/e/e2/Katharinaklooster_R01.jpg',
-      nowTitle: 'Sinai Peninsula Coastline & Mount Sinai National Preserve',
-      nowEra: '21st Century Reality (Sinai Peninsula, Egypt)'
-    };
-  }
-
-  // 16. Body of Christ / Church / Apostles
-  if (q.includes('body of christ') || q.includes('church') || q.includes('apostle') || q.includes('covenant')) {
-    return {
-      thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
-      thenTitle: 'Apostolic Fellowship & Early Church Gatherings in Jerusalem',
-      thenEra: 'Apostolic Era (1st Century A.D.)',
-      nowUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/6/67/Western_Wall_and_Dome_of_the_Rock.jpg',
-      nowTitle: 'Global Fellowship of Believers & Historic Holy Land Sanctuaries',
-      nowEra: '21st Century Reality (Global Church)'
-    };
-  }
-
-  // Generic fallback: Authentic Second Temple Herodian Jerusalem Model and Contemporary Old City Jerusalem
+  // Generic fallback for Biblical Place: Authentic Second Temple Herodian Jerusalem Model and Contemporary Old City Jerusalem
   return {
     thenUrl: '/api/image-proxy?url=https://upload.wikimedia.org/wikipedia/commons/9/92/Model_of_Jerusalem_in_the_Late_Second_Temple_Period_%285540487348%29.jpg',
     thenTitle: `${query} in Biblical Antiquity`,
