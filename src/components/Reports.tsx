@@ -308,11 +308,11 @@ export default function Reports() {
                       <div className="space-y-4">
                         <div>
                           <div className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Literary Genre</div>
-                          <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#334155] italic">{selectedInquiry.literaryGenre}</div>
+                          <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#0f172a] italic">{selectedInquiry.literaryGenre}</div>
                         </div>
                         <div>
                           <div className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Expository Tone</div>
-                          <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#334155] italic">Academic & Devotional</div>
+                          <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#0f172a] italic">Academic & Devotional</div>
                         </div>
                       </div>
                     </div>
@@ -332,7 +332,7 @@ export default function Reports() {
                   <div className="space-y-12 mb-12">
                     <section>
                       <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Analytical Interpretation</h2>
-                      <div className="max-w-none text-[#334155] leading-loose font-serif text-lg space-y-6">
+                      <div className="max-w-none text-[#0f172a] font-medium leading-loose font-serif text-lg space-y-6">
                         <Markdown>{selectedInquiry.interpretation}</Markdown>
                       </div>
                     </section>
@@ -340,13 +340,13 @@ export default function Reports() {
                     <div className="grid grid-cols-2 gap-12">
                       <section>
                         <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Historical Context</h2>
-                        <div className="text-[#475569] leading-relaxed italic border-l-4 border-[#f1f5f9] pl-6 text-base">
+                        <div className="text-[#1e293b] font-medium leading-relaxed italic border-l-4 border-[#f1f5f9] pl-6 text-base">
                           <Markdown>{selectedInquiry.historicalContext}</Markdown>
                         </div>
                       </section>
                       <section>
                         <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Grammatical Analysis</h2>
-                        <div className="text-[#475569] leading-relaxed text-base bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9]">
+                        <div className="text-[#1e293b] font-medium leading-relaxed text-base bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9]">
                           <Markdown>{selectedInquiry.grammarAnalysis}</Markdown>
                         </div>
                       </section>
@@ -392,11 +392,11 @@ export default function Reports() {
                     <div className="col-span-3 grid grid-cols-2 gap-6">
                        <div>
                          <p className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Historical Status</p>
-                         <p className="text-xs text-[#475569] leading-relaxed italic">{selectedInquiry.geography.thenDesc}</p>
+                         <p className="text-xs text-[#1e293b] font-medium leading-relaxed italic">{selectedInquiry.geography.thenDesc}</p>
                        </div>
                        <div>
                          <p className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Modern Status</p>
-                         <p className="text-xs text-[#475569] leading-relaxed italic">{selectedInquiry.geography.nowDesc}</p>
+                         <p className="text-xs text-[#1e293b] font-medium leading-relaxed italic">{selectedInquiry.geography.nowDesc}</p>
                        </div>
                     </div>
                   </div>

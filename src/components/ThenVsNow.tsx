@@ -911,7 +911,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                           <p className="text-xs font-sans font-bold text-accent uppercase tracking-wider">
                             {item.ref}
                           </p>
-                          <p className="text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                          <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                             "{item.text}"
                           </p>
                         </div>
@@ -972,7 +972,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                     </div>
 
                     <div className="p-6 md:p-8 space-y-4 flex-1 flex flex-col justify-between">
-                      <p className="text-text-secondary font-serif italic text-sm leading-relaxed font-medium">
+                      <p className="text-text-primary font-serif italic text-sm leading-relaxed font-medium">
                         {study.thenVisual.description}
                       </p>
 
@@ -1194,7 +1194,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                             <span className="text-[10px] font-sans font-black uppercase tracking-wider text-blue-400 block">
                               1. {study.nowVisual.title} ({study.nowVisual.era}):
                             </span>
-                            <p className="text-text-secondary font-serif italic text-xs leading-relaxed">
+                            <p className="text-text-primary font-serif italic text-sm leading-relaxed font-medium">
                               {study.nowVisual.description}
                             </p>
                           </div>
@@ -1202,13 +1202,13 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                             <span className="text-[10px] font-sans font-black uppercase tracking-wider text-emerald-400 block">
                               2. {study.nowVisual.secondaryTitle || 'The Garden Tomb'} ({study.nowVisual.secondaryEra || '21st Century Reality'}):
                             </span>
-                            <p className="text-text-secondary font-serif italic text-xs leading-relaxed font-medium">
+                            <p className="text-text-primary font-serif italic text-sm leading-relaxed font-medium">
                               {study.nowVisual.secondaryDescription}
                             </p>
                           </div>
                         </div>
                       ) : (
-                        <p className="text-text-secondary font-serif italic text-sm leading-relaxed font-medium">
+                        <p className="text-text-primary font-serif italic text-sm leading-relaxed font-medium">
                           {selectedModernSite === 'secondary' && study.nowVisual.secondaryDescription 
                             ? study.nowVisual.secondaryDescription 
                             : study.nowVisual.description}
@@ -1254,7 +1254,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                   <h4 className="text-lg font-serif font-bold text-text-primary italic">
                     Antiquity Worldview
                   </h4>
-                  <p className="text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                  <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                     {study.antiquityPerspective}
                   </p>
                 </div>
@@ -1266,7 +1266,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                   <h4 className="text-lg font-serif font-bold text-text-primary italic">
                     Modern World Perception
                   </h4>
-                  <p className="text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                  <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                     {study.modernWorldPerspective}
                   </p>
                 </div>
@@ -1278,7 +1278,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                   <h4 className="text-lg font-serif font-bold text-text-primary italic">
                     Theological Evolution
                   </h4>
-                  <p className="text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                  <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                     {study.theologicalEvolution}
                   </p>
                 </div>
@@ -1314,11 +1314,11 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
 
                 {/* Summaries */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                  <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                     <strong className="text-amber-500 font-sans uppercase font-bold block mb-1">Antiquity Demographics:</strong>
                     {study.demographicComparison?.summaryThen}
                   </div>
-                  <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                  <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                     <strong className="text-blue-500 font-sans uppercase font-bold block mb-1">Modern Demographics:</strong>
                     {study.demographicComparison?.summaryNow}
                   </div>
@@ -1377,7 +1377,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                         </div>
                       </div>
 
-                      <div className="space-y-1.5 text-xs font-serif italic text-text-secondary">
+                      <div className="space-y-1.5 text-xs font-serif italic text-text-primary font-medium">
                         <p><strong className="not-italic text-accent font-sans text-[10px] uppercase">Antiquity:</strong> {sect.descriptionThen}</p>
                         <p><strong className="not-italic text-blue-400 font-sans text-[10px] uppercase">Modern:</strong> {sect.descriptionNow}</p>
                       </div>
@@ -1413,7 +1413,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                           <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                           {ch.title}
                         </h6>
-                        <p className="text-sm text-text-secondary font-serif italic leading-relaxed font-medium">
+                        <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                           {ch.challenge}
                         </p>
                         <p className="text-[11px] text-accent/90 font-serif italic pt-1 border-t border-ui-border/50">
@@ -1456,7 +1456,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                       <h6 className="text-[10px] font-sans font-black uppercase tracking-widest text-accent">
                         Divine Destiny Exegesis
                       </h6>
-                      <p className="text-xs text-text-primary font-serif italic leading-relaxed">
+                      <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                         {study.endTimesProphecy?.divineDestinySummary}
                       </p>
                     </div>
@@ -1465,7 +1465,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                       <h6 className="text-[10px] font-sans font-black uppercase tracking-widest text-accent">
                         God's Redemptive Plan in Christ
                       </h6>
-                      <p className="text-xs text-text-primary font-serif italic leading-relaxed">
+                      <p className="text-sm text-text-primary font-serif italic leading-relaxed font-medium">
                         {study.endTimesProphecy?.godsRedemptivePlan}
                       </p>
                     </div>
@@ -2247,7 +2247,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                             </p>
                           </div>
 
-                          <p className="text-xs text-text-secondary italic line-clamp-2 bg-bg-primary/50 p-2.5 rounded-xl border border-ui-border/50 font-serif">
+                          <p className="text-xs text-text-primary font-medium italic line-clamp-2 bg-bg-primary/50 p-2.5 rounded-xl border border-ui-border/50 font-serif">
                             "{item.godsIntentForBodyOfChrist || item.historicalMeaning}"
                           </p>
                         </div>

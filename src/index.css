@@ -80,6 +80,28 @@
   .mono {
     @apply font-mono;
   }
+
+  /* Global high-contrast dark off-black color enforcement for all generated content & markdown */
+  .markdown-body,
+  .markdown-body p,
+  .markdown-body li,
+  .markdown-body span,
+  .markdown-body blockquote,
+  .prose,
+  .prose p,
+  .prose li,
+  .prose blockquote,
+  .generated-content {
+    color: var(--text-primary) !important;
+  }
+
+  .markdown-body strong,
+  .prose strong,
+  .markdown-body b,
+  .prose b {
+    color: var(--text-primary) !important;
+    font-weight: 700;
+  }
 }
 
 .card-sanctuary {

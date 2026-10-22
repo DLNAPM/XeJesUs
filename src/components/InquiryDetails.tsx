@@ -707,9 +707,9 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                   <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-3xl leading-relaxed text-text-primary shadow-inner">
                     "{inquiry.godIntent}"
                   </div>
-                  <div className="prose prose-invert max-w-none">
+                   <div className="prose max-w-none">
                     <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Detailed Interpretation</h3>
-                    <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-text-secondary">
+                    <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-text-primary">
                       <Markdown>{inquiry.interpretation}</Markdown>
                     </div>
                   </div>
@@ -757,7 +757,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                   <section>
                     <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
-                    <div className="text-xl leading-relaxed text-text-secondary font-serif space-y-4">
+                    <div className="text-xl leading-relaxed text-text-primary font-serif space-y-4 font-medium">
                        <Markdown>{inquiry.historicalContext}</Markdown>
                     </div>
                   </section>
@@ -765,14 +765,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                   <div className="grid md:grid-cols-2 gap-12">
                     <section>
                       <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Literary Genre</h3>
-                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-text-secondary/80 text-lg shadow-sm">
+                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-text-primary text-lg shadow-sm font-medium">
                          {inquiry.literaryGenre}
                       </div>
                     </section>
 
                     <section>
                       <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Grammatical Analysis</h3>
-                      <div className="text-lg leading-relaxed text-text-secondary italic border-l-2 border-accent/20 pl-6">
+                      <div className="text-lg leading-relaxed text-text-primary italic border-l-2 border-accent/20 pl-6 font-medium">
                          <Markdown>{inquiry.grammarAnalysis}</Markdown>
                       </div>
                     </section>
@@ -829,7 +829,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                           <span className="text-white font-serif italic text-xl">In Biblical Times</span>
                         </div>
                       </button>
-                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-secondary shadow-inner">
+                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-primary shadow-inner font-medium">
                         {inquiry.geography.thenDesc}
                       </div>
                     </div>
@@ -857,7 +857,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                           <span className="text-white font-serif italic text-xl">Region Today</span>
                         </div>
                       </button>
-                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-secondary shadow-inner">
+                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-primary shadow-inner font-medium">
                         {inquiry.geography.nowDesc}
                       </div>
                     </div>

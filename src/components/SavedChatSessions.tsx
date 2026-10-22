@@ -742,7 +742,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                         <Sparkles className="w-4 h-4" />
                         Executive Summary
                       </h2>
-                      <p className="text-sm leading-relaxed text-[#334155] italic">
+                      <p className="text-sm leading-relaxed text-[#0f172a] font-medium italic">
                         {literaryWork.executiveSummary}
                       </p>
                     </section>
@@ -753,7 +753,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                         <BookOpen className="w-4 h-4" />
                         Thematic Exegesis & Theological Synthesis
                       </h2>
-                      <div className="text-sm leading-relaxed text-[#334155] space-y-3 font-serif">
+                      <div className="text-sm leading-relaxed text-[#0f172a] font-medium space-y-3 font-serif">
                         {literaryWork.thematicAnalysis}
                       </div>
                     </section>
@@ -779,11 +779,11 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                                       {node.biblicalTitle}
                                     </span>
                                   </div>
-                                  <span className="text-[10px] font-sans text-[#64748b] uppercase tracking-wider font-semibold">
+                                  <span className="text-[10px] font-sans text-[#1e293b] uppercase tracking-wider font-semibold">
                                     {node.generation} {node.keyScripture && `• ${node.keyScripture}`}
                                   </span>
                                 </div>
-                                <p className="text-xs text-[#475569] italic leading-relaxed">{node.significance}</p>
+                                <p className="text-xs text-[#1e293b] font-medium italic leading-relaxed">{node.significance}</p>
                               </div>
                             ))}
                           </div>
@@ -806,10 +806,10 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                                   {work.era}
                                 </span>
                                 <h3 className="font-bold text-sm text-[#0f172a] mb-0.5">{work.title}</h3>
-                                <p className="text-xs text-[#64748b] italic font-semibold mb-2">By {work.author}</p>
-                                <p className="text-xs text-[#334155] leading-relaxed mb-3">{work.summary}</p>
+                                <p className="text-xs text-[#1e293b] italic font-semibold mb-2">By {work.author}</p>
+                                <p className="text-xs text-[#0f172a] font-medium leading-relaxed mb-3">{work.summary}</p>
                               </div>
-                              <div className="pt-2 border-t border-[#e2e8f0] text-[11px] text-[#475569] italic">
+                              <div className="pt-2 border-t border-[#e2e8f0] text-[11px] text-[#1e293b] font-medium italic">
                                 <strong>Relevance:</strong> {work.relevance}
                               </div>
                             </div>
@@ -844,7 +844,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                               <h3 className="font-bold text-xs text-[#0f172a] mb-1 group-hover:text-[#3b82f6] transition-colors line-clamp-2">
                                 {video.title}
                               </h3>
-                              <p className="text-xs text-[#64748b] leading-relaxed italic line-clamp-3">
+                              <p className="text-xs text-[#1e293b] leading-relaxed italic line-clamp-3">
                                 {video.description}
                               </p>
                             </a>
@@ -864,12 +864,12 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                             Annotated Dialogue & Commentary
                           </h2>
                         </div>
-                        <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-[#64748b] bg-[#f1f5f9] px-3 py-1 rounded-full w-fit">
+                        <span className="text-[10px] font-sans font-semibold uppercase tracking-widest text-[#1e293b] bg-[#f1f5f9] px-3 py-1 rounded-full w-fit">
                           Transcript • {selectedSessionForExport.messages.length} Exchanges
                         </span>
                       </div>
 
-                      <p className="text-xs font-serif italic text-[#475569] leading-relaxed border-l-2 border-[#3b82f6] pl-3 py-0.5">
+                      <p className="text-xs font-serif italic text-[#1e293b] font-medium leading-relaxed border-l-2 border-[#3b82f6] pl-3 py-0.5">
                         A formal scholarly transcript documenting the pilgrimage inquiry and exegetical study between the Pilgrim and the Sanctuary Scholar in the tradition of classical commentary archives.
                       </p>
 
@@ -896,7 +896,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
                                 }`}>
                                   {isUser ? 'PILGRIM' : 'SANCTUARY SCHOLAR'}
                                 </span>
-                                <span className="text-xs font-serif italic text-[#64748b] font-medium tracking-wide">
+                                <span className="text-xs font-serif italic text-[#1e293b] font-medium tracking-wide">
                                   {isUser ? '• Pilgrim Inquiry' : '• Exegetical Response'}
                                 </span>
                               </div>
