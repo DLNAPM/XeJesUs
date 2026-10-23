@@ -596,7 +596,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
         {/* Quick Presets */}
         <div className="space-y-2 pt-2 border-t border-ui-border/50">
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-sans font-black uppercase tracking-[0.2em] text-text-secondary/70">
+            <p className="text-[10px] font-sans font-black uppercase tracking-[0.2em] text-text-primary">
               Curated Excavations ({category === 'place' ? 'Places' : category === 'people' ? 'Generations & People' : category === 'event' ? 'Biblical Events' : 'Phrases'} Highlighted):
             </p>
             {savedAntiquities.length > 0 && (
@@ -630,7 +630,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                   }`}
                 >
                   <span className="font-serif italic font-medium">{preset.name}</span>
-                  <span className={`text-[9px] font-sans uppercase tracking-wider ${isMatch ? 'text-accent font-bold' : 'text-text-secondary/70 group-hover:text-accent'}`}>
+                  <span className={`text-[9px] font-sans uppercase tracking-wider ${isMatch ? 'text-accent font-bold' : 'text-text-primary font-semibold group-hover:text-accent'}`}>
                     ({preset.category})
                   </span>
                 </button>
@@ -1776,9 +1776,9 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                 </div>
 
                 {/* Page 1 Footer */}
-                <div className="pt-4 border-t border-amber-800/20 flex items-center justify-between text-[10px] text-zinc-500 font-sans">
+                <div className="pt-4 border-t border-amber-800/20 flex items-center justify-between text-[10px] text-zinc-950 font-sans font-semibold">
                   <span>Page 1 of 2 (Front) • XeJesUs Sanctuary Publication</span>
-                  <span className="uppercase tracking-widest text-amber-800 font-bold">Turn to Back Page for Demographics & End Times</span>
+                  <span className="uppercase tracking-widest text-amber-900 font-bold">Turn to Back Page for Demographics & End Times</span>
                 </div>
               </div>
             </div>
@@ -1886,22 +1886,22 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                         </div>
                         {/* Dual Progress Meter */}
                         <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-[8px] font-sans text-zinc-500">
+                          <div className="flex items-center gap-1.5 text-[8px] font-sans text-zinc-900 font-semibold">
                             <span className="w-8">Then:</span>
                             <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
                               <div className="h-full bg-amber-600 rounded-full" style={{ width: `${Math.min(100, sect.percentageThen)}%` }} />
                             </div>
-                            <span className="w-6 text-right font-bold text-amber-700">{sect.percentageThen}%</span>
+                            <span className="w-6 text-right font-bold text-amber-900">{sect.percentageThen}%</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[8px] font-sans text-zinc-500">
+                          <div className="flex items-center gap-1.5 text-[8px] font-sans text-zinc-900 font-semibold">
                             <span className="w-8">Now:</span>
                             <div className="flex-1 h-1.5 bg-zinc-200 rounded-full overflow-hidden">
                               <div className="h-full bg-blue-600 rounded-full" style={{ width: `${Math.min(100, sect.percentageNow)}%` }} />
                             </div>
-                            <span className="w-6 text-right font-bold text-blue-700">{sect.percentageNow}%</span>
+                            <span className="w-6 text-right font-bold text-blue-900">{sect.percentageNow}%</span>
                           </div>
                         </div>
-                        <p className="text-[10px] text-zinc-600 italic line-clamp-1 pt-0.5">
+                        <p className="text-[10px] text-zinc-900 font-medium italic line-clamp-1 pt-0.5">
                           Antiquity: {sect.descriptionThen}
                         </p>
                       </div>
@@ -1920,8 +1920,8 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                       {study.modernRegionalChallenges?.map((ch, i) => (
                         <div key={i} className="p-2 bg-red-50/40 border border-red-200 rounded-lg space-y-0.5">
                           <p className="font-sans font-bold text-red-900 text-[10px] uppercase">{ch.title}</p>
-                          <p className="text-zinc-700 italic text-[11px] leading-tight">{ch.challenge}</p>
-                          <p className="text-[9px] text-amber-900 font-sans italic pt-0.5">
+                          <p className="text-zinc-900 font-medium italic text-[11px] leading-tight">{ch.challenge}</p>
+                          <p className="text-[9px] text-amber-900 font-sans italic pt-0.5 font-semibold">
                             Spiritual: {ch.spiritualSignificance}
                           </p>
                         </div>
@@ -1938,12 +1938,12 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                       <p className="font-sans font-bold text-amber-900 text-[10px]">
                         Prophetic Scriptures: {study.endTimesProphecy?.scripturalProphecies?.join(', ')}
                       </p>
-                      <p className="text-zinc-800 italic text-[11px] leading-relaxed">
+                      <p className="text-zinc-900 italic text-[11px] leading-relaxed font-medium">
                         {study.endTimesProphecy?.divineDestinySummary}
                       </p>
                       <div className="pt-1 border-t border-amber-800/10">
-                        <p className="text-[9px] font-sans font-bold uppercase text-amber-800">Redemptive Plan in Christ:</p>
-                        <p className="text-zinc-700 italic text-[11px]">
+                        <p className="text-[9px] font-sans font-bold uppercase text-amber-900">Redemptive Plan in Christ:</p>
+                        <p className="text-zinc-900 italic text-[11px] font-medium">
                           {study.endTimesProphecy?.godsRedemptivePlan}
                         </p>
                       </div>
@@ -1956,15 +1956,15 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                   <p className="text-[9px] font-sans font-black uppercase tracking-widest text-amber-900">
                     Sanctuary Pilgrim Benediction:
                   </p>
-                  <p className="text-xs font-serif italic text-zinc-900 max-w-2xl mx-auto leading-relaxed">
+                  <p className="text-xs font-serif italic text-zinc-950 font-medium max-w-2xl mx-auto leading-relaxed">
                     "{study.pilgrimTakeaway}"
                   </p>
                 </div>
 
                 {/* Page 2 Footer */}
-                <div className="pt-3 border-t border-amber-800/20 flex items-center justify-between text-[10px] text-zinc-500 font-sans">
+                <div className="pt-3 border-t border-amber-800/20 flex items-center justify-between text-[10px] text-zinc-950 font-sans font-semibold">
                   <span>Page 2 of 2 (Back) • XeJesUs Sanctuary Publication</span>
-                  <span className="uppercase tracking-widest text-amber-800 font-bold">Faith Through Understanding • End of Exegesis</span>
+                  <span className="uppercase tracking-widest text-amber-900 font-bold">Faith Through Understanding • End of Exegesis</span>
                 </div>
               </div>
             </div>
@@ -2226,7 +2226,7 @@ export default function ThenVsNow({ isPremium, onUpgradeRequest, userProfile }: 
                             <span className="px-2.5 py-0.5 rounded-md bg-accent/20 text-accent text-[9px] font-sans font-bold uppercase tracking-wider">
                               {item.category}
                             </span>
-                            <span className="text-[10px] text-text-secondary/60 font-sans">
+                            <span className="text-[10px] text-text-primary font-sans font-medium">
                               {(() => {
                                 try {
                                   const d = item.savedAt ? new Date(item.savedAt) : new Date();

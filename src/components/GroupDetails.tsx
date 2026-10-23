@@ -123,7 +123,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
               </button>
             )}
           </div>
-          <p className="text-xl opacity-70 italic max-w-xl font-serif leading-relaxed">{group.description}</p>
+          <p className="text-xl text-bg-primary/95 italic max-w-xl font-serif leading-relaxed font-medium">{group.description}</p>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
 
         {discussions.length === 0 ? (
           <div className="text-center py-24 bg-ui-card/30 rounded-[2rem] border-2 border-dashed border-ui-border">
-            <p className="text-text-secondary italic font-serif text-lg">No inquiries shared here yet. Be the first to share a seeking!</p>
+            <p className="text-text-primary italic font-serif text-lg font-bold">No inquiries shared here yet. Be the first to share a seeking!</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -151,12 +151,12 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                       <div className="flex items-center gap-3 mb-3">
                         <span className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em]">{disc.inquiry.scripture}</span>
                         <span className="w-1 h-1 rounded-full bg-ui-border"></span>
-                        <span className="text-[10px] text-text-secondary italic font-serif">Deep seeking shared in faith</span>
+                        <span className="text-[10px] text-text-primary font-bold italic font-serif">Deep seeking shared in faith</span>
                       </div>
                       <h3 className="text-2xl font-serif text-text-primary mb-2 italic font-bold">{disc.inquiry.query}</h3>
                     </>
                   ) : (
-                    <p className="text-text-secondary opacity-40 italic font-serif">This inquiry has returned to the silence of the archives.</p>
+                    <p className="text-text-primary italic font-serif font-bold">This inquiry has returned to the silence of the archives.</p>
                   )}
                 </div>
                 
@@ -191,13 +191,13 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
             >
               <button 
                 onClick={() => setShowMembersModal(false)}
-                className="absolute top-8 right-8 text-text-secondary hover:text-text-primary"
+                className="absolute top-8 right-8 text-text-primary hover:opacity-75 font-bold"
               >
                 ✕
               </button>
               
               <h2 className="text-3xl font-serif text-text-primary mb-2 italic text-center font-bold">Communion Members</h2>
-              <p className="text-sm text-text-secondary mb-8 font-serif text-center italic">Manage the gatherers in this study sanctuary.</p>
+              <p className="text-sm text-text-primary mb-8 font-serif text-center italic font-semibold">Manage the gatherers in this study sanctuary.</p>
 
               <form onSubmit={handleInvite} className="mb-8 flex gap-3">
                 <input 
@@ -205,7 +205,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                   placeholder="Invite by Gmail account..."
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="flex-1 px-5 py-4 bg-ui-card border border-ui-border rounded-2xl font-serif text-text-primary focus:outline-none focus:border-accent transition-all text-sm"
+                  className="flex-1 px-5 py-4 bg-ui-card border border-ui-border rounded-2xl font-serif text-text-primary focus:outline-none focus:border-accent transition-all text-sm font-medium"
                   required
                 />
                 <button 
@@ -232,7 +232,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                             <Shield className="w-3 h-3 text-accent" />
                           )}
                         </div>
-                        <p className="text-[11px] text-text-secondary uppercase tracking-widest font-bold">
+                        <p className="text-[11px] text-text-primary uppercase tracking-widest font-black">
                           {member.role} {member.status === 'invited' ? '• Pending Invite' : ''}
                         </p>
                       </div>

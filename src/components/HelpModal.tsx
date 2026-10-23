@@ -86,7 +86,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                       </div>
                       <div>
                         <h4 className="font-bold text-text-primary font-sans text-sm mb-1 uppercase tracking-tighter">{step.title}</h4>
-                        <p className="text-xs text-text-secondary opacity-70 leading-relaxed font-serif italic">{step.desc}</p>
+                        <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">{step.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -97,16 +97,16 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               <section className="space-y-4">
                 <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Academic & Spiritual Citation Framework</h3>
                 <div className="p-6 bg-ui-card rounded-2xl border border-ui-border space-y-3">
-                  <p className="text-sm font-serif italic text-text-secondary leading-relaxed">
+                  <p className="text-sm font-serif italic text-text-primary font-medium leading-relaxed">
                     XeJesUs grounds every theological interpretation and AI exegesis in six core foundational authorities:
                   </p>
-                  <ul className="text-xs text-text-secondary font-serif space-y-1.5 pl-4 list-disc marker:text-accent">
-                    <li><strong className="font-sans text-text-primary">Primary Canonical Scriptures:</strong> Direct Old & New Testament book/chapter/verse citations.</li>
-                    <li><strong className="font-sans text-text-primary">Asher Wilson's The Most Complete Ethiopian Bible In English:</strong> Complete 81-book Ethiopian Orthodox Tewahedo canon, preserving ancient Ge'ez manuscripts, 1 Enoch, Jubilees, and 1-3 Meqabyan.</li>
-                    <li><strong className="font-sans text-text-primary">Original Linguistic Lexicons:</strong> Hebrew, Aramaic, Ge'ez, and Greek etymologies via Strong’s, BDB, and BDAG.</li>
-                    <li><strong className="font-sans text-text-primary">Patristic & Classical Exegesis:</strong> Early Church Fathers (Augustine, Chrysostom, Athanasius) & classic commentators.</li>
-                    <li><strong className="font-sans text-text-primary">Historical & Archaeological Records:</strong> Josephus, Dead Sea Scrolls, and ancient Levant geography.</li>
-                    <li><strong className="font-sans text-text-primary">Real-Time Web Grounding:</strong> Contemporary application anchored in unchanging scripture.</li>
+                  <ul className="text-xs text-text-primary font-serif font-medium space-y-1.5 pl-4 list-disc marker:text-accent">
+                    <li><strong className="font-sans text-text-primary font-bold">Primary Canonical Scriptures:</strong> Direct Old & New Testament book/chapter/verse citations.</li>
+                    <li><strong className="font-sans text-text-primary font-bold">Asher Wilson's The Most Complete Ethiopian Bible In English:</strong> Complete 81-book Ethiopian Orthodox Tewahedo canon, preserving ancient Ge'ez manuscripts, 1 Enoch, Jubilees, and 1-3 Meqabyan.</li>
+                    <li><strong className="font-sans text-text-primary font-bold">Original Linguistic Lexicons:</strong> Hebrew, Aramaic, Ge'ez, and Greek etymologies via Strong’s, BDB, and BDAG.</li>
+                    <li><strong className="font-sans text-text-primary font-bold">Patristic & Classical Exegesis:</strong> Early Church Fathers (Augustine, Chrysostom, Athanasius) & classic commentators.</li>
+                    <li><strong className="font-sans text-text-primary font-bold">Historical & Archaeological Records:</strong> Josephus, Dead Sea Scrolls, and ancient Levant geography.</li>
+                    <li><strong className="font-sans text-text-primary font-bold">Real-Time Web Grounding:</strong> Contemporary application anchored in unchanging scripture.</li>
                   </ul>
                 </div>
               </section>
@@ -114,7 +114,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               {/* Audience */}
               <section className="space-y-4">
                 <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Intended Audience</h3>
-                <p className="font-serif text-lg text-text-secondary leading-relaxed italic opacity-80">
+                <p className="font-serif text-lg text-text-primary leading-relaxed italic font-medium">
                   Designed for believers seeking deep scriptural depth, theology students, small groups, and anyone who desires to hear the heartbeat of the Gospels more clearly.
                 </p>
               </section>
@@ -125,7 +125,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   <AlertTriangle className="w-5 h-5" />
                   <h3 className="text-xs font-sans font-bold uppercase tracking-widest">Important Disclaimer</h3>
                 </div>
-                <div className="text-sm text-text-secondary/80 font-serif leading-relaxed space-y-4 italic">
+                <div className="text-sm text-text-primary font-serif leading-relaxed space-y-4 italic font-medium">
                   <p>
                     XeJesUs utilizes advanced AI to assist in scriptural analysis. While we strive for theological accuracy, these results should be used for educational and spiritual exploration.
                   </p>

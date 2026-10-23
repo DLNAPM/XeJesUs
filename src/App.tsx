@@ -583,23 +583,23 @@ export default function App() {
             </div>
           )}
           
-          <div className="mt-12 text-natural-text/60 text-xs font-sans max-w-md mx-auto leading-relaxed uppercase tracking-widest">
+          <div className="mt-12 text-text-primary text-xs font-sans font-bold max-w-md mx-auto leading-relaxed uppercase tracking-widest">
             Our purpose is to travel through the text to discover Jesus' true intentions for Us today.
           </div>
         </motion.div>
 
         {/* Privacy Policy & Terms Footer */}
         <div className="absolute bottom-6 left-0 right-0 text-center z-10 px-6 flex flex-col items-center gap-1.5">
-          <div className="flex items-center gap-3 text-xs font-sans font-bold text-text-secondary/70 uppercase tracking-[0.2em]">
+          <div className="flex items-center gap-3 text-xs font-sans font-bold text-text-primary uppercase tracking-[0.2em]">
             <button onClick={() => setCurrentPage('privacy')} className="hover:text-accent hover:underline underline-offset-4 transition-colors">
               Privacy Policy
             </button>
-            <span className="opacity-30">•</span>
+            <span className="opacity-50">•</span>
             <button onClick={() => setCurrentPage('terms')} className="hover:text-accent hover:underline underline-offset-4 transition-colors">
               Terms of Use
             </button>
           </div>
-          <p className="text-[10px] font-sans text-text-secondary/50 uppercase tracking-widest">
+          <p className="text-[10px] font-sans font-bold text-text-primary uppercase tracking-widest">
             By using XeJesUs, you agree to our Sanctuary Covenants & Terms.
           </p>
         </div>
@@ -680,7 +680,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  <p className="text-xs text-text-secondary/80 font-serif italic text-center">
+                  <p className="text-xs text-text-primary font-serif italic text-center font-medium">
                     Tip: If opening inside an app preview or social webview, tap the browser menu (⋮) and select <span className="font-sans font-bold text-accent">"Open in Chrome"</span>.
                   </p>
                 </div>
@@ -688,11 +688,11 @@ export default function App() {
                 <div className="flex flex-col gap-2">
                   <button 
                     onClick={() => setShowLoginErrorModal(false)}
-                    className="w-full py-3 bg-ui-sidebar text-text-secondary rounded-xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:text-text-primary transition-all text-center"
+                    className="w-full py-3 bg-ui-sidebar text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:text-accent transition-all text-center"
                   >
                     Close
                   </button>
-                  <p className="text-[10px] text-text-secondary/60 text-center font-sans tracking-widest uppercase">Storage-Partitioned Environment Resolver Active</p>
+                  <p className="text-[10px] text-text-primary text-center font-sans tracking-widest uppercase font-semibold">Storage-Partitioned Environment Resolver Active</p>
                 </div>
               </motion.div>
             </div>
@@ -715,7 +715,7 @@ export default function App() {
             <UserX className="w-10 h-10 text-red-500" />
           </div>
           <h1 className="text-3xl font-serif text-text-primary mb-4 italic font-bold">Account Frozen</h1>
-          <p className="text-text-secondary italic mb-8">Your journey has been temporarily paused. Please contact Sanctuary Support for guidance on your path forward.</p>
+          <p className="text-text-primary font-medium italic mb-8">Your journey has been temporarily paused. Please contact Sanctuary Support for guidance on your path forward.</p>
           <button 
             onClick={handleLogout}
             className="w-full py-4 bg-text-primary text-bg-primary rounded-2xl font-bold uppercase tracking-widest text-xs hover:opacity-90 transition-all"
@@ -741,14 +741,14 @@ export default function App() {
         <div className="flex items-center gap-2">
            <button 
              onClick={() => setCurrentPage('groups')} 
-             className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-primary/60")}
+             className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-primary")}
              title="Groups"
            >
              <Users className="w-5 h-5" />
            </button>
            <button 
              onClick={() => navigateToPage('then-vs-now', 'Then vs Now')} 
-             className={cn("p-2 transition-colors relative", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary/60")}
+             className={cn("p-2 transition-colors relative", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary")}
              title="Then vs Now (Premium)"
            >
              <Compass className="w-5 h-5" />
@@ -756,14 +756,14 @@ export default function App() {
            </button>
            <button 
              onClick={openSavedChatSessions} 
-             className="p-2 transition-colors text-text-primary/60 hover:text-accent"
+             className="p-2 transition-colors text-text-primary hover:text-accent"
              title="Saved Chat Sessions"
            >
              <History className="w-5 h-5" />
            </button>
            <button 
              onClick={() => navigateToPage('reports', 'Reports Menu')} 
-             className={cn("p-2 transition-colors relative", currentPage === 'reports' ? "text-accent" : "text-text-primary/60")}
+             className={cn("p-2 transition-colors relative", currentPage === 'reports' ? "text-accent" : "text-text-primary")}
              title="Reports (Premium)"
            >
              <FileText className="w-5 h-5" />
@@ -930,14 +930,14 @@ export default function App() {
               <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user?.email}</p>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-2 pt-2 pb-1 text-[10px] font-sans font-bold text-text-secondary/70 uppercase tracking-wider">
+          <div className="flex items-center justify-center gap-2 pt-2 pb-1 text-[10px] font-sans font-bold text-text-primary uppercase tracking-wider">
             <button onClick={() => setCurrentPage('privacy')} className="hover:text-accent transition-colors">Privacy Policy</button>
-            <span className="opacity-30">•</span>
+            <span className="opacity-50">•</span>
             <button onClick={() => setCurrentPage('terms')} className="hover:text-accent transition-colors">Terms of Use</button>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-text-secondary hover:text-accent transition-colors text-sm font-semibold"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-text-primary hover:text-accent transition-colors text-sm font-bold"
           >
             <LogOut className="w-5 h-5" />
             <span>Depart</span>
@@ -1201,9 +1201,9 @@ export default function App() {
                   </button>
                 )}
 
-                <div className="flex items-center justify-center gap-3 py-2 mb-4 text-xs font-sans font-bold text-text-secondary/70 uppercase tracking-widest border-t border-ui-border/50 pt-4">
+                <div className="flex items-center justify-center gap-3 py-2 mb-4 text-xs font-sans font-bold text-text-primary uppercase tracking-widest border-t border-ui-border/50 pt-4">
                   <button onClick={() => navigateToPage('privacy', 'Privacy Policy')} className="hover:text-accent transition-colors">Privacy Policy</button>
-                  <span className="opacity-30">•</span>
+                  <span className="opacity-50">•</span>
                   <button onClick={() => navigateToPage('terms', 'Terms of Use')} className="hover:text-accent transition-colors">Terms of Use</button>
                 </div>
 

@@ -584,7 +584,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         <div className="xl:col-span-1 space-y-8">
           <div>
             {senderEmail && inquiry.userId !== currentUserId && (
-              <div className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.3em] mb-1 opacity-60">
+              <div className="text-[10px] font-sans font-black text-text-primary uppercase tracking-[0.3em] mb-1">
                 Shared by: {senderEmail}
               </div>
             )}
@@ -608,7 +608,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               </button>
             )}
             <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
-            <div className="text-xs text-text-secondary font-sans uppercase tracking-widest font-semibold">Seeked on {(() => {
+            <div className="text-xs text-text-primary font-sans uppercase tracking-widest font-bold">Seeked on {(() => {
               if (!inquiry?.createdAt) return 'N/A';
               try {
                 if (typeof inquiry.createdAt.toDate === 'function') {
@@ -788,7 +788,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                         Academic & Spiritual Authorities
                       </h4>
                     </div>
-                    <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
+                    <p className="text-xs text-text-primary font-serif italic leading-relaxed font-semibold">
                       This exegesis is anchored in the XeJesUs Academic & Spiritual Citation Framework — drawing from Primary Canonical Scriptures, <strong>Asher Wilson's The Most Complete Ethiopian Bible In English</strong> (preserving the ancient 81-book Ge'ez canon, 1 Enoch, Jubilees, and Meqabyan), original Hebrew, Aramaic, Ge'ez, and Greek lexicons, and classical Patristic commentary.
                     </p>
                   </div>
@@ -800,7 +800,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                   <header className="flex justify-between items-end border-b border-ui-border pb-6">
                     <div>
                       <h3 className="text-4xl font-serif text-text-primary italic font-bold">{inquiry.geography.location}</h3>
-                      <p className="text-text-secondary font-medium italic font-serif mt-2 text-lg">Connecting the Holy Land across the ages</p>
+                      <p className="text-text-primary font-bold italic font-serif mt-2 text-lg">Connecting the Holy Land across the ages</p>
                     </div>
                     <Map className="w-12 h-12 text-accent/20" />
                   </header>
@@ -863,7 +863,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     </div>
                   </div>
 
-                  <div className="p-6 bg-bg-primary/30 rounded-2xl text-center text-xs text-text-secondary/40 uppercase tracking-[0.4em] font-sans">
+                  <div className="p-6 bg-bg-primary/50 rounded-2xl text-center text-xs text-text-primary uppercase tracking-[0.4em] font-sans font-bold">
                     Images are illustrative of the historical region and its modern atmosphere
                   </div>
                </motion.div>
@@ -877,7 +877,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     </div>
                     <Video className="w-20 h-20 text-accent mx-auto mb-8 relative z-10" />
                     <h3 className="text-4xl font-serif mb-6 relative z-10 italic font-bold">Living Word Media</h3>
-                    <p className="opacity-70 mb-10 max-w-sm mx-auto font-sans text-sm tracking-wide relative z-10 leading-relaxed italic">Explore academic TEACHINGS and geographical archaeological series curated for this passage.</p>
+                    <p className="opacity-95 mb-10 max-w-sm mx-auto font-sans text-sm tracking-wide relative z-10 leading-relaxed italic font-medium">Explore academic TEACHINGS and geographical archaeological series curated for this passage.</p>
                     
                     <a 
                       href={`https://www.youtube.com/results?search_query=${encodeURIComponent(inquiry.videoClipQuery || inquiry.scripture + ' exegesis')}`}
@@ -890,14 +890,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                     </a>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 opacity-60">
-                     <div className="p-8 bg-ui-sidebar/50 rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-ui-border">
-                        <div className="w-12 h-12 rounded-full border border-accent/30 flex items-center justify-center font-bold text-accent">BP</div>
-                        <p className="italic text-sm font-serif text-text-secondary">Curated: The Bible Project</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="p-8 bg-ui-sidebar/80 rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-ui-border">
+                        <div className="w-12 h-12 rounded-full border border-accent/40 flex items-center justify-center font-bold text-accent">BP</div>
+                        <p className="italic text-sm font-serif text-text-primary font-bold">Curated: The Bible Project</p>
                      </div>
-                     <div className="p-8 bg-ui-sidebar/50 rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-ui-border">
-                        <div className="w-12 h-12 rounded-full border border-accent/30 flex items-center justify-center font-bold text-accent">MW</div>
-                        <p className="italic text-sm font-serif text-text-secondary">Deep Dive: Mike Winger</p>
+                     <div className="p-8 bg-ui-sidebar/80 rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-ui-border">
+                        <div className="w-12 h-12 rounded-full border border-accent/40 flex items-center justify-center font-bold text-accent">MW</div>
+                        <p className="italic text-sm font-serif text-text-primary font-bold">Deep Dive: Mike Winger</p>
                      </div>
                   </div>
                </motion.div>
@@ -911,7 +911,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                 <Trash2 className="w-4 h-4 text-red-500" />
                 Library Controls
               </h3>
-              <p className="text-xs text-text-secondary mb-4 italic leading-relaxed">
+              <p className="text-xs text-text-primary mb-4 italic leading-relaxed font-medium">
                 Remove this seeking permanently from your Exegesis Library. This action is irreversible.
               </p>
               <button 
@@ -995,13 +995,13 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               </button>
               
               <h2 className="text-3xl font-serif text-text-primary mb-2 text-center italic font-bold">Share Communion</h2>
-              <p className="text-sm text-text-secondary text-center mb-8 italic opacity-60">Spread the light of your findings.</p>
+              <p className="text-sm text-text-primary text-center mb-8 italic font-semibold">Spread the light of your findings.</p>
 
               <div className="flex bg-ui-sidebar/30 p-1 rounded-xl mb-8 border border-ui-border">
                 <button 
                   onClick={() => setShareMode('groups')}
                   className={`flex-1 py-2 text-[10px] font-sans font-bold uppercase tracking-widest rounded-lg transition-all ${
-                    shareMode === 'groups' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-secondary/40'
+                    shareMode === 'groups' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-primary font-semibold'
                   }`}
                 >
                   Small Groups
@@ -1009,7 +1009,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                 <button 
                   onClick={() => setShowGmailWarning(true)}
                   className={`flex-1 py-2 text-[10px] font-sans font-bold uppercase tracking-widest rounded-lg transition-all ${
-                    shareMode === 'individual' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-secondary/40'
+                    shareMode === 'individual' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-primary font-semibold'
                   }`}
                 >
                   Direct Reveal
@@ -1030,7 +1030,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                         <Globe className="w-6 h-6 text-accent" />
                       </div>
                       <h3 className="text-xl font-serif italic font-bold text-accent">Verify Google Account</h3>
-                      <p className="text-xs font-serif leading-relaxed opacity-80">
+                      <p className="text-xs font-serif leading-relaxed opacity-90 font-medium">
                         Before sharing, please verify with the recipient that they are using a valid <span className="font-bold text-white">Google account</span>. Direct sharing requires the recipient to sign in with this exact email.
                       </p>
                       <button 
@@ -1044,7 +1044,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                       </button>
                       <button 
                         onClick={() => setShowGmailWarning(false)}
-                        className="text-[10px] font-sans font-bold uppercase tracking-widest opacity-40 hover:opacity-100"
+                        className="text-[10px] font-sans font-bold uppercase tracking-widest text-white/80 hover:text-white"
                       >
                         Go Back
                       </button>
@@ -1057,7 +1057,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                 <div className="space-y-3 max-h-[350px] overflow-y-auto mb-2 pr-2 scrollbar-thin scrollbar-thumb-ui-border">
                   {myGroups.length === 0 ? (
                     <div className="text-center py-10 bg-ui-card rounded-2xl border border-dashed border-ui-border">
-                      <p className="text-xs text-text-secondary/40 italic font-serif">No study groups found. Join a communion first.</p>
+                      <p className="text-xs text-text-primary font-medium italic font-serif">No study groups found. Join a communion first.</p>
                     </div>
                   ) : (
                     myGroups.map(group => (

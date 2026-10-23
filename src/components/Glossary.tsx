@@ -556,11 +556,11 @@ export default function Glossary() {
 
       {/* Search Input Bar */}
       <div className="relative mb-4 sm:mb-6 shrink-0">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary/50" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-primary" />
         <input 
           type="text"
           placeholder="Search your lexicon words or definitions..."
-          className="w-full bg-ui-card border border-ui-border rounded-2xl pl-12 pr-10 py-3 sm:py-3.5 font-serif text-base sm:text-lg focus:outline-none focus:border-accent transition-all shadow-sm text-text-primary placeholder:text-text-secondary/40"
+          className="w-full bg-ui-card border border-ui-border rounded-2xl pl-12 pr-10 py-3 sm:py-3.5 font-serif text-base sm:text-lg focus:outline-none focus:border-accent transition-all shadow-sm text-text-primary placeholder:text-text-secondary font-medium"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -568,7 +568,7 @@ export default function Glossary() {
           <button
             type="button"
             onClick={() => setSearchTerm('')}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary/60 hover:text-text-primary p-1 rounded-full cursor-pointer"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-primary hover:text-accent p-1 rounded-full cursor-pointer font-bold"
           >
             <X className="w-4 h-4" />
           </button>
@@ -673,7 +673,7 @@ export default function Glossary() {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <p className="text-text-secondary leading-relaxed font-serif text-sm sm:text-base italic pl-4 border-l-2 border-accent/20 select-text">
+                    <p className="text-text-primary font-medium leading-relaxed font-serif text-sm sm:text-base italic pl-4 border-l-2 border-accent/20 select-text">
                       {entry.definition}
                     </p>
                   </motion.div>

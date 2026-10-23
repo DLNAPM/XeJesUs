@@ -530,14 +530,14 @@ export default function AdminMaintenanceStation() {
                 </h5>
 
                 {/* Custom Message */}
-                <p className="text-xs font-sans text-text-secondary leading-relaxed mb-4 whitespace-pre-line">
+                <p className="text-xs font-sans text-text-primary leading-relaxed mb-4 whitespace-pre-line font-medium">
                   {config.message || "We are currently conducting scheduled upgrades. Check back shortly."}
                 </p>
 
                 {/* Affected Services Pills */}
                 {config.affectedServices && config.affectedServices.length > 0 && (
                   <div className="space-y-1.5 pt-3 border-t border-ui-border/50">
-                    <p className="text-[9px] font-sans font-black uppercase tracking-wider text-text-secondary/80">
+                    <p className="text-[9px] font-sans font-black uppercase tracking-wider text-text-primary">
                       What's Down / Being Upgraded:
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -565,7 +565,7 @@ export default function AdminMaintenanceStation() {
               </div>
 
               <div className="mt-4 text-center">
-                <span className="text-[10px] font-sans text-text-secondary/60 uppercase tracking-widest">
+                <span className="text-[10px] font-sans text-text-primary font-bold uppercase tracking-widest">
                   Preview mirrors exact pilgrim viewport
                 </span>
               </div>

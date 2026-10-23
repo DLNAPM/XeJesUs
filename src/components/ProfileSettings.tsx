@@ -179,7 +179,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
     <div className="max-w-2xl mx-auto">
       <header className="mb-12">
         <h1 className="text-4xl font-serif text-text-primary mb-2 italic font-bold">Pilgrim's Profile</h1>
-        <p className="text-text-secondary italic font-medium">Customize your spiritual study environment.</p>
+        <p className="text-text-primary italic font-semibold">Customize your spiritual study environment.</p>
       </header>
 
       <div className="bg-ui-card border border-ui-border rounded-[2.5rem] p-8 md:p-12 shadow-sm relative overflow-hidden">
@@ -199,7 +199,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               />
               <div className="text-center md:text-left flex-1">
                 <h2 className="text-3xl font-serif text-text-primary italic font-bold mb-1">{profile.displayName}</h2>
-                <p className="text-sm text-text-secondary font-sans tracking-wide mb-4">{profile.email}</p>
+                <p className="text-sm text-text-primary font-bold font-sans tracking-wide mb-4">{profile.email}</p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <span className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-[0.1em] border ${profile.tier === 'premium' ? 'bg-accent/10 border-accent text-accent' : 'bg-ui-sidebar border-ui-border text-text-secondary'}`}>
                     {profile.tier === 'premium' && <Crown className="w-3 h-3" />}
@@ -225,7 +225,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               <h2 className="text-xl font-serif text-text-primary italic font-bold">Sanctuary Atmosphere</h2>
             </div>
             
-            <p className="text-sm text-text-secondary mb-8 leading-relaxed font-serif italic">
+            <p className="text-sm text-text-primary mb-8 leading-relaxed font-serif italic font-medium">
               Choose the visual environment that best supports your focus and spiritual reflection.
             </p>
 
@@ -251,7 +251,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-text-primary uppercase tracking-tight">{t.name}</h3>
-                    <p className="text-xs text-text-secondary opacity-60 italic">{t.desc}</p>
+                    <p className="text-xs text-text-primary italic font-semibold">{t.desc}</p>
                   </div>
                 </button>
               ))}
@@ -266,11 +266,11 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               </div>
               <div>
                 <h2 className="text-xl font-serif text-text-primary italic font-bold">Scholars Voices</h2>
-                <p className="text-xs text-text-secondary font-sans tracking-wide">Configure text-to-speech personas for spiritual narration</p>
+                <p className="text-xs text-text-primary font-bold font-sans tracking-wide">Configure text-to-speech personas for spiritual narration</p>
               </div>
             </div>
 
-            <p className="text-sm text-text-secondary leading-relaxed font-serif italic">
+            <p className="text-sm text-text-primary leading-relaxed font-serif italic font-medium">
               Set your preferred Male and Female scholar voices for text-to-speech audio exegesis. Choose a renowned preacher or scholar persona, or define your own custom scholar voice.
             </p>
 
@@ -287,7 +287,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                   </span>
                   <h3 className="text-sm font-sans font-bold text-text-primary">Scholar AI Voice Engine</h3>
                 </div>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-xs text-text-primary leading-relaxed font-medium">
                   {scholarsVoicesEnabled 
                     ? 'Custom AI Scholar Personas are active for expressive, high-fidelity exegesis narration.'
                     : 'Using default computer-robot browser speech synthesis for fast, zero-delay audio playback.'}
@@ -391,7 +391,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                       <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
                       {maleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
                     </div>
-                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                    <span className="text-[10px] text-text-primary font-bold italic font-serif mt-1">{p.style}</span>
                   </button>
                 ))}
               </div>
@@ -404,7 +404,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     placeholder="e.g. Joel Osteen, John Piper, Charles Stanley..."
                     value={customMaleVoice}
                     onChange={(e) => setCustomMaleVoice(e.target.value)}
-                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary"
+                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary font-medium"
                   />
                 </div>
               )}
@@ -456,7 +456,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                       <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
                       {femaleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
                     </div>
-                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
+                    <span className="text-[10px] text-text-primary font-bold italic font-serif mt-1">{p.style}</span>
                   </button>
                 ))}
               </div>
@@ -469,7 +469,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     placeholder="e.g. Oprah Winfrey, Lysa TerKeurst, Priscilla Shirer..."
                     value={customFemaleVoice}
                     onChange={(e) => setCustomFemaleVoice(e.target.value)}
-                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary"
+                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 text-xs font-serif focus:outline-none focus:border-accent text-text-primary font-medium"
                   />
                 </div>
               )}
@@ -483,13 +483,13 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               </div>
               <div>
                 <h2 className="text-xl font-serif text-text-primary italic font-bold">Primary Foundational Sources</h2>
-                <p className="text-[10px] text-text-secondary/80 font-sans uppercase tracking-widest font-semibold mt-0.5">
+                <p className="text-[10px] text-text-primary font-sans uppercase tracking-widest font-black mt-0.5">
                   Academic & Spiritual Citations Framework
                 </p>
               </div>
             </div>
 
-            <p className="text-sm text-text-secondary mb-6 leading-relaxed font-serif italic">
+            <p className="text-sm text-text-primary mb-6 leading-relaxed font-serif italic font-medium">
               XeJesUs synthesizes exegesis and answers from six core canonical, historical, and scholarly authorities to provide Pilgrims with grounded, reverent, and scholarly answers to their Seekings and Chat Questions:
             </p>
 
@@ -504,7 +504,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source I</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Primary Canonical Scriptures</h3>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                  <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">
                     Direct chapter & verse citations across Old & New Testament Canons (Genesis through Revelation).
                   </p>
                 </div>
@@ -520,7 +520,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 uppercase tracking-wider">Source II</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Asher Wilson's Complete Ethiopian Bible</h3>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                  <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">
                     The complete 81-book Ethiopian Orthodox Tewahedo Canon in English, preserving ancient Ge'ez manuscripts, 1 Enoch (Henok), Jubilees (Kufale), 1, 2, and 3 Meqabyan (Maccabees), 4 Baruch, and ancient Aksumite apostolic heritage.
                   </p>
                 </div>
@@ -536,7 +536,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source III</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Original Linguistic Lexicons & Roots</h3>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                  <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">
                     Original Hebrew, Aramaic, Ge'ez, and Koine Greek word etymologies via Strong’s, BDB, and BDAG concordances.
                   </p>
                 </div>
@@ -552,7 +552,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source IV</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Patristic & Classical Exegesis</h3>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                  <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">
                     Early Church Fathers (Augustine, Chrysostom, Athanasius) & classical commentators (Henry, Spurgeon, C.S. Lewis).
                   </p>
                 </div>
@@ -568,7 +568,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source V</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Historical & Archaeological Records</h3>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                  <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">
                     Flavius Josephus histories, Dead Sea Scrolls, Levant geography, and Ancient Roman road & archaeological logs.
                   </p>
                 </div>
@@ -584,7 +584,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-accent/10 text-accent uppercase tracking-wider">Source VI</span>
                     <h3 className="text-sm font-sans font-bold text-text-primary">Real-Time Web Grounding (Google Search)</h3>
                   </div>
-                  <p className="text-xs text-text-secondary leading-relaxed font-serif italic">
+                  <p className="text-xs text-text-primary leading-relaxed font-serif italic font-medium">
                     Live web grounding for evaluating contemporary news and modern world application while remaining anchored in Scripture.
                   </p>
                 </div>
@@ -654,8 +654,8 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               </div>
 
               <div className="p-4 bg-ui-sidebar/50 rounded-xl border border-ui-border">
-                <p className="text-xs text-text-secondary/60 uppercase tracking-widest font-bold mb-2">Example Formatting</p>
-                <div className="space-y-1 font-mono text-xs text-text-secondary">
+                <p className="text-xs text-text-primary uppercase tracking-widest font-black mb-2">Example Formatting</p>
+                <div className="space-y-1 font-mono text-xs text-text-primary font-medium">
                   <p>• https://www.biblegateway.com/passage/?search=</p>
                   <p>• https://www.blueletterbible.org/search/preSearch.cfm?Criteria=</p>
                   <p>• https://biblehub.com/text/</p>
@@ -672,7 +672,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               </div>
               <div>
                 <h2 className="text-xl font-serif text-text-primary italic font-bold">Sanctuary Covenants & Legal Pages</h2>
-                <p className="text-xs text-text-secondary italic">Read the full commitments regarding your privacy, data security, and platform terms of use.</p>
+                <p className="text-xs text-text-primary italic font-semibold">Read the full commitments regarding your privacy, data security, and platform terms of use.</p>
               </div>
             </div>
 

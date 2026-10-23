@@ -19,20 +19,20 @@
 :root {
   /* Default: Modern Sanctuary (Clean & Technical) */
   --bg-primary: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #1e293b; /* Darker off-black (Slate 800) for crisp, readable subtitles and descriptions */
-  --accent: #3b82f6;
+  --text-primary: #000000; /* Pure pitch black for high contrast */
+  --text-secondary: #090d16; /* Deepest dark slate off-black for crisp, ultra-readable secondary text */
+  --accent: #2563eb;
   --accent-soft: #dbeafe;
   --ui-card: #ffffff;
-  --ui-border: #e2e8f0;
+  --ui-border: #cbd5e1;
   --ui-sidebar: #f1f5f9;
 }
 
 [data-theme='midnight'] {
   /* Midnight Exegesis (Dark Mode) */
   --bg-primary: #020617;
-  --text-primary: #f8fafc;
-  --text-secondary: #e2e8f0; /* Crisp, readable light off-white on dark midnight background */
+  --text-primary: #ffffff; /* Crisp bright white */
+  --text-secondary: #f8fafc; /* Crisp, readable near-white */
   --accent: #f59e0b;
   --accent-soft: #451a03;
   --ui-card: #0f172a;
@@ -43,29 +43,41 @@
 [data-theme='parchment'] {
   /* Traditional Parchment (Enhanced Classics) */
   --bg-primary: #f9f4e8;
-  --text-primary: #12100e;
-  --text-secondary: #26221d; /* Darker off-black warm charcoal for high-contrast readability */
-  --accent: #b08d57;
+  --text-primary: #000000; /* Deep black on parchment */
+  --text-secondary: #12100d; /* Deep charcoal black */
+  --accent: #92400e;
   --accent-soft: #ede0c8;
   --ui-card: #fcfaf2;
-  --ui-border: #e2dcc3;
+  --ui-border: #d4cca9;
   --ui-sidebar: #f2ebd9;
 }
 
 @layer base {
   html {
     font-size: 115%; /* 1-2 levels up from standard 100% */
+    font-weight: 500;
+    color: var(--text-primary);
   }
 
   body {
     @apply bg-bg-primary text-text-primary font-sans transition-colors duration-300 antialiased;
+    font-weight: 500;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
-  h1, h2, h3, h4, .serif {
+  h1, h2, h3, h4, h5, h6, .serif {
     @apply font-serif font-bold italic;
+    color: var(--text-primary);
   }
 
-  /* Ensure subtitles and text immediately below titles and sub-titles are dark off-black and highly readable */
+  /* Strengthen serif font strokes so Cormorant Garamond is dark, rich, and never hairline thin */
+  .font-serif, [class*="font-serif"] {
+    font-weight: 600;
+  }
+
+  /* Ensure subtitles and text immediately below titles and sub-titles are dark off-black and bold/medium */
   h1 + p,
   h2 + p,
   h3 + p,
@@ -74,11 +86,25 @@
   .subtitle,
   .text-subtitle {
     color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  p, span, label, dt, dd, li {
     font-weight: 500;
+  }
+
+  .text-text-secondary {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .text-text-primary {
+    color: var(--text-primary);
   }
 
   .mono {
     @apply font-mono;
+    font-weight: 600;
   }
 
   /* Global high-contrast dark off-black color enforcement for all generated content & markdown */
@@ -93,6 +119,7 @@
   .prose blockquote,
   .generated-content {
     color: var(--text-primary) !important;
+    font-weight: 500;
   }
 
   .markdown-body strong,

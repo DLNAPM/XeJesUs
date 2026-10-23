@@ -479,13 +479,13 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
         <div className="p-8 border-b border-ui-border flex items-center justify-between bg-ui-sidebar/30">
           <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em]">Pilgrim Registry</h3>
           <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/40" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-primary" />
             <input 
               type="text" 
               placeholder="Search by name or email..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-bg-primary/50 border border-ui-border rounded-lg pl-10 pr-4 py-2 text-xs font-sans focus:outline-none focus:border-accent"
+              className="w-full bg-bg-primary/50 border border-ui-border rounded-lg pl-10 pr-4 py-2 text-xs font-sans focus:outline-none focus:border-accent text-text-primary"
             />
           </div>
         </div>
@@ -493,7 +493,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
         <div className="overflow-x-auto">
           <table className="w-full text-left font-sans text-xs">
             <thead>
-              <tr className="bg-ui-sidebar/10 text-text-secondary uppercase tracking-widest font-bold border-b border-ui-border">
+              <tr className="bg-ui-sidebar/10 text-text-primary uppercase tracking-widest font-black border-b border-ui-border">
                 <th 
                   className="px-8 py-4 cursor-pointer hover:bg-ui-sidebar/20 select-none group/th transition-all duration-200"
                   onClick={() => handleSort('pilgrim')}
@@ -550,7 +550,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
                       <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-ui-border" referrerPolicy="no-referrer" />
                       <div>
                         <p className="font-bold text-text-primary">{u.displayName}</p>
-                        <p className="text-[10px] opacity-60">{u.email}</p>
+                        <p className="text-[10px] text-text-primary font-bold">{u.email}</p>
                       </div>
                     </div>
                   </td>
@@ -607,7 +607,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
                           }
                         })()}
                       </span>
-                      <span className="text-[10px] text-text-secondary opacity-60">
+                      <span className="text-[10px] text-text-primary font-bold">
                         {(() => {
                           if (!u.lastLoginAt) return '--:--';
                           const t = u.lastLoginAt as any;
