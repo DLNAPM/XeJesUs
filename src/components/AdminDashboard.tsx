@@ -19,6 +19,7 @@ import {
 import { UserProfile } from '../types';
 import AdminAlertsStation from './AdminAlertsStation';
 import AdminMaintenanceStation from './AdminMaintenanceStation';
+import AdminAdStudio from './AdminAdStudio';
 import { subscribeToMaintenance } from '../services/maintenanceService';
 import { 
   Shield, 
@@ -36,7 +37,8 @@ import {
   ArrowUpDown,
   Radio,
   AlertOctagon,
-  Wrench
+  Wrench,
+  Megaphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -50,7 +52,7 @@ interface SystemLog {
 }
 
 interface AdminDashboardProps {
-  initialTab?: 'alarms' | 'registry' | 'maintenance';
+  initialTab?: 'alarms' | 'registry' | 'maintenance' | 'ad-studio';
 }
 
 export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboardProps) {
@@ -59,7 +61,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
-  const [activeTab, setActiveTab] = useState<'alarms' | 'registry' | 'maintenance'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'alarms' | 'registry' | 'maintenance' | 'ad-studio'>(initialTab);
   const [activeAlertCount, setActiveAlertCount] = useState<number>(0);
   const [maintenanceActive, setMaintenanceActive] = useState<boolean>(false);
   
@@ -346,10 +348,27 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
             </span>
           )}
         </button>
+
+        <button
+          id="tab-btn-ad-studio"
+          onClick={() => setActiveTab('ad-studio')}
+          className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'ad-studio'
+              ? 'bg-accent text-bg-primary shadow-lg shadow-accent/20 scale-[1.02]'
+              : 'bg-ui-card hover:bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <Megaphone className="w-4 h-4" />
+          <span>Ad & How-To Studio</span>
+          <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-black">
+            14 ADS READY
+          </span>
+        </button>
       </div>
 
       {activeTab === 'alarms' && <AdminAlertsStation />}
       {activeTab === 'maintenance' && <AdminMaintenanceStation />}
+      {activeTab === 'ad-studio' && <AdminAdStudio />}
       {activeTab === 'registry' && (
         <>
           {/* Analytics Section */}
