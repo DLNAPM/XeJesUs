@@ -750,3 +750,53 @@ export async function generateThenVsNowStudy(
   }
 }
 
+export interface GeneratedAdScript {
+  title: string;
+  duration: string;
+  wordCount: number;
+  hook: string;
+  fullScript: string;
+  callToAction: string;
+  talkingPoints: string[];
+}
+
+/**
+ * Generates an advertising script explaining key features of XeJesUs
+ */
+export async function generateAdScript(params: {
+  topicName: string;
+  topicCategory?: string;
+  targetAudience?: string;
+  scriptType?: string;
+  format?: string;
+  tone?: string;
+  customInstructions?: string;
+  keyFeatures?: string | string[];
+}): Promise<GeneratedAdScript> {
+  try {
+    const result = await safeFetchJson<GeneratedAdScript>('/api/gemini/ad-script', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    return result;
+  } catch (err: any) {
+    console.error("Failed to generate ad script:", err);
+    // Graceful fallback with formatted script
+    return {
+      title: `${params.topicName}: The Living Exegesis Sanctuary`,
+      duration: '60 Seconds',
+      wordCount: 145,
+      hook: `What if you could understand the deepest biblical truths behind ${params.topicName} with ancient Levant history and original Greek/Hebrew roots?`,
+      fullScript: `[Visual: Illuminated screen opening xejesus.app with golden dawn glow]\n[Audio: Warm, reverent musical undertone]\n\nVOICEOVER: "What if you could understand the deepest biblical truths behind ${params.topicName}—with ancient Levant history, original Hebrew and Greek roots, and zero registration?"\n\n[Visual: Screen demonstrates one-tap 'Test Drive as Guest' entrance into Pilgrim Headquarters]\nVOICEOVER: "Welcome to XeJesUs—The Living Exegesis Sanctuary. Experience ${params.topicName} with authentic scholarship anchored in our six foundational pillars, including the complete 81-book Ethiopian Bible."\n\n[Visual: Live exegesis scrolls and historical maps on screen]\nVOICEOVER: "See how scripture connects directly to our contemporary culture and moral living today."\n\n[Visual: Transition to xejesus.app URL with golden emblem]\nVOICEOVER: "Discover the Living Word. Visit xejesus.app today, tap 'Test Drive as Guest', and step inside."`,
+      callToAction: "Visit xejesus.app today and test drive as guest.",
+      talkingPoints: [
+        `Deep exegesis on ${params.topicName}`,
+        "Anchored in 6 foundational scholarly authorities",
+        "Zero-registration instant Guest Mode access"
+      ]
+    };
+  }
+}
+
+

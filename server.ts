@@ -1443,6 +1443,87 @@ function generateThenVsNowFallback(query: string, category: string): any {
   };
 }
 
+// 12. Advertisement Video/Audio Script Generation
+app.post('/api/gemini/ad-script', async (req, res) => {
+  try {
+    const { topicName, topicCategory, targetAudience, scriptType, tone, keyFeatures } = req.body;
+    if (!topicName) {
+      return res.status(400).json({ error: 'Topic name is required' });
+    }
+
+    const prompt = `
+    You are an award-winning creative director and biblical communications expert writing a compelling advertising script for XeJesUs (The Living Exegesis Sanctuary).
+    
+    Topic to Advertise: "${topicName}" (${topicCategory || 'Sanctuary Feature'})
+    Key Features & Data: "${Array.isArray(keyFeatures) ? keyFeatures.join(', ') : (keyFeatures || 'Live exegesis scrolls, original Greek/Hebrew concordance, 6 foundational sources, instant Guest Mode test drive')}"
+    Script Format: ${scriptType || '60s Video Commercial'}
+    Target Audience: ${targetAudience || 'Spiritual Seekers & Bible Students'}
+    Tone of Voice: ${tone || 'Inspiring, Reverent, Articulate'}
+    
+    Structure the script with:
+    1. A captivating Hook (0:00 - 0:08)
+    2. The Problem/Desire & The Solution (XeJesUs)
+    3. Practical Demonstration using authentic Guest Mode proof (e.g. John 11:35 Lazarus tears, 153 fish, Golgotha Levant timelines, Asher Wilson 81-book Ethiopian Bible)
+    4. Clear How-To action step for the viewer
+    5. Compelling Call to Action (CTA) directing to xejesus.app with zero registration required.
+    
+    Include stage directions in brackets like [Visual: ...] and [Audio/Tone: ...].
+    Provide the exact spoken voiceover lines clearly separated.
+    Provide the estimated spoken duration and word count.
+    
+    Return strict JSON with:
+    {
+      "title": "Script title",
+      "duration": "e.g. 60 Seconds",
+      "wordCount": 140,
+      "hook": "Opening hook line",
+      "fullScript": "Complete formatted script text with stage directions and spoken lines",
+      "callToAction": "Closing CTA",
+      "talkingPoints": ["Key point 1", "Key point 2", "Key point 3"]
+    }
+    `;
+
+    const response = await generateWithFallback({
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            title: { type: Type.STRING },
+            duration: { type: Type.STRING },
+            wordCount: { type: Type.NUMBER },
+            hook: { type: Type.STRING },
+            fullScript: { type: Type.STRING },
+            callToAction: { type: Type.STRING },
+            talkingPoints: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
+          },
+          required: ['title', 'duration', 'fullScript', 'callToAction']
+        }
+      }
+    });
+
+    const text = response.text || '{}';
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const data = JSON.parse(cleanedText);
+    res.json(data);
+  } catch (error: any) {
+    console.error('Server Ad Script Error:', error);
+    res.status(500).json({
+      error: error?.message || 'Failed to generate advertising script'
+    });
+  }
+});
+
 // Explicit 404 handler for all unhandled /api/* routes so they NEVER fall through to HTML
 app.all('/api/*', (_req, res) => {
   res.status(404).json({ error: 'API route not found' });

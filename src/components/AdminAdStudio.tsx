@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Download, 
   Copy, 
@@ -23,16 +23,35 @@ import {
   CheckCircle2, 
   ChevronRight, 
   Play, 
+  Pause,
   Volume2, 
+  VolumeX,
   Scroll, 
   Shield, 
   Info, 
   ExternalLink,
   Layers,
   Flame,
-  ArrowRight
+  ArrowRight,
+  Video,
+  Maximize2,
+  X,
+  Wand2,
+  RotateCcw,
+  FileCode,
+  Sliders,
+  Type as TypeIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { 
+  getScriptForTopic, 
+  MASTER_ALL_FEATURES_SCRIPT, 
+  ScriptFormat, 
+  TargetAudience, 
+  ScriptTone,
+  AdScriptItem 
+} from '../data/adScriptsData';
+import { generateAdScript } from '../services/geminiService';
 
 export type AdTopicId = 
   | 'landing-page'
@@ -588,23 +607,120 @@ Every verse in your exegesis scrolls automatically links to your preferred tool 
 ];
 
 export default function AdminAdStudio() {
-  const [selectedTopicId, setSelectedTopicId] = useState<AdTopicId>('landing-page');
+  const [selectedTopicId, setSelectedTopicId] = useState<string>('landing-page');
+  const [viewMode, setViewMode] = useState<'dual' | 'graphic' | 'script'>('dual');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [adTheme, setAdTheme] = useState<AdTheme>('modern');
   const [copiedCaption, setCopiedCaption] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number; isRunning: boolean } | null>(null);
   const [editableCaption, setEditableCaption] = useState<string>(() => {
     return AD_TOPICS[0].caption;
   });
 
+  // Written Script States
+  const [scriptFormat, setScriptFormat] = useState<ScriptFormat>('60s-commercial');
+  const [customScripts, setCustomScripts] = useState<Record<string, string>>({});
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Fullscreen Teleprompter States
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
+  const [prompterFontSize, setPrompterFontSize] = useState(32);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
+  const [scrollSpeed, setScrollSpeed] = useState(2);
+  const prompterContentRef = useRef<HTMLDivElement>(null);
+
+  // Gemini AI Customizer States
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiAudience, setAiAudience] = useState<TargetAudience>('general-seekers');
+  const [aiTone, setAiTone] = useState<ScriptTone>('inspiring-pastoral');
+  const [aiCustomNotes, setAiCustomNotes] = useState('');
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [aiStatusMessage, setAiStatusMessage] = useState<string | null>(null);
+
   const adCardRef = useRef<HTMLDivElement>(null);
 
+  const isMasterTopic = selectedTopicId === 'master-all-features';
   const selectedTopic = AD_TOPICS.find(t => t.id === selectedTopicId) || AD_TOPICS[0];
+
+  // Resolve current active script item and text
+  const defaultScriptItem: AdScriptItem = isMasterTopic
+    ? MASTER_ALL_FEATURES_SCRIPT
+    : getScriptForTopic(selectedTopicId, scriptFormat);
+
+  const scriptKey = `${selectedTopicId}_${scriptFormat}`;
+  const currentScriptText = customScripts[scriptKey] !== undefined
+    ? customScripts[scriptKey]
+    : defaultScriptItem.fullScript;
+
+  // Cleanup speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Teleprompter Keyboard Shortcuts
+  useEffect(() => {
+    if (!showTeleprompter) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        setIsAutoScrolling(prev => !prev);
+      } else if (e.code === 'Escape') {
+        setShowTeleprompter(false);
+        setIsAutoScrolling(false);
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        setScrollSpeed(prev => Math.min(prev + 1, 6));
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        setScrollSpeed(prev => Math.max(prev - 1, 1));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showTeleprompter]);
+
+  // Teleprompter Auto-scroll Loop
+  useEffect(() => {
+    if (!showTeleprompter || !isAutoScrolling) return;
+    let animId: number;
+    const scrollStep = () => {
+      if (prompterContentRef.current) {
+        prompterContentRef.current.scrollTop += scrollSpeed * 0.7;
+      }
+      animId = requestAnimationFrame(scrollStep);
+    };
+    animId = requestAnimationFrame(scrollStep);
+    return () => cancelAnimationFrame(animId);
+  }, [showTeleprompter, isAutoScrolling, scrollSpeed]);
 
   const handleSelectTopic = (topic: AdTopicConfig) => {
     setSelectedTopicId(topic.id);
     setEditableCaption(topic.caption);
+    if (scriptFormat === 'master-commercial') {
+      setScriptFormat('60s-commercial');
+    }
+  };
+
+  const handleSelectMasterTopic = () => {
+    setSelectedTopicId('master-all-features');
+    setScriptFormat('master-commercial');
+    setEditableCaption(`🌟 XeJesUs: The Living Exegesis Sanctuary — Complete Walkthrough!
+
+Discover Jesus' authentic 1st Century voice through original Greek, Hebrew, and Ge'ez roots, synthesized across 6 foundational pillars including Asher Wilson's 81-book Ethiopian Bible canon.
+
+✨ Zero-Friction Guest Mode Access
+✨ Pre-loaded with Lazarus (John 11:35) & 153 Fish (John 21:11)
+✨ Then vs Now Antiquity-to-Modernity Cross-Referencing
+✨ Historical Scholar Voice Narration
+
+👉 Test Drive now at https://xejesus.app
+#XeJesUs #BibleStudy #Exegesis #Hermeneutics #GospelOfJohn #ChurchHistory #ChristianTech`);
   };
 
   const handleCopyCaption = async () => {
@@ -614,6 +730,197 @@ export default function AdminAdStudio() {
       setTimeout(() => setCopiedCaption(false), 2500);
     } catch (err) {
       console.error("Failed to copy caption", err);
+    }
+  };
+
+  const handleCopyScript = async () => {
+    try {
+      await navigator.clipboard.writeText(currentScriptText);
+      setCopiedScript(true);
+      setTimeout(() => setCopiedScript(false), 2500);
+    } catch (err) {
+      console.error("Failed to copy script", err);
+    }
+  };
+
+  const handleScriptTextChange = (newText: string) => {
+    setCustomScripts(prev => ({
+      ...prev,
+      [scriptKey]: newText
+    }));
+  };
+
+  const handleResetScript = () => {
+    setCustomScripts(prev => {
+      const copy = { ...prev };
+      delete copy[scriptKey];
+      return copy;
+    });
+  };
+
+  const handleToggleVoiceover = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      alert("Speech synthesis is not supported on this browser.");
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Extract spoken narrative text: skip bracketed lines [Visual: ...], [0:00 - 0:10], [Audio: ...]
+    // and strip VOICEOVER: / NARRATOR: prefixes
+    const lines = currentScriptText.split('\n');
+    const spokenLines: string[] = [];
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      if (line.startsWith('[') && line.endsWith(']')) continue;
+      if (line.startsWith('[Visual') || line.startsWith('[Audio') || line.startsWith('[Graphic')) continue;
+
+      let clean = line;
+      clean = clean.replace(/^(VOICEOVER|NARRATOR|HOST|SPEAKER|PRESENTER):\s*"?/i, '');
+      if (clean.endsWith('"')) {
+        clean = clean.slice(0, -1);
+      }
+      clean = clean.replace(/\[.*?\]/g, '').trim();
+
+      if (clean.length > 0) {
+        spokenLines.push(clean);
+      }
+    }
+
+    const fullSpokenText = spokenLines.join(' ');
+    if (!fullSpokenText) {
+      alert("No spoken lines detected to narrate. Ensure the script contains dialogue lines.");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(fullSpokenText);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Alex') || v.name.includes('Samantha')));
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleDownloadScript = (formatExt: 'txt' | 'md') => {
+    const topicTitle = isMasterTopic ? 'XeJesUs Master All-Features Commercial' : selectedTopic.name;
+    const cleanFilename = `xejesus-ad-script-${isMasterTopic ? 'master' : selectedTopic.id}-${scriptFormat}.${formatExt}`;
+
+    let content = '';
+    const wordCount = currentScriptText.split(/\s+/).filter(Boolean).length;
+
+    if (formatExt === 'md') {
+      content = `# XeJesUs Advertising & Narration Script
+**Sanctuary Feature:** ${topicTitle}  
+**Format:** ${scriptFormat}  
+**Estimated Run-Time:** ${defaultScriptItem.durationEstimate}  
+**Word Count:** ~${wordCount} words  
+
+---
+
+### Key Features Explained & Highlighted
+${defaultScriptItem.keyFeaturesSummary.map((f, i) => `${i + 1}. **${f}**`).join('\n')}
+
+---
+
+### Call To Action
+> "${defaultScriptItem.callToAction}"
+
+---
+
+### Production Script (Timestamps, Visual Cues & Spoken Voiceover)
+\`\`\`text
+${currentScriptText}
+\`\`\`
+
+---
+*Created with the XeJesUs Admin Marketing & Exegesis Studio*
+`;
+    } else {
+      content = `======================================================================
+XEJESUS ADVERTISING & NARRATION SCRIPT
+Sanctuary Feature: ${topicTitle}
+Format: ${scriptFormat}
+Estimated Run-Time: ${defaultScriptItem.durationEstimate}
+Word Count: ~${wordCount} words
+======================================================================
+
+KEY FEATURES EXPLAINED IN THIS SCRIPT:
+${defaultScriptItem.keyFeaturesSummary.map((f, i) => `[${i + 1}] ${f}`).join('\n')}
+
+CALL TO ACTION:
+"${defaultScriptItem.callToAction}"
+
+======================================================================
+PRODUCTION SCRIPT (TIMESTAMPS, VISUAL CUES & SPOKEN VOICEOVER):
+======================================================================
+${currentScriptText}
+
+======================================================================
+Created with the XeJesUs Admin Marketing & Exegesis Studio
+`;
+    }
+
+    const blob = new Blob([content], { type: formatExt === 'md' ? 'text/markdown;charset=utf-8' : 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = cleanFilename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  const handleGenerateAiCustomScript = async () => {
+    setIsGeneratingAi(true);
+    setAiStatusMessage(null);
+    try {
+      const topicName = isMasterTopic 
+        ? 'Complete XeJesUs Sanctuary (All 14 Features)' 
+        : selectedTopic.name;
+
+      const result = await generateAdScript({
+        topicName,
+        format: scriptFormat,
+        targetAudience: aiAudience,
+        tone: aiTone,
+        customInstructions: aiCustomNotes,
+        keyFeatures: defaultScriptItem.keyFeaturesSummary
+      });
+
+      if (result && result.fullScript) {
+        setCustomScripts(prev => ({
+          ...prev,
+          [scriptKey]: result.fullScript
+        }));
+        setAiStatusMessage("Script tailored successfully with Gemini!");
+        setTimeout(() => {
+          setShowAiModal(false);
+          setAiStatusMessage(null);
+        }, 1200);
+      } else {
+        alert("Could not generate script. Please try again.");
+      }
+    } catch (err) {
+      console.error("AI Script generation error:", err);
+      alert("Error generating script with AI. Check console or try again.");
+    } finally {
+      setIsGeneratingAi(false);
     }
   };
 
@@ -730,48 +1037,92 @@ export default function AdminAdStudio() {
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="px-3 py-1 rounded-full bg-accent text-bg-primary text-[10px] font-sans font-black uppercase tracking-[0.25em]">
                 ADMIN MARKETING & HOW-TO STUDIO
               </span>
               <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider">
                 14 AD TEMPLATES
               </span>
+              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                <Scroll className="w-3 h-3" />
+                WRITTEN SCRIPTS & AUDIO VOICEOVER
+              </span>
             </div>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-text-primary">
-              Advertisement & How-To Graphics Generator
+              Advertisement Graphics & Written Script Studio
             </h2>
-            <p className="text-sm text-text-primary font-medium max-w-2xl leading-relaxed">
-              Generate publication-grade promotional images and step-by-step How-To guides using authentic live data from Guest Mode. Download high-resolution PNGs with matching social media captions and hashtags.
+            <p className="text-sm text-text-primary font-medium max-w-3xl leading-relaxed">
+              Generate publication-grade promotional images, step-by-step How-To guides, and complete written advertising & narration scripts (with timestamps, stage directions, audio voiceover preview, and teleprompter) explaining XeJesUs key features.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0 flex-wrap">
+            {/* View Mode Switcher */}
+            <div className="bg-ui-sidebar p-1 rounded-2xl border border-ui-border flex items-center gap-1">
+              <button
+                onClick={() => setViewMode('dual')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-sans font-bold transition-all flex items-center gap-1.5 ${
+                  viewMode === 'dual'
+                    ? 'bg-accent text-bg-primary shadow-sm'
+                    : 'text-text-primary hover:text-accent'
+                }`}
+                title="View Graphic and Written Script simultaneously"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Dual View</span>
+              </button>
+              <button
+                onClick={() => setViewMode('script')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-sans font-bold transition-all flex items-center gap-1.5 ${
+                  viewMode === 'script'
+                    ? 'bg-accent text-bg-primary shadow-sm'
+                    : 'text-text-primary hover:text-accent'
+                }`}
+                title="Focus on Written Advertising Script & Voiceover"
+              >
+                <Scroll className="w-3.5 h-3.5" />
+                <span>Written Script</span>
+              </button>
+              <button
+                onClick={() => setViewMode('graphic')}
+                className={`px-3.5 py-2 rounded-xl text-xs font-sans font-bold transition-all flex items-center gap-1.5 ${
+                  viewMode === 'graphic'
+                    ? 'bg-accent text-bg-primary shadow-sm'
+                    : 'text-text-primary hover:text-accent'
+                }`}
+                title="Focus on Visual Graphic & Canvas export"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>Visual Graphic</span>
+              </button>
+            </div>
+
             <button
               onClick={() => handleDownloadSingleImage('Single')}
               disabled={isExporting || batchProgress?.isRunning}
-              className="px-6 py-3.5 rounded-2xl bg-accent text-bg-primary font-sans font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-accent/25 flex items-center gap-2"
+              className="px-5 py-3 rounded-2xl bg-accent text-bg-primary font-sans font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-accent/25 flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
-              <span>{isExporting ? 'Generating PNG...' : 'Download This Ad (PNG)'}</span>
+              <span>{isExporting ? 'Generating...' : 'Download PNG'}</span>
             </button>
 
             <button
               onClick={handleDownloadAllBundle}
               disabled={batchProgress?.isRunning}
-              className="px-6 py-3.5 rounded-2xl bg-ui-sidebar border border-ui-border text-text-primary font-sans font-bold text-xs uppercase tracking-widest hover:bg-accent hover:text-bg-primary transition-all flex items-center gap-2"
+              className="px-5 py-3 rounded-2xl bg-ui-sidebar border border-ui-border text-text-primary font-sans font-bold text-xs uppercase tracking-widest hover:bg-accent hover:text-bg-primary transition-all flex items-center gap-2"
             >
               <Layers className="w-4 h-4 text-accent" />
-              <span>{batchProgress?.isRunning ? `Exporting (${batchProgress.current}/${batchProgress.total})...` : 'Download All 14 Ads'}</span>
+              <span>{batchProgress?.isRunning ? `(${batchProgress.current}/${batchProgress.total})...` : 'All 14 Ads'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Topic Selector on Left, Interactive Ad Preview & Caption on Right */}
+      {/* Main Grid: Topic Selector on Left, Interactive Ad Preview & Script on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Left Column: 14 Topic Buttons (4 Cols) */}
+        {/* Left Column: Master Commercial + 14 Topic Buttons (4 Cols) */}
         <div className="lg:col-span-4 space-y-4">
           <div className="bg-ui-card rounded-[2rem] border border-ui-border p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
@@ -779,11 +1130,38 @@ export default function AdminAdStudio() {
                 <Sparkles className="w-4 h-4" />
                 Select Sanctuary Feature
               </h3>
-              <span className="text-[10px] text-text-primary font-bold">14 Topics</span>
+              <span className="text-[10px] text-text-primary font-bold">14 Topics + Master</span>
+            </div>
+
+            {/* Master Commercial Highlight Button */}
+            <div className="mb-4">
+              <button
+                onClick={handleSelectMasterTopic}
+                className={`w-full text-left p-3.5 rounded-2xl border transition-all relative overflow-hidden group ${
+                  isMasterTopic
+                    ? 'bg-gradient-to-r from-accent/25 via-accent/15 to-transparent border-accent shadow-md shadow-accent/20'
+                    : 'bg-ui-sidebar/80 hover:bg-ui-sidebar border-accent/40 text-text-primary'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="px-2 py-0.5 rounded-full bg-accent text-bg-primary text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    MASTER SHOWCASE
+                  </span>
+                  <span className="text-[10px] font-mono text-accent font-bold">90-120s</span>
+                </div>
+                <div className="text-xs font-sans font-bold text-text-primary group-hover:text-accent transition-colors flex items-center justify-between">
+                  <span>🌟 Master Sanctuary Commercial</span>
+                  <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isMasterTopic ? 'translate-x-1 text-accent' : 'opacity-40'}`} />
+                </div>
+                <p className="text-[11px] text-text-primary/75 mt-0.5 line-clamp-1">
+                  Complete walkthrough covering all 14 sanctuary features
+                </p>
+              </button>
             </div>
 
             {/* Topics Grouped by Category */}
-            <div className="space-y-6 max-h-[820px] overflow-y-auto pr-1">
+            <div className="space-y-6 max-h-[760px] overflow-y-auto pr-1">
               
               {/* Category 1: Sanctuary Portal */}
               <div>
@@ -967,11 +1345,14 @@ export default function AdminAdStudio() {
           </div>
         </div>
 
-        {/* Right Column: Live Card Canvas, Aspect & Theme Controls, Caption Box (8 Cols) */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Right Column: Dynamic Graphic Studio and Written Script Studio (8 Cols) */}
+        <div className="lg:col-span-8 space-y-8">
           
-          {/* Controls Bar: Theme & Aspect Ratio */}
-          <div className="bg-ui-card rounded-2xl border border-ui-border p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+          {/* 1. VISUAL GRAPHIC & HOW-TO GENERATOR */}
+          {(viewMode === 'graphic' || viewMode === 'dual') && (
+            <div className="space-y-6">
+              {/* Controls Bar: Theme & Aspect Ratio */}
+              <div className="bg-ui-card rounded-2xl border border-ui-border p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
             {/* Aspect Ratio Switcher */}
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-sans font-black uppercase tracking-wider text-text-primary mr-1">
@@ -1226,9 +1607,500 @@ export default function AdminAdStudio() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 2. WRITTEN ADVERTISING SCRIPT & VOICEOVER GUIDE (Script or Dual) */}
+      {/* ========================================================= */}
+      {(viewMode === 'script' || viewMode === 'dual') && (
+        <div className="bg-ui-card rounded-[2.5rem] border-2 border-accent/40 p-6 md:p-8 shadow-xl space-y-6">
+          
+          {/* Script Station Header & Title */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-ui-border">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-1 rounded-full bg-accent text-bg-primary text-[10px] font-sans font-black uppercase tracking-[0.2em] flex items-center gap-1.5">
+                  <Scroll className="w-3.5 h-3.5" />
+                  WRITTEN ADVERTISING SCRIPT & VOICEOVER GUIDE
+                </span>
+                <span className="px-3 py-1 rounded-full bg-ui-sidebar border border-ui-border text-text-primary text-[10px] font-mono font-bold">
+                  ⏱️ {defaultScriptItem.durationEstimate}
+                </span>
+                <span className="px-3 py-1 rounded-full bg-ui-sidebar border border-ui-border text-text-primary text-[10px] font-mono font-bold">
+                  📝 ~{currentScriptText.split(/\s+/).filter(Boolean).length} words
+                </span>
+                {isMasterTopic && (
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-wider">
+                    🌟 ALL 14 SANCTUARY FEATURES INCLUDED
+                  </span>
+                )}
+              </div>
+              <h3 className="text-xl md:text-2xl font-serif font-bold text-text-primary">
+                {defaultScriptItem.title}
+              </h3>
+              <p className="text-xs text-text-primary font-medium">
+                Comprehensive production script with stage directions, on-screen visual cues, and narration dialogue explaining XeJesUs key features.
+              </p>
+            </div>
+
+            {/* Script Format Selector Pills (Hidden when Master topic is selected) */}
+            {!isMasterTopic && (
+              <div className="flex items-center gap-1 bg-ui-sidebar/80 p-1.5 rounded-2xl border border-ui-border flex-wrap shrink-0">
+                <button
+                  onClick={() => setScriptFormat('60s-commercial')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-sans font-bold transition-all ${
+                    scriptFormat === '60s-commercial'
+                      ? 'bg-accent text-bg-primary shadow-sm'
+                      : 'text-text-primary hover:text-accent'
+                  }`}
+                >
+                  🎬 60s Commercial
+                </button>
+                <button
+                  onClick={() => setScriptFormat('30s-reel')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-sans font-bold transition-all ${
+                    scriptFormat === '30s-reel'
+                      ? 'bg-accent text-bg-primary shadow-sm'
+                      : 'text-text-primary hover:text-accent'
+                  }`}
+                >
+                  ⚡ 30s Reel
+                </button>
+                <button
+                  onClick={() => setScriptFormat('2m-tutorial')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-sans font-bold transition-all ${
+                    scriptFormat === '2m-tutorial'
+                      ? 'bg-accent text-bg-primary shadow-sm'
+                      : 'text-text-primary hover:text-accent'
+                  }`}
+                >
+                  📖 2-Min Walkthrough
+                </button>
+                <button
+                  onClick={() => setScriptFormat('podcast-radio')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-sans font-bold transition-all ${
+                    scriptFormat === 'podcast-radio'
+                      ? 'bg-accent text-bg-primary shadow-sm'
+                      : 'text-text-primary hover:text-accent'
+                  }`}
+                >
+                  🎙️ Radio/Audio
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Key Features Explained Callout Card */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-accent/10 via-ui-sidebar/50 to-ui-card border-l-4 border-accent border border-ui-border shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-sans font-black text-accent uppercase tracking-[0.25em] flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Key Features Explained in this Script
+              </h4>
+              <span className="text-[10px] font-sans font-bold text-text-primary/70">
+                Targeted Talking Points
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {defaultScriptItem.keyFeaturesSummary.map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs font-sans text-text-primary">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-semibold">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Opening Hook and Call to Action */}
+            <div className="pt-2 border-t border-ui-border/60 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-[10px] font-mono font-black text-accent uppercase tracking-wider block mb-0.5">
+                  Opening Hook Line:
+                </span>
+                <p className="italic text-text-primary font-serif">
+                  "{defaultScriptItem.hook}"
+                </p>
+              </div>
+              <div>
+                <span className="text-[10px] font-mono font-black text-emerald-500 uppercase tracking-wider block mb-0.5">
+                  Call to Action:
+                </span>
+                <p className="font-medium text-text-primary">
+                  "{defaultScriptItem.callToAction}"
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Toolbar */}
+          <div className="flex items-center justify-between flex-wrap gap-3 p-3 rounded-2xl bg-ui-sidebar/60 border border-ui-border">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Play/Stop Voiceover button */}
+              <button
+                onClick={handleToggleVoiceover}
+                className={`px-4 py-2.5 rounded-xl font-sans font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm ${
+                  isSpeaking
+                    ? 'bg-rose-600 text-white animate-pulse'
+                    : 'bg-accent text-bg-primary hover:scale-105 active:scale-95'
+                }`}
+              >
+                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                <span>{isSpeaking ? 'Stop Voiceover Narration' : 'Listen to Voiceover'}</span>
+              </button>
+
+              {/* Teleprompter button */}
+              <button
+                onClick={() => {
+                  setShowTeleprompter(true);
+                  setIsAutoScrolling(false);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-ui-card border border-ui-border text-text-primary font-sans font-bold text-xs uppercase tracking-wider hover:border-accent hover:text-accent transition-all flex items-center gap-2"
+              >
+                <Maximize2 className="w-4 h-4 text-accent" />
+                <span>Launch Teleprompter</span>
+              </button>
+
+              {/* Tailor with Gemini AI */}
+              <button
+                onClick={() => setShowAiModal(true)}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-sans font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 shadow-sm"
+              >
+                <Wand2 className="w-4 h-4" />
+                <span>Customize with Gemini AI</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Copy Script */}
+              <button
+                onClick={handleCopyScript}
+                className={`px-3.5 py-2.5 rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                  copiedScript
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-ui-card border border-ui-border text-text-primary hover:border-accent'
+                }`}
+              >
+                {copiedScript ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedScript ? 'Copied!' : 'Copy Script'}</span>
+              </button>
+
+              {/* Download TXT */}
+              <button
+                onClick={() => handleDownloadScript('txt')}
+                className="px-3 py-2.5 rounded-xl bg-ui-card border border-ui-border text-text-primary hover:border-accent font-sans font-bold text-xs flex items-center gap-1.5"
+                title="Download script as clean text file"
+              >
+                <FileText className="w-4 h-4 text-accent" />
+                <span>.TXT</span>
+              </button>
+
+              {/* Download Markdown */}
+              <button
+                onClick={() => handleDownloadScript('md')}
+                className="px-3 py-2.5 rounded-xl bg-ui-card border border-ui-border text-text-primary hover:border-accent font-sans font-bold text-xs flex items-center gap-1.5"
+                title="Download script as formatted Markdown"
+              >
+                <FileCode className="w-4 h-4 text-purple-400" />
+                <span>.MD</span>
+              </button>
+
+              {/* Reset to Default */}
+              {customScripts[scriptKey] && (
+                <button
+                  onClick={handleResetScript}
+                  className="px-3 py-2.5 rounded-xl bg-ui-card border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 font-sans font-bold text-xs flex items-center gap-1"
+                  title="Reset to default script"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Formatted Script Editor & Preview */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-sans text-text-primary px-1">
+              <span className="font-bold flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-accent" />
+                Production Script (Directly Editable with Timestamps & Stage Directions):
+              </span>
+              <span className="font-mono text-[11px] text-text-primary/75">
+                [Visual: ...] = Visual direction • VOICEOVER: "..." = Spoken dialogue
+              </span>
+            </div>
+
+            <div className="relative rounded-2xl border-2 border-ui-border bg-ui-sidebar/50 focus-within:border-accent transition-colors shadow-inner overflow-hidden">
+              <textarea
+                value={currentScriptText}
+                onChange={(e) => handleScriptTextChange(e.target.value)}
+                rows={14}
+                className="w-full bg-transparent p-5 font-mono text-xs md:text-sm text-text-primary leading-relaxed focus:outline-none resize-y selection:bg-accent selection:text-bg-primary"
+                placeholder="Enter production script with stage directions and spoken lines..."
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
         </div>
       </div>
+
+      {/* ========================================================= */}
+      {/* 3. FULLSCREEN TELEPROMPTER MODAL */}
+      {/* ========================================================= */}
+      <AnimatePresence>
+        {showTeleprompter && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-[#090d16] text-[#ffffff] flex flex-col select-none"
+          >
+            {/* Top Floating Control Bar */}
+            <div className="p-4 md:px-8 border-b border-white/10 bg-[#060a12]/95 backdrop-blur-md flex items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                <div>
+                  <h4 className="font-serif font-bold text-base text-white">
+                    XeJesUs Teleprompter Studio
+                  </h4>
+                  <p className="text-[11px] text-white/60 font-mono">
+                    {defaultScriptItem.title} • Spacebar toggles scroll • Esc exits
+                  </p>
+                </div>
+              </div>
+
+              {/* Prompter Controls */}
+              <div className="flex items-center gap-2">
+                {/* Play/Pause Auto-scroll */}
+                <button
+                  onClick={() => setIsAutoScrolling(prev => !prev)}
+                  className={`px-4 py-2 rounded-xl font-sans font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md ${
+                    isAutoScrolling
+                      ? 'bg-amber-500 text-black'
+                      : 'bg-emerald-500 text-black hover:scale-105'
+                  }`}
+                >
+                  {isAutoScrolling ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  <span>{isAutoScrolling ? 'Pause (Space)' : 'Scroll (Space)'}</span>
+                </button>
+
+                {/* Speed Controls */}
+                <div className="flex items-center bg-white/10 rounded-xl p-1 border border-white/10">
+                  <span className="text-[10px] font-mono uppercase px-2 text-white/70">Speed</span>
+                  <button
+                    onClick={() => setScrollSpeed(prev => Math.max(prev - 1, 1))}
+                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center justify-center text-white"
+                  >
+                    -
+                  </button>
+                  <span className="px-2 font-mono text-xs font-bold text-accent">{scrollSpeed}x</span>
+                  <button
+                    onClick={() => setScrollSpeed(prev => Math.min(prev + 1, 6))}
+                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center justify-center text-white"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Font Size Controls */}
+                <div className="flex items-center bg-white/10 rounded-xl p-1 border border-white/10">
+                  <span className="text-[10px] font-mono uppercase px-2 text-white/70">Font</span>
+                  <button
+                    onClick={() => setPrompterFontSize(prev => Math.max(prev - 4, 20))}
+                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center justify-center text-white"
+                  >
+                    A-
+                  </button>
+                  <span className="px-2 font-mono text-xs font-bold text-accent">{prompterFontSize}px</span>
+                  <button
+                    onClick={() => setPrompterFontSize(prev => Math.min(prev + 4, 64))}
+                    className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center justify-center text-white"
+                  >
+                    A+
+                  </button>
+                </div>
+
+                {/* Close Prompter */}
+                <button
+                  onClick={() => {
+                    setShowTeleprompter(false);
+                    setIsAutoScrolling(false);
+                  }}
+                  className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Prompter Text Scroll Area */}
+            <div
+              ref={prompterContentRef}
+              className="flex-1 overflow-y-auto px-8 md:px-32 py-20 font-serif leading-relaxed text-center scroll-smooth focus:outline-none"
+              style={{ fontSize: `${prompterFontSize}px` }}
+            >
+              <div className="max-w-4xl mx-auto space-y-10 pb-40">
+                <div className="text-accent text-sm md:text-base font-sans font-black uppercase tracking-[0.3em] pb-4 border-b border-accent/20">
+                  {defaultScriptItem.title}
+                </div>
+                {currentScriptText.split('\n\n').map((paragraph, idx) => {
+                  const isStageDirection = paragraph.trim().startsWith('[');
+                  return (
+                    <div
+                      key={idx}
+                      className={`transition-all duration-300 ${
+                        isStageDirection
+                          ? 'text-accent/60 font-mono text-[65%] tracking-normal'
+                          : 'text-white font-serif font-medium tracking-wide'
+                      }`}
+                    >
+                      {paragraph}
+                    </div>
+                  );
+                })}
+                <div className="pt-20 text-accent/50 text-sm font-sans uppercase tracking-[0.25em]">
+                  — END OF SCRIPT —
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================= */}
+      {/* 4. GEMINI AI CUSTOMIZER MODAL */}
+      {/* ========================================================= */}
+      <AnimatePresence>
+        {showAiModal && (
+          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-ui-card border-2 border-accent/40 rounded-[2rem] p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-ui-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center">
+                    <Wand2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-serif font-bold text-text-primary">
+                      Customize with Gemini AI
+                    </h3>
+                    <p className="text-xs text-text-primary font-medium">
+                      Tailor advertising lines, stage directions, and audience tone.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAiModal(false)}
+                  className="w-8 h-8 rounded-lg bg-ui-sidebar flex items-center justify-center text-text-primary hover:text-accent"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Form fields */}
+              <div className="space-y-4 text-xs font-sans">
+                {/* Target Audience */}
+                <div>
+                  <label className="font-bold text-text-primary uppercase tracking-wider block mb-1.5">
+                    Target Audience
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'general-seekers', label: 'General Seekers' },
+                      { id: 'pastors-leaders', label: 'Pastors & Ministry' },
+                      { id: 'youth-students', label: 'Youth & Students' },
+                      { id: 'scholars-seminary', label: 'Seminary & Scholars' },
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setAiAudience(opt.id as TargetAudience)}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          aiAudience === opt.id
+                            ? 'bg-accent text-bg-primary font-bold border-accent shadow-sm'
+                            : 'bg-ui-sidebar border-ui-border text-text-primary hover:border-accent'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Script Tone */}
+                <div>
+                  <label className="font-bold text-text-primary uppercase tracking-wider block mb-1.5">
+                    Script Tone
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'inspiring-pastoral', label: 'Inspiring & Pastoral' },
+                      { id: 'scholarly-deep', label: 'Scholarly & Deep' },
+                      { id: 'dynamic-modern', label: 'Dynamic & Fast' },
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setAiTone(opt.id as ScriptTone)}
+                        className={`p-2.5 rounded-xl border text-center transition-all ${
+                          aiTone === opt.id
+                            ? 'bg-accent text-bg-primary font-bold border-accent shadow-sm'
+                            : 'bg-ui-sidebar border-ui-border text-text-primary hover:border-accent'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Notes */}
+                <div>
+                  <label className="font-bold text-text-primary uppercase tracking-wider block mb-1.5">
+                    Custom Focus / Specific Instructions (Optional)
+                  </label>
+                  <textarea
+                    value={aiCustomNotes}
+                    onChange={(e) => setAiCustomNotes(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. Emphasize how Guest Mode lets users explore Lazarus in John 11:35 in 10 seconds..."
+                    className="w-full bg-ui-sidebar border border-ui-border rounded-xl p-3 text-xs text-text-primary focus:outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+
+              {aiStatusMessage && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-xs font-bold text-center">
+                  {aiStatusMessage}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setShowAiModal(false)}
+                  disabled={isGeneratingAi}
+                  className="px-4 py-2.5 rounded-xl bg-ui-sidebar border border-ui-border text-text-primary text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGenerateAiCustomScript}
+                  disabled={isGeneratingAi}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-sans font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 shadow-lg"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  <span>{isGeneratingAi ? 'Writing with Gemini...' : 'Generate Script'}</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
