@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import html2canvas from 'html2canvas';
 import { 
   Download, 
   Copy, 
@@ -619,18 +618,10 @@ export default function AdminAdStudio() {
   };
 
   const handleDownloadSingleImage = async (formatTitle: string) => {
-    if (!adCardRef.current || isExporting) return;
+    if (isExporting) return;
     setIsExporting(true);
     try {
-      // Use html2canvas with scale: 2 for sharp retina quality
-      const canvas = await html2canvas(adCardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false
-      });
-
+      const canvas = renderAdToCanvas(selectedTopic, aspectRatio, adTheme);
       const dataUrl = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       const cleanName = selectedTopic.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -641,7 +632,7 @@ export default function AdminAdStudio() {
       document.body.removeChild(link);
     } catch (error) {
       console.error("Failed to export ad image", error);
-      alert("Image generation completed. If download didn't trigger, please check browser popup permissions.");
+      alert("Image export encountered an error.");
     } finally {
       setIsExporting(false);
     }
@@ -657,31 +648,21 @@ export default function AdminAdStudio() {
       setEditableCaption(topic.caption);
       setBatchProgress({ current: i + 1, total: AD_TOPICS.length, isRunning: true });
 
-      // Allow DOM to render the new topic card
-      await new Promise(r => setTimeout(r, 450));
-
-      if (adCardRef.current) {
-        try {
-          const canvas = await html2canvas(adCardRef.current, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null,
-            logging: false
-          });
-          const dataUrl = canvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          const cleanName = topic.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
-          link.download = `xejesus-ad-${i + 1}-${cleanName}-${aspectRatio.replace(':', 'x')}.png`;
-          link.href = dataUrl;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (e) {
-          console.warn(`Could not export ${topic.name}:`, e);
-        }
+      try {
+        const canvas = renderAdToCanvas(topic, aspectRatio, adTheme);
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const cleanName = topic.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        link.download = `xejesus-ad-${i + 1}-${cleanName}-${aspectRatio.replace(':', 'x')}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.warn(`Could not export ${topic.name}:`, e);
       }
-      await new Promise(r => setTimeout(r, 200));
+
+      await new Promise(r => setTimeout(r, 100));
     }
 
     setBatchProgress(null);
@@ -1269,3 +1250,437 @@ function HomeIcon(props: any) {
     </svg>
   );
 }
+
+function renderAdToCanvas(
+  topic: AdTopicConfig,
+  aspectRatio: AspectRatio,
+  theme: AdTheme
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  let width = 1080;
+  let height = 1080;
+
+  if (aspectRatio === '16:9') {
+    width = 1920;
+    height = 1080;
+  } else if (aspectRatio === '9:16') {
+    width = 1080;
+    height = 1920;
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  // Exact Hex and RGB colors - 100% immune to oklab/oklch parser issues
+  let bgGradStart = '#090d16';
+  let bgGradEnd = '#0d1424';
+  let cardSurface = 'rgba(19, 27, 46, 0.96)';
+  let cardBorder = 'rgba(203, 159, 67, 0.35)';
+  let accentColor = '#cb9f43';
+  let badgeText = '#090d16';
+  let textPrimary = '#ffffff';
+  let textSecondary = '#cbd5e1';
+  let tagBg = 'rgba(203, 159, 67, 0.15)';
+  let chipBg = 'rgba(255, 255, 255, 0.05)';
+  let chipBorder = 'rgba(255, 255, 255, 0.12)';
+  let chipText = '#ffffff';
+
+  if (theme === 'parchment') {
+    bgGradStart = '#f5ede3';
+    bgGradEnd = '#e8d7c2';
+    cardSurface = 'rgba(253, 250, 245, 0.96)';
+    cardBorder = 'rgba(139, 90, 43, 0.35)';
+    accentColor = '#8b5a2b';
+    badgeText = '#ffffff';
+    textPrimary = '#1a120b';
+    textSecondary = '#423326';
+    tagBg = 'rgba(139, 90, 43, 0.15)';
+    chipBg = 'rgba(139, 90, 43, 0.06)';
+    chipBorder = 'rgba(139, 90, 43, 0.2)';
+    chipText = '#1a120b';
+  } else if (theme === 'midnight') {
+    bgGradStart = '#060b19';
+    bgGradEnd = '#0b1633';
+    cardSurface = 'rgba(11, 19, 41, 0.96)';
+    cardBorder = 'rgba(56, 189, 248, 0.35)';
+    accentColor = '#38bdf8';
+    badgeText = '#060b19';
+    textPrimary = '#f8fafc';
+    textSecondary = '#cbd5e1';
+    tagBg = 'rgba(56, 189, 248, 0.15)';
+    chipBg = 'rgba(255, 255, 255, 0.05)';
+    chipBorder = 'rgba(56, 189, 248, 0.2)';
+    chipText = '#f8fafc';
+  }
+
+  // Draw background gradient
+  const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+  bgGrad.addColorStop(0, bgGradStart);
+  bgGrad.addColorStop(1, bgGradEnd);
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Subtle grid lines
+  ctx.save();
+  ctx.strokeStyle = theme === 'parchment' ? 'rgba(139, 90, 43, 0.04)' : 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 1;
+  const gridSize = 60;
+  for (let x = 0; x < width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Draw Decorative Outer Frame Card
+  const margin = Math.round(width * 0.04);
+  const frameW = width - margin * 2;
+  const frameH = height - margin * 2;
+  const cornerRadius = 36;
+
+  // Outer shadow & fill
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 15;
+  drawRoundRect(ctx, margin, margin, frameW, frameH, cornerRadius);
+  ctx.fillStyle = cardSurface;
+  ctx.fill();
+  ctx.restore();
+
+  // Outer border
+  ctx.save();
+  ctx.strokeStyle = cardBorder;
+  ctx.lineWidth = 3;
+  drawRoundRect(ctx, margin, margin, frameW, frameH, cornerRadius);
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner Content Padding
+  const padX = margin + 50;
+  let currentY = margin + 50;
+
+  // 1. HEADER ROW: Emblem Logo, Title, and Badge Pill
+  const logoBoxSize = 64;
+  drawRoundRect(ctx, padX, currentY, logoBoxSize, logoBoxSize, 18);
+  ctx.fillStyle = accentColor;
+  ctx.fill();
+
+  ctx.save();
+  ctx.fillStyle = badgeText;
+  drawSacredStar(ctx, padX + logoBoxSize / 2, currentY + logoBoxSize / 2, 14, 6);
+  ctx.restore();
+
+  ctx.fillStyle = textPrimary;
+  ctx.font = 'bold 34px Cormorant Garamond, Georgia, serif';
+  ctx.fillText('XeJesUs', padX + logoBoxSize + 18, currentY + 30);
+
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+  ctx.fillText('SANCTUARY HOW-TO GUIDE', padX + logoBoxSize + 20, currentY + 52);
+
+  // Top Right Badge Pill
+  ctx.save();
+  ctx.font = '900 13px Inter, system-ui, sans-serif';
+  const badgeTextStr = topic.badge;
+  const badgeMetrics = ctx.measureText(badgeTextStr);
+  const badgeW = badgeMetrics.width + 36;
+  const badgeH = 38;
+  const badgeX = margin + frameW - 50 - badgeW;
+  const badgeY = currentY + 12;
+
+  drawRoundRect(ctx, badgeX, badgeY, badgeW, badgeH, 19);
+  ctx.fillStyle = accentColor;
+  ctx.fill();
+
+  ctx.fillStyle = badgeText;
+  ctx.fillText(badgeTextStr, badgeX + 18, badgeY + 24);
+  ctx.restore();
+
+  currentY += logoBoxSize + 30;
+
+  // Thin separator rule
+  ctx.strokeStyle = cardBorder;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padX, currentY);
+  ctx.lineTo(margin + frameW - 50, currentY);
+  ctx.stroke();
+
+  currentY += 35;
+
+  // 2. HERO FEATURE TITLE & SUBTITLE
+  ctx.fillStyle = accentColor;
+  ctx.font = '900 15px Inter, system-ui, sans-serif';
+  ctx.fillText(`${topic.name.toUpperCase()}  •  ${topic.category.toUpperCase()}`, padX, currentY);
+
+  currentY += 40;
+
+  ctx.fillStyle = textPrimary;
+  ctx.font = 'bold 44px Cormorant Garamond, Georgia, serif';
+  const titleMaxWidth = frameW - 100;
+  const titleLines = getWrappedLines(ctx, topic.headline, titleMaxWidth);
+  titleLines.slice(0, 2).forEach(line => {
+    ctx.fillText(line, padX, currentY);
+    currentY += 48;
+  });
+
+  currentY += 5;
+  ctx.fillStyle = textSecondary;
+  ctx.font = '500 18px Inter, system-ui, sans-serif';
+  const subLines = getWrappedLines(ctx, topic.subheadline, titleMaxWidth);
+  subLines.slice(0, 2).forEach(line => {
+    ctx.fillText(line, padX, currentY);
+    currentY += 26;
+  });
+
+  currentY += 20;
+
+  // 3. LIVE GUEST MODE DATA SHOWCASE CARD
+  const guestCardW = frameW - 100;
+  const guestCardH = aspectRatio === '9:16' ? 320 : (aspectRatio === '16:9' ? 200 : 240);
+  const guestCardY = currentY;
+
+  ctx.save();
+  drawRoundRect(ctx, padX, guestCardY, guestCardW, guestCardH, 24);
+  ctx.fillStyle = theme === 'parchment' ? 'rgba(240, 230, 218, 0.8)' : 'rgba(9, 13, 22, 0.75)';
+  ctx.fill();
+  ctx.strokeStyle = cardBorder;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Guest card header
+  let cardInnerY = guestCardY + 36;
+  ctx.beginPath();
+  ctx.arc(padX + 30, cardInnerY - 6, 6, 0, Math.PI * 2);
+  ctx.fillStyle = '#10b981';
+  ctx.fill();
+
+  ctx.fillStyle = textPrimary;
+  ctx.font = '900 13px Inter, system-ui, sans-serif';
+  ctx.fillText(`GUEST MODE LIVE DATA:  ${topic.previewData.title.toUpperCase()}`, padX + 48, cardInnerY);
+
+  // Tag Pill on right
+  ctx.save();
+  ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+  const tagText = topic.previewData.tag;
+  const tagW = ctx.measureText(tagText).width + 24;
+  const tagX = padX + guestCardW - tagW - 25;
+  drawRoundRect(ctx, tagX, cardInnerY - 18, tagW, 28, 8);
+  ctx.fillStyle = tagBg;
+  ctx.fill();
+  ctx.fillStyle = accentColor;
+  ctx.fillText(tagText, tagX + 12, cardInnerY);
+  ctx.restore();
+
+  cardInnerY += 28;
+
+  // Divider inside guest card
+  ctx.strokeStyle = cardBorder;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(padX + 25, cardInnerY);
+  ctx.lineTo(padX + guestCardW - 25, cardInnerY);
+  ctx.stroke();
+
+  cardInnerY += 32;
+
+  // Verse / Topic line
+  if (topic.previewData.verseOrTopic) {
+    ctx.fillStyle = textPrimary;
+    ctx.font = 'italic bold 22px Cormorant Garamond, Georgia, serif';
+    ctx.fillText(`"${topic.previewData.verseOrTopic}"`, padX + 25, cardInnerY);
+    cardInnerY += 34;
+  }
+
+  // 3 Detail Chips
+  const chipCount = topic.previewData.details.length;
+  const chipGap = 16;
+  const chipW = (guestCardW - 50 - chipGap * (chipCount - 1)) / chipCount;
+  const chipH = 50;
+
+  topic.previewData.details.forEach((detail, i) => {
+    const cX = padX + 25 + i * (chipW + chipGap);
+    drawRoundRect(ctx, cX, cardInnerY, chipW, chipH, 14);
+    ctx.fillStyle = chipBg;
+    ctx.fill();
+    ctx.strokeStyle = chipBorder;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cX + 22, cardInnerY + chipH / 2, 9, 0, Math.PI * 2);
+    ctx.fillStyle = accentColor;
+    ctx.fill();
+
+    ctx.fillStyle = badgeText;
+    ctx.font = '900 11px Inter, system-ui, sans-serif';
+    ctx.fillText('✓', cX + 18, cardInnerY + chipH / 2 + 4);
+
+    ctx.fillStyle = chipText;
+    ctx.font = '600 13px Inter, system-ui, sans-serif';
+    const maxDetailW = chipW - 48;
+    const truncated = truncateText(ctx, detail, maxDetailW);
+    ctx.fillText(truncated, cX + 38, cardInnerY + chipH / 2 + 5);
+  });
+
+  currentY = guestCardY + guestCardH + 30;
+
+  // 4. STEP-BY-STEP HOW-TO 1-2-3 CARDS
+  ctx.fillStyle = textSecondary;
+  ctx.font = '900 13px Inter, system-ui, sans-serif';
+  ctx.fillText('STEP-BY-STEP HOW TO:', padX, currentY);
+
+  currentY += 20;
+
+  const stepCount = topic.howToSteps.length;
+  const stepGap = 18;
+  const stepW = (frameW - 100 - stepGap * (stepCount - 1)) / stepCount;
+  const stepH = aspectRatio === '9:16' ? 180 : (aspectRatio === '16:9' ? 130 : 155);
+
+  topic.howToSteps.forEach((st, i) => {
+    const sX = padX + i * (stepW + stepGap);
+
+    drawRoundRect(ctx, sX, currentY, stepW, stepH, 20);
+    ctx.fillStyle = theme === 'parchment' ? 'rgba(253, 250, 245, 0.9)' : 'rgba(19, 27, 46, 0.7)';
+    ctx.fill();
+    ctx.strokeStyle = cardBorder;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Step number circle
+    const badgeR = 14;
+    ctx.beginPath();
+    ctx.arc(sX + 24, currentY + 28, badgeR, 0, Math.PI * 2);
+    ctx.fillStyle = accentColor;
+    ctx.fill();
+
+    ctx.fillStyle = badgeText;
+    ctx.font = '900 13px Inter, system-ui, sans-serif';
+    ctx.fillText(String(st.step), sX + 20, currentY + 33);
+
+    // Step title
+    ctx.fillStyle = textPrimary;
+    ctx.font = '900 15px Inter, system-ui, sans-serif';
+    ctx.fillText(st.title, sX + 48, currentY + 33);
+
+    // Step description
+    ctx.fillStyle = textSecondary;
+    ctx.font = '500 13px Inter, system-ui, sans-serif';
+    const sDescMaxWidth = stepW - 36;
+    const descLines = getWrappedLines(ctx, st.desc, sDescMaxWidth);
+    let descY = currentY + 65;
+    descLines.slice(0, 3).forEach(l => {
+      ctx.fillText(l, sX + 18, descY);
+      descY += 20;
+    });
+  });
+
+  // 5. BOTTOM FOOTER BAR
+  const footerY = margin + frameH - 75;
+  ctx.strokeStyle = cardBorder;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(padX, footerY - 20);
+  ctx.lineTo(margin + frameW - 50, footerY - 20);
+  ctx.stroke();
+
+  ctx.fillStyle = accentColor;
+  ctx.font = '900 11px Inter, system-ui, sans-serif';
+  ctx.fillText('VERIFIED GUEST MODE WORKFLOW', padX, footerY + 5);
+
+  ctx.fillStyle = textPrimary;
+  ctx.font = 'bold 15px Inter, system-ui, sans-serif';
+  ctx.fillText(topic.actionCallout, padX, footerY + 26);
+
+  // Right pill: URL
+  const urlBoxW = 160;
+  const urlBoxH = 44;
+  const urlBoxX = margin + frameW - 50 - urlBoxW;
+  const urlBoxY = footerY - 5;
+
+  drawRoundRect(ctx, urlBoxX, urlBoxY, urlBoxW, urlBoxH, 16);
+  ctx.fillStyle = accentColor;
+  ctx.fill();
+
+  ctx.fillStyle = badgeText;
+  ctx.font = '900 15px Inter, system-ui, sans-serif';
+  ctx.fillText('xejesus.app  →', urlBoxX + 24, urlBoxY + 28);
+
+  return canvas;
+}
+
+function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+}
+
+function getWrappedLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (let i = 0; i < words.length; i++) {
+    const testLine = currentLine ? currentLine + ' ' + words[i] : words[i];
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && i > 0) {
+      lines.push(currentLine);
+      currentLine = words[i];
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let truncated = text;
+  while (truncated.length > 3 && ctx.measureText(truncated + '…').width > maxWidth) {
+    truncated = truncated.slice(0, -1);
+  }
+  return truncated + '…';
+}
+
+function drawSacredStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerR: number, innerR: number) {
+  const points = 4;
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (i * Math.PI) / points - Math.PI / 2;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
