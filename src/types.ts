@@ -35,6 +35,30 @@ export interface MaintenanceConfig {
   updatedBy?: string;
 }
 
+export interface AppVersionInfo {
+  version: string; // e.g. "v2.7.0"
+  releaseDate?: string;
+  releaseTitle?: string;
+  releaseNotes?: string[];
+  mandatory?: boolean;
+  minSupportedVersion?: string;
+  sourceUrl?: string; // e.g. "https://xejesus-app.onrender.com"
+  publishedAt?: any;
+  updatedBy?: string;
+}
+
+export interface AppVersionStatus {
+  currentVersion: string;
+  latestVersion: string;
+  needsUpgrade: boolean;
+  mandatory: boolean;
+  releaseTitle?: string;
+  releaseNotes?: string[];
+  releaseDate?: string;
+  sourceUrl?: string;
+  lastCheckedAt?: number;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;

@@ -156,6 +156,101 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Server Version Endpoint (Used by client to detect latest released code)
+const SERVER_APP_VERSION = process.env.APP_VERSION || 'v2.7.0';
+const SERVER_RELEASE_TITLE = "Sacred Scholar Upgrade & Dynamic Version Tracking";
+const SERVER_RELEASE_NOTES = [
+  "Dynamic Code Version & Upgrade Detector with interactive pilgrim upgrade modal",
+  "Enhanced PDF Exegesis Export engine with full legacy color parsing and high-res rendering",
+  "Scholar Voice AI selector with instant audio playback for saved theological chat sessions",
+  "Guest Mode Read-Only Test Drive with guided Sanctuary access for sacred exegeses",
+  "Extended Ge'ez biblical canon references to Asher Wilson's 81-book Ethiopian Orthodox canon"
+];
+const SERVER_RELEASE_DATE = "April 2026";
+const CANONICAL_APP_URL = "https://xejesus-app.onrender.com";
+
+app.get('/api/version', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json({
+    version: SERVER_APP_VERSION,
+    releaseDate: SERVER_RELEASE_DATE,
+    releaseTitle: SERVER_RELEASE_TITLE,
+    releaseNotes: SERVER_RELEASE_NOTES,
+    sourceUrl: CANONICAL_APP_URL,
+    mandatory: false,
+    minSupportedVersion: 'v2.5.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Proxy / Check endpoint against deployed Render service
+app.get('/api/version/check', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const clientVersion = String(req.query.clientVersion || 'v2.6.0');
+  
+  // First, if hosted or proxying to Render, attempt to query https://xejesus-app.onrender.com/api/version
+  let remoteVersionData: any = null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const remoteRes = await fetch(`${CANONICAL_APP_URL}/api/version`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'XeJesUs-Version-Check/1.0'
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (remoteRes.ok) {
+      remoteVersionData = await remoteRes.json();
+    }
+  } catch (err: any) {
+    // Render instance might be spinning up or client is running in dev
+  }
+
+  const latestVersion = remoteVersionData?.version || SERVER_APP_VERSION;
+  const releaseTitle = remoteVersionData?.releaseTitle || SERVER_RELEASE_TITLE;
+  const releaseNotes = remoteVersionData?.releaseNotes || SERVER_RELEASE_NOTES;
+  const releaseDate = remoteVersionData?.releaseDate || SERVER_RELEASE_DATE;
+  const mandatory = Boolean(remoteVersionData?.mandatory);
+
+  // Semver comparison: normalize "v2.6.0" -> [2, 6, 0]
+  const parseSemver = (v: string) => {
+    const clean = String(v || '').replace(/^v/i, '').trim();
+    const parts = clean.split('.').map(p => parseInt(p, 10) || 0);
+    while (parts.length < 3) parts.push(0);
+    return parts;
+  };
+
+  const cParts = parseSemver(clientVersion);
+  const lParts = parseSemver(latestVersion);
+
+  let needsUpgrade = false;
+  for (let i = 0; i < 3; i++) {
+    if (lParts[i] > cParts[i]) {
+      needsUpgrade = true;
+      break;
+    } else if (lParts[i] < cParts[i]) {
+      needsUpgrade = false;
+      break;
+    }
+  }
+
+  res.json({
+    currentVersion: clientVersion,
+    latestVersion,
+    needsUpgrade,
+    mandatory,
+    releaseTitle,
+    releaseNotes,
+    releaseDate,
+    sourceUrl: CANONICAL_APP_URL,
+    lastCheckedAt: Date.now()
+  });
+});
+
 // 1. Exegesis Generation
 app.post('/api/gemini/exegesis', async (req, res) => {
   try {

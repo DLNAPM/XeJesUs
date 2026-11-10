@@ -89,8 +89,11 @@ import SavedChatSessions from './components/SavedChatSessions';
 import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import TermsOfUsePage from './components/TermsOfUsePage';
 import MaintenanceNoticeCard from './components/MaintenanceNoticeCard';
-import { MaintenanceConfig } from './types';
+import VersionUpgradeModal from './components/VersionUpgradeModal';
+import { MaintenanceConfig, AppVersionStatus, AppVersionInfo } from './types';
 import { subscribeToMaintenance } from './services/maintenanceService';
+import { checkAppVersion, subscribeToAppVersion, isUpgradeNeeded } from './services/versionService';
+import { CURRENT_APP_VERSION } from './config/version';
 
 const safeSessionStorage = {
   getItem(key: string): string | null {
@@ -180,6 +183,12 @@ export default function App() {
   const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
   const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
   const [maintenanceConfig, setMaintenanceConfig] = useState<MaintenanceConfig | null>(null);
+
+  // App Version Detection & Upgrade States
+  const [versionStatus, setVersionStatus] = useState<AppVersionStatus | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = safeLocalStorage.getItem('xejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
@@ -192,6 +201,92 @@ export default function App() {
     });
     return () => unsub();
   }, []);
+
+  // Real-time subscription to Sanctuary Code Version releases
+  useEffect(() => {
+    const unsub = subscribeToAppVersion((liveVersionInfo) => {
+      if (liveVersionInfo && liveVersionInfo.version) {
+        const needed = isUpgradeNeeded(CURRENT_APP_VERSION, liveVersionInfo.version);
+        setVersionStatus(prev => ({
+          currentVersion: CURRENT_APP_VERSION,
+          latestVersion: liveVersionInfo.version,
+          needsUpgrade: needed,
+          mandatory: Boolean(liveVersionInfo.mandatory),
+          releaseTitle: liveVersionInfo.releaseTitle,
+          releaseNotes: liveVersionInfo.releaseNotes,
+          releaseDate: liveVersionInfo.releaseDate,
+          sourceUrl: liveVersionInfo.sourceUrl,
+          lastCheckedAt: Date.now()
+        }));
+
+        // If upgrade is mandatory or not dismissed in this session, surface it
+        if (needed && user) {
+          const dismissedFor = safeSessionStorage.getItem('xejesus_dismissed_version');
+          if (liveVersionInfo.mandatory || dismissedFor !== liveVersionInfo.version) {
+            setShowUpgradeModal(true);
+          }
+        }
+      }
+    });
+    return () => unsub();
+  }, [user]);
+
+  // Detect if user is running latest version of APP code after login
+  useEffect(() => {
+    if (!user) {
+      setShowUpgradeModal(false);
+      return;
+    }
+
+    let isMounted = true;
+    const runVersionDetection = async () => {
+      try {
+        const status = await checkAppVersion(CURRENT_APP_VERSION);
+        if (!isMounted) return;
+        setVersionStatus(status);
+
+        if (status.needsUpgrade) {
+          // Check if pilgrim chose "Upgrade Later" during this session for this specific version
+          const dismissedFor = safeSessionStorage.getItem('xejesus_dismissed_version');
+          if (status.mandatory || dismissedFor !== status.latestVersion) {
+            // Small polite delay so user lands in Sanctuary before seeing the upgrade announcement
+            setTimeout(() => {
+              if (isMounted) setShowUpgradeModal(true);
+            }, 800);
+          }
+        }
+      } catch (err) {
+        console.warn("Version detection after login notice:", err);
+      }
+    };
+
+    runVersionDetection();
+    return () => { isMounted = false; };
+  }, [user]);
+
+  const handleUpgradeNow = () => {
+    setIsUpgrading(true);
+    // Clear storage cache keys and reload to fetch fresh code bundle from server / Render
+    try {
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => caches.delete(name));
+        });
+      }
+      safeSessionStorage.setItem('xejesus_dismissed_version', '');
+    } catch {}
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 900);
+  };
+
+  const handleUpgradeLater = () => {
+    if (versionStatus?.latestVersion) {
+      safeSessionStorage.setItem('xejesus_dismissed_version', versionStatus.latestVersion);
+    }
+    setShowUpgradeModal(false);
+  };
 
   const isAdmin = userProfile?.role === 'admin' || 
     user?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
@@ -945,7 +1040,21 @@ export default function App() {
               <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user?.email}</p>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-2 pt-2 pb-1 text-[10px] font-sans font-bold text-text-primary uppercase tracking-wider">
+          <div className="flex items-center justify-between px-2 pt-2 pb-1 border-t border-ui-border/40 text-[10px] font-sans font-bold">
+            <span className="text-text-secondary opacity-60 font-mono">{CURRENT_APP_VERSION}</span>
+            {versionStatus?.needsUpgrade ? (
+              <button 
+                onClick={() => setShowUpgradeModal(true)}
+                className="text-amber-500 hover:text-amber-400 flex items-center gap-1 font-bold animate-pulse cursor-pointer"
+                title="Click to view code upgrade details"
+              >
+                <span>Upgrade to {versionStatus.latestVersion}</span>
+              </button>
+            ) : (
+              <span className="text-emerald-500/80 font-mono text-[9px] uppercase">Latest Code</span>
+            )}
+          </div>
+          <div className="flex items-center justify-center gap-2 pt-1 pb-1 text-[10px] font-sans font-bold text-text-primary uppercase tracking-wider">
             <button onClick={() => setCurrentPage('privacy')} className="hover:text-accent transition-colors">Privacy Policy</button>
             <span className="opacity-50">•</span>
             <button onClick={() => setCurrentPage('terms')} className="hover:text-accent transition-colors">Terms of Use</button>
@@ -1096,6 +1205,15 @@ export default function App() {
           userProfile={userProfile} 
           openSignal={openChatbotSignal} 
           onUpdateProfile={(updated) => setUserProfile(updated)}
+        />
+
+        {/* Dynamic Code Version Upgrade Prompt */}
+        <VersionUpgradeModal 
+          isOpen={showUpgradeModal} 
+          versionStatus={versionStatus} 
+          onUpgradeNow={handleUpgradeNow} 
+          onUpgradeLater={handleUpgradeLater} 
+          isUpgrading={isUpgrading} 
         />
 
         {/* Guest Mode: Enter the Sanctuary Modal */}

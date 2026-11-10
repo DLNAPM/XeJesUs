@@ -3,6 +3,23 @@ import { Sparkles, Palette, Trash2, Download, FileText, GraduationCap, Globe, Cl
 
 export const UPDATES = [
   {
+    version: "v2.7",
+    date: "April 2026",
+    title: "Sacred Scholar Upgrade & Dynamic Version Tracking",
+    changes: [
+      { 
+        icon: Sparkles, 
+        name: "Code Version Detector & Pop-up Upgrade", 
+        desc: "Detects if your running client is out of date after login with a seamless pop-up comparing current and latest versions with Upgrade Now and Later choices." 
+      },
+      { 
+        icon: FileText, 
+        name: "Enhanced PDF Exegesis Engine", 
+        desc: "Upgraded the Exegesis Export engine with a legacy color parser, ensuring reports generate correctly across all pilgrimage devices." 
+      }
+    ]
+  },
+  {
     version: "v2.6",
     date: "April 2031",
     title: "The Scholar's Stability",

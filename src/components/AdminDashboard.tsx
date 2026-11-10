@@ -20,6 +20,7 @@ import { UserProfile } from '../types';
 import AdminAlertsStation from './AdminAlertsStation';
 import AdminMaintenanceStation from './AdminMaintenanceStation';
 import AdminAdStudio from './AdminAdStudio';
+import AdminVersionStation from './AdminVersionStation';
 import { subscribeToMaintenance } from '../services/maintenanceService';
 import { 
   Shield, 
@@ -38,7 +39,8 @@ import {
   Radio,
   AlertOctagon,
   Wrench,
-  Megaphone
+  Megaphone,
+  ArrowUpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -52,7 +54,7 @@ interface SystemLog {
 }
 
 interface AdminDashboardProps {
-  initialTab?: 'alarms' | 'registry' | 'maintenance' | 'ad-studio';
+  initialTab?: 'alarms' | 'registry' | 'maintenance' | 'ad-studio' | 'version';
 }
 
 export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboardProps) {
@@ -61,7 +63,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
-  const [activeTab, setActiveTab] = useState<'alarms' | 'registry' | 'maintenance' | 'ad-studio'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'alarms' | 'registry' | 'maintenance' | 'ad-studio' | 'version'>(initialTab);
   const [activeAlertCount, setActiveAlertCount] = useState<number>(0);
   const [maintenanceActive, setMaintenanceActive] = useState<boolean>(false);
   
@@ -364,11 +366,28 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
             14 ADS READY
           </span>
         </button>
+
+        <button
+          id="tab-btn-version"
+          onClick={() => setActiveTab('version')}
+          className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'version'
+              ? 'bg-accent text-bg-primary shadow-lg shadow-accent/20 scale-[1.02]'
+              : 'bg-ui-card hover:bg-ui-sidebar border border-ui-border text-text-secondary hover:text-text-primary'
+          }`}
+        >
+          <ArrowUpCircle className="w-4 h-4" />
+          <span>Code Versions & Upgrades</span>
+          <span className="px-2 py-0.5 rounded-full bg-ui-sidebar border border-ui-border text-accent text-[10px] font-black">
+            ACTIVE
+          </span>
+        </button>
       </div>
 
       {activeTab === 'alarms' && <AdminAlertsStation />}
       {activeTab === 'maintenance' && <AdminMaintenanceStation />}
       {activeTab === 'ad-studio' && <AdminAdStudio />}
+      {activeTab === 'version' && <AdminVersionStation />}
       {activeTab === 'registry' && (
         <>
           {/* Analytics Section */}
