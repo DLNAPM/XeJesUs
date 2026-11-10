@@ -7,7 +7,7 @@ import {
   serverTimestamp 
 } from '../lib/firebase';
 import { AppVersionInfo, AppVersionStatus } from '../types';
-import { CURRENT_APP_VERSION, CANONICAL_RENDER_URL } from '../config/version';
+import { CURRENT_APP_VERSION, CANONICAL_RENDER_URL, getInstalledAppVersion } from '../config/version';
 
 export const DEFAULT_APP_VERSION_INFO: AppVersionInfo = {
   version: "v2.7.0",
@@ -106,7 +106,7 @@ export function subscribeToAppVersion(
  * Fetches latest app version information once, combining Firestore, Render remote API, and server fallback.
  */
 export async function checkAppVersion(
-  clientVersion: string = CURRENT_APP_VERSION
+  clientVersion: string = getInstalledAppVersion()
 ): Promise<AppVersionStatus> {
   let targetVersionInfo: AppVersionInfo = DEFAULT_APP_VERSION_INFO;
 

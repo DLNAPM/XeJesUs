@@ -6,7 +6,7 @@ import {
   checkAppVersion
 } from '../services/versionService';
 import { AppVersionInfo, AppVersionStatus } from '../types';
-import { CURRENT_APP_VERSION, CANONICAL_RENDER_URL } from '../config/version';
+import { CURRENT_APP_VERSION, CANONICAL_RENDER_URL, getInstalledAppVersion, resetInstalledAppVersion } from '../config/version';
 import { getAuthService } from '../lib/firebase';
 import { 
   Sparkles, 
@@ -119,14 +119,26 @@ export default function AdminVersionStation() {
           </div>
         </div>
 
-        <button
-          onClick={handleRunCheck}
-          disabled={checking}
-          className="px-5 py-3 bg-ui-sidebar hover:bg-accent/10 border border-ui-border text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm shrink-0 cursor-pointer"
-        >
-          <RefreshCw className={`w-4 h-4 text-accent ${checking ? 'animate-spin' : ''}`} />
-          <span>Test Version Check</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleRunCheck}
+            disabled={checking}
+            className="px-5 py-3 bg-ui-sidebar hover:bg-accent/10 border border-ui-border text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm shrink-0 cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 text-accent ${checking ? 'animate-spin' : ''}`} />
+            <span>Test Version Check</span>
+          </button>
+          <button
+            onClick={() => {
+              resetInstalledAppVersion();
+              window.location.reload();
+            }}
+            className="px-4 py-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer"
+            title="Reset to v2.6.0 to test the Upgrade Now prompt again"
+          >
+            <span>Reset to v2.6.0</span>
+          </button>
+        </div>
       </div>
 
       {/* Diagnostics / Status Card */}

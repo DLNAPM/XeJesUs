@@ -93,7 +93,7 @@ import VersionUpgradeModal from './components/VersionUpgradeModal';
 import { MaintenanceConfig, AppVersionStatus, AppVersionInfo } from './types';
 import { subscribeToMaintenance } from './services/maintenanceService';
 import { checkAppVersion, subscribeToAppVersion, isUpgradeNeeded } from './services/versionService';
-import { CURRENT_APP_VERSION } from './config/version';
+import { CURRENT_APP_VERSION, getInstalledAppVersion, setInstalledAppVersion } from './config/version';
 
 const safeSessionStorage = {
   getItem(key: string): string | null {
@@ -206,9 +206,10 @@ export default function App() {
   useEffect(() => {
     const unsub = subscribeToAppVersion((liveVersionInfo) => {
       if (liveVersionInfo && liveVersionInfo.version) {
-        const needed = isUpgradeNeeded(CURRENT_APP_VERSION, liveVersionInfo.version);
+        const clientVer = getInstalledAppVersion();
+        const needed = isUpgradeNeeded(clientVer, liveVersionInfo.version);
         setVersionStatus(prev => ({
-          currentVersion: CURRENT_APP_VERSION,
+          currentVersion: clientVer,
           latestVersion: liveVersionInfo.version,
           needsUpgrade: needed,
           mandatory: Boolean(liveVersionInfo.mandatory),
@@ -241,7 +242,8 @@ export default function App() {
     let isMounted = true;
     const runVersionDetection = async () => {
       try {
-        const status = await checkAppVersion(CURRENT_APP_VERSION);
+        const clientVer = getInstalledAppVersion();
+        const status = await checkAppVersion(clientVer);
         if (!isMounted) return;
         setVersionStatus(status);
 
@@ -265,20 +267,37 @@ export default function App() {
   }, [user]);
 
   const handleUpgradeNow = () => {
+    const targetVersion = versionStatus?.latestVersion || 'v2.7.0';
     setIsUpgrading(true);
-    // Clear storage cache keys and reload to fetch fresh code bundle from server / Render
+
+    // 1. Immediately persist the new installed version in client storage
+    setInstalledAppVersion(targetVersion);
+    safeSessionStorage.setItem('xejesus_dismissed_version', targetVersion);
+    safeSessionStorage.setItem('xejesus_just_upgraded', targetVersion);
+
+    // 2. Clear browser caches if supported
     try {
       if ('caches' in window) {
         caches.keys().then((names) => {
           names.forEach((name) => caches.delete(name));
         });
       }
-      safeSessionStorage.setItem('xejesus_dismissed_version', '');
     } catch {}
 
+    // 3. Update in-memory version state
+    setVersionStatus(prev => prev ? {
+      ...prev,
+      currentVersion: targetVersion,
+      needsUpgrade: false
+    } : null);
+
+    // 4. Smooth user feedback and reload
     setTimeout(() => {
+      setShowUpgradeModal(false);
+      setIsUpgrading(false);
+      // Reload page to re-initialize with new code version active
       window.location.reload();
-    }, 900);
+    }, 1200);
   };
 
   const handleUpgradeLater = () => {
@@ -1041,7 +1060,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center justify-between px-2 pt-2 pb-1 border-t border-ui-border/40 text-[10px] font-sans font-bold">
-            <span className="text-text-secondary opacity-60 font-mono">{CURRENT_APP_VERSION}</span>
+            <span className="text-text-secondary opacity-60 font-mono">{versionStatus?.currentVersion || getInstalledAppVersion()}</span>
             {versionStatus?.needsUpgrade ? (
               <button 
                 onClick={() => setShowUpgradeModal(true)}
