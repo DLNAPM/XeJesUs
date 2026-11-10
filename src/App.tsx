@@ -61,10 +61,12 @@ import {
   History,
   LogIn,
   Compass,
-  Star
+  Star,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
+import { isGuestUser } from './data/guestData';
 
 // Pages - We'll define them as components for now to keep it single file or small
 import { UserProfile } from './types';
@@ -134,8 +136,11 @@ export default function App() {
     return safeSessionStorage.getItem('hasWatchedHowTo') === 'true';
   });
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showEnterSanctuaryModal, setShowEnterSanctuaryModal] = useState(false);
   const [hasInquiries, setHasInquiries] = useState<boolean | null>(null);
   const [openChatbotSignal, setOpenChatbotSignal] = useState<{ open: boolean; view: 'chat' | 'sessions'; id: number; session?: any }>({ open: false, view: 'chat', id: 0 });
+
+  const isGuest = isGuestUser(user, userProfile);
 
   const openSavedChatSessions = () => {
     setCurrentPage('saved-chats');
@@ -441,6 +446,10 @@ export default function App() {
   };
 
   const navigateToPage = (page: Page, label: string) => {
+    if (page === 'inquiry' && isGuest) {
+      setShowEnterSanctuaryModal(true);
+      return;
+    }
     if ((page === 'reports' || page === 'glossary') && !isPremium) {
       setPremiumModal({ isOpen: true, feature: label });
       return;
@@ -846,7 +855,13 @@ export default function App() {
         <div className="flex-1 space-y-1">
           {[
             { id: 'dashboard', label: 'Exegesis Library', icon: BookOpen },
-            { id: 'inquiry', label: 'Seek the Word', icon: Search },
+            { 
+              id: 'inquiry', 
+              label: 'Seek the Word', 
+              icon: Search,
+              badge: isGuest ? 'READ-ONLY' : undefined,
+              onClick: isGuest ? () => setShowEnterSanctuaryModal(true) : undefined
+            },
             { 
               id: 'then-vs-now', 
               label: 'Then vs Now', 
@@ -965,8 +980,22 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="p-4 md:p-12 pb-24 md:pb-12"
           >
-            {currentPage === 'dashboard' && <Dashboard onSelectInquiry={navigateToDetails} onNewInquiry={() => setCurrentPage('inquiry')} />}
-            {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} isPremium={isPremium} />}
+            {currentPage === 'dashboard' && (
+              <Dashboard 
+                onSelectInquiry={navigateToDetails} 
+                onNewInquiry={() => isGuest ? setShowEnterSanctuaryModal(true) : setCurrentPage('inquiry')} 
+                isGuest={isGuest}
+                onPromptLogin={() => setShowEnterSanctuaryModal(true)}
+              />
+            )}
+            {currentPage === 'inquiry' && (
+              <InquiryTool 
+                onComplete={(id) => navigateToDetails(id)} 
+                isPremium={isPremium} 
+                isGuest={isGuest}
+                onPromptLogin={() => setShowEnterSanctuaryModal(true)}
+              />
+            )}
             {currentPage === 'then-vs-now' && (
               <ThenVsNow 
                 isPremium={isPremium} 
@@ -981,10 +1010,18 @@ export default function App() {
                 userProfile={userProfile} 
                 onUpdateProfile={(updated) => setUserProfile(updated)}
                 onSelectSession={(session) => setOpenChatbotSignal({ open: true, view: 'chat', id: Date.now(), session })} 
+                onOpenSettings={() => setCurrentPage('settings')}
+                isGuest={isGuest}
               />
             )}
             {currentPage === 'glossary' && <Glossary />}
-            {currentPage === 'settings' && <SettingsPage onNavigatePage={(page) => setCurrentPage(page)} />}
+            {currentPage === 'settings' && (
+              <SettingsPage 
+                onNavigatePage={(page) => setCurrentPage(page)} 
+                userProfile={userProfile}
+                onUpdateProfile={(updated) => setUserProfile(updated)}
+              />
+            )}
             {currentPage === 'privacy' && <PrivacyPolicyPage onBack={() => setCurrentPage('dashboard')} />}
             {currentPage === 'terms' && <TermsOfUsePage onBack={() => setCurrentPage('dashboard')} />}
             {currentPage === 'admin' && <AdminDashboard />}
@@ -1060,6 +1097,85 @@ export default function App() {
           openSignal={openChatbotSignal} 
           onUpdateProfile={(updated) => setUserProfile(updated)}
         />
+
+        {/* Guest Mode: Enter the Sanctuary Modal */}
+        <AnimatePresence>
+          {showEnterSanctuaryModal && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowEnterSanctuaryModal(false)}
+                className="absolute inset-0 bg-bg-primary/95 backdrop-blur-xl"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative bg-ui-card p-6 sm:p-8 rounded-[2.5rem] shadow-2xl border-2 border-amber-500/40 max-w-lg w-full overflow-hidden text-center z-10"
+              >
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-accent to-amber-500"></div>
+
+                <div className="w-16 h-16 bg-amber-500/15 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-5 border border-amber-500/30 shadow-inner">
+                  <Lock className="w-8 h-8" />
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-500 text-[10px] font-sans font-black uppercase tracking-widest mb-3">
+                  <span>Guest Test Drive • Read-Only Sanctuary</span>
+                </div>
+
+                <h3 className="text-2xl sm:text-3xl font-serif font-bold text-text-primary italic mb-3">
+                  Enter the Sanctuary
+                </h3>
+
+                <p className="text-sm font-serif italic text-text-primary leading-relaxed mb-6 font-medium">
+                  The Test Drive is in <span className="font-bold text-amber-500 not-italic">Read-Only Mode</span>. Please login and <span className="font-bold text-accent not-italic">Enter the Sanctuary</span> in order to Seek the meanings of God's Word and generate personalized exegeses.
+                </p>
+
+                <div className="bg-ui-sidebar/60 p-4 rounded-2xl border border-ui-border space-y-2.5 mb-6 text-left">
+                  <p className="text-[10px] font-sans font-bold uppercase tracking-widest text-text-secondary">What Guest Test Drive Offers:</p>
+                  <ul className="text-xs font-serif text-text-primary space-y-1.5 list-disc list-inside">
+                    <li>Explore pre-loaded exegeses (John 11:35 & John 21:11)</li>
+                    <li>Listen to authentic Saved Chat Sessions with scholar voices</li>
+                    <li>Audition & customize male and female Scholar Voice presets</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => {
+                      setShowEnterSanctuaryModal(false);
+                      handleLogin();
+                    }}
+                    className="w-full py-4 px-6 bg-accent hover:opacity-95 text-bg-primary rounded-2xl font-sans font-bold text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-lg cursor-pointer active:scale-95"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Enter the Sanctuary (Login with Google)</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => {
+                        setShowEnterSanctuaryModal(false);
+                        setCurrentPage('saved-chats');
+                      }}
+                      className="flex-1 py-3 px-4 bg-ui-sidebar hover:bg-accent/10 text-accent border border-ui-border rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all"
+                    >
+                      Listen to Saved Chats
+                    </button>
+                    <button 
+                      onClick={() => setShowEnterSanctuaryModal(false)}
+                      className="py-3 px-4 text-text-secondary hover:text-text-primary font-sans font-bold text-xs uppercase tracking-wider transition-all"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </main>
 
       {/* Mobile Bottom Nav */}
@@ -1067,8 +1183,17 @@ export default function App() {
         <button onClick={() => setCurrentPage('dashboard')} className={cn("p-2 transition-colors", currentPage === 'dashboard' ? "text-accent" : "text-text-secondary")}>
           <Home className="w-7 h-7" />
         </button>
-        <button onClick={() => setCurrentPage('inquiry')} className={cn("p-2 transition-colors", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}>
+        <button 
+          onClick={() => isGuest ? setShowEnterSanctuaryModal(true) : setCurrentPage('inquiry')} 
+          className={cn("p-2 transition-colors relative", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}
+          title={isGuest ? "Seek the Word (Login Required)" : "Seek the Word"}
+        >
           <Search className="w-7 h-7" />
+          {isGuest && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full flex items-center justify-center text-[8px] font-bold text-bg-primary">
+              !
+            </span>
+          )}
         </button>
         <button 
           onClick={() => setShowMobileMenu(true)} 

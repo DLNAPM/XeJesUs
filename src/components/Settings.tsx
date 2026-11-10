@@ -10,9 +10,11 @@ type SettingsTab = 'profile' | 'updates';
 
 interface SettingsProps {
   onNavigatePage?: (page: 'privacy' | 'terms') => void;
+  userProfile?: import('../types').UserProfile | null;
+  onUpdateProfile?: (updated: import('../types').UserProfile) => void;
 }
 
-export default function Settings({ onNavigatePage }: SettingsProps) {
+export default function Settings({ onNavigatePage, userProfile, onUpdateProfile }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
   const tabs = [
@@ -74,7 +76,13 @@ export default function Settings({ onNavigatePage }: SettingsProps) {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              {activeTab === 'profile' && <ProfileSettings onNavigatePage={onNavigatePage} />}
+              {activeTab === 'profile' && (
+                <ProfileSettings 
+                  onNavigatePage={onNavigatePage} 
+                  userProfile={userProfile} 
+                  onUpdateProfile={onUpdateProfile} 
+                />
+              )}
               {activeTab === 'updates' && <DivineUpdates />}
             </motion.div>
           </AnimatePresence>

@@ -38,25 +38,31 @@ import {
   Crown,
   RotateCcw,
   RotateCw,
-  Star
+  Star,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PremiumOverlay from './PremiumOverlay';
 import { exportElementToPdf } from '../utils/pdfExporter';
 import ScholarVoiceDropdown from './ScholarVoiceDropdown';
+import { GUEST_SAVED_SESSIONS } from '../data/guestData';
 
 interface SavedChatSessionsProps {
   userProfile: UserProfile | null;
   onSelectSession?: (session: ChatSession) => void;
   onUpdateProfile?: (updatedProfile: UserProfile) => void;
+  onOpenSettings?: () => void;
+  isGuest?: boolean;
 }
 
-export default function SavedChatSessions({ userProfile, onSelectSession, onUpdateProfile }: SavedChatSessionsProps) {
+export default function SavedChatSessions({ userProfile, onSelectSession, onUpdateProfile, onOpenSettings, isGuest: propIsGuest }: SavedChatSessionsProps) {
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(userProfile);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const isGuest = propIsGuest ?? Boolean(getAuthService()?.currentUser?.isAnonymous || userProfile?.email === 'guest@xejesus.app');
 
   useEffect(() => {
     setCurrentProfile(userProfile);
@@ -122,6 +128,9 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
     const auth = getAuthService();
     const db = getDbService();
     if (!auth || !auth.currentUser || !db) {
+      if (isGuest) {
+        setSessions(GUEST_SAVED_SESSIONS);
+      }
       setLoading(false);
       return;
     }
@@ -158,6 +167,16 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
       } catch (errRoot) {
         console.warn("Could not fetch root collection chat sessions:", errRoot);
       }
+
+      // If guest mode, ensure pre-populated flagship sessions are available to explore and listen to
+      if (isGuest) {
+        const existingIds = new Set(fetchedSessions.map(s => s.id));
+        for (const gs of GUEST_SAVED_SESSIONS) {
+          if (!existingIds.has(gs.id)) {
+            fetchedSessions.push(gs);
+          }
+        }
+      }
       
       // Sort newest first
       fetchedSessions.sort((a, b) => {
@@ -172,13 +191,22 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
 
       setSessions(fetchedSessions);
     } catch (err) {
-      handleFirestoreError(err, OperationType.GET, 'chat_sessions');
+      if (isGuest) {
+        setSessions(GUEST_SAVED_SESSIONS);
+      } else {
+        handleFirestoreError(err, OperationType.GET, 'chat_sessions');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const deleteSession = async (sessionId: string) => {
+    if (sessionId.startsWith('guest-session-') || isGuest) {
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      return;
+    }
+
     const auth = getAuthService();
     const db = getDbService();
     if (!db || !auth || !auth.currentUser) return;
@@ -370,6 +398,46 @@ export default function SavedChatSessions({ userProfile, onSelectSession, onUpda
           </div>
         </div>
       </header>
+
+      {/* Guest Mode Showcase & Scholar Voice Guidance Banner */}
+      {isGuest && (
+        <div className="mb-8 p-6 rounded-3xl bg-gradient-to-r from-accent/15 via-ui-card to-ui-card border-2 border-accent/40 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-accent text-bg-primary flex items-center justify-center shrink-0 shadow-md">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-accent text-bg-primary text-[10px] font-sans font-black uppercase tracking-wider">
+                  Guest Mode Showcase
+                </span>
+                <span className="text-[11px] font-mono text-accent font-bold">
+                  3 Saved Chat Sessions Pre-Loaded
+                </span>
+              </div>
+              <h3 className="font-serif font-bold text-base text-text-primary mb-1">
+                Audition & Play Saved Sessions with Scholar Voices
+              </h3>
+              <p className="text-xs text-text-secondary leading-relaxed font-medium max-w-2xl">
+                Tap <strong>Listen (Play)</strong> on any session below to hear sacred theological dialogues read aloud. Select different scholar voices using the <strong>Scholar Voice</strong> dropdown above or customize voices in <strong>Sanctuary Settings</strong>!
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            {onOpenSettings && (
+              <button
+                type="button"
+                onClick={onOpenSettings}
+                className="px-4 py-2.5 bg-ui-sidebar hover:bg-accent hover:text-bg-primary border border-ui-border text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm cursor-pointer active:scale-95"
+              >
+                <SettingsIcon className="w-3.5 h-3.5" />
+                <span>Sanctuary Settings (Voices)</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Audio Player Toolbar (if active) - Brought to front with z-30 and no overflow clipping */}
       {speakingSessionId && (

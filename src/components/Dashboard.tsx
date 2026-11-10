@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType, getDoc, doc, deleteDoc } from '../lib/firebase';
 import { Inquiry } from '../types';
-import { BookOpen, Clock, ChevronRight, PlusCircle, Share2, Trash2, Loader2 } from 'lucide-react';
+import { BookOpen, Clock, ChevronRight, PlusCircle, Share2, Trash2, Loader2, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
+import { GUEST_TEST_INQUIRIES } from '../data/guestData';
 
 interface DashboardProps {
   onSelectInquiry: (id: string) => void;
   onNewInquiry: () => void;
+  isGuest?: boolean;
+  onPromptLogin?: () => void;
 }
 
 const TEST_INQUIRIES: Inquiry[] = [
@@ -48,23 +51,25 @@ const TEST_INQUIRIES: Inquiry[] = [
   }
 ];
 
-export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardProps) {
+export default function Dashboard({ onSelectInquiry, onNewInquiry, isGuest: propIsGuest, onPromptLogin }: DashboardProps) {
   const [recentInquiries, setRecentInquiries] = useState<Inquiry[]>([]);
   const [sharedInquiries, setSharedInquiries] = useState<(Inquiry & { shareId?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingShareId, setDeletingShareId] = useState<string | null>(null);
 
+  const auth = getAuthService();
+  const isGuest = propIsGuest ?? Boolean(auth?.currentUser?.isAnonymous);
+
   const fetchInquiries = async () => {
-    const auth = getAuthService();
     const db = getDbService();
     if (!auth || !auth.currentUser || !db) {
+      if (isGuest) {
+        setRecentInquiries(GUEST_TEST_INQUIRIES);
+      }
       setLoading(false);
       return;
     }
-    
-    // Guest Mode: Pre-populate with test data
-    const isGuest = auth.currentUser.isAnonymous;
     
     const inquiriesPath = 'inquiries';
     try {
@@ -88,7 +93,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
       });
       
       if (isGuest && data.length === 0) {
-        data = TEST_INQUIRIES;
+        data = GUEST_TEST_INQUIRIES;
       }
       
       setRecentInquiries(data);
@@ -174,24 +179,89 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
 
   return (
     <div className="max-w-4xl mx-auto">
-      <header className="mb-12">
+      <header className="mb-8 md:mb-12">
         <h1 className="text-4xl font-serif text-text-primary mb-2">Exegesis Library</h1>
         <p className="text-text-secondary italic font-medium">Welcome back. Continue your journey through the Word.</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* New Inquiry Card */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onNewInquiry}
-          className="h-48 border-2 border-dashed border-ui-border rounded-2xl flex flex-col items-center justify-center gap-4 bg-ui-card/40 hover:bg-ui-card transition-all group"
-        >
-          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-            <PlusCircle className="w-6 h-6 text-accent" />
+      {/* Guest Mode Informational Banner */}
+      {isGuest && (
+        <div className="mb-8 p-5 rounded-3xl bg-gradient-to-r from-amber-500/15 via-ui-card to-ui-card border-2 border-amber-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/30 mt-0.5">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-bg-primary text-[10px] font-sans font-black uppercase tracking-widest">
+                  Test Drive • Read-Only Mode
+                </span>
+              </div>
+              <p className="text-xs text-text-primary leading-relaxed font-medium">
+                The ability to <strong className="text-text-primary font-bold">Begin New Inquiry</strong> and <strong className="text-text-primary font-bold">Seek the Word</strong> is turned off in the Guest Test Drive. Please login and Enter the Sanctuary in order to Seek the meanings of God's Word.
+              </p>
+            </div>
           </div>
-          <span className="font-sans font-bold text-sm text-text-primary tracking-wide">Begin New Inquiry</span>
-        </motion.button>
+
+          <button
+            onClick={onPromptLogin}
+            className="px-5 py-2.5 rounded-xl bg-text-primary text-bg-primary hover:bg-accent hover:text-bg-primary transition-all font-sans font-bold text-xs uppercase tracking-wider shrink-0 shadow-md flex items-center gap-2 active:scale-95 cursor-pointer"
+          >
+            <span>Enter the Sanctuary</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* New Inquiry Card - Disabled & Read-Only in Guest Mode */}
+        {isGuest ? (
+          <div 
+            onClick={onPromptLogin}
+            className="h-48 border-2 border-dashed border-amber-500/40 rounded-2xl flex flex-col items-center justify-between p-5 bg-gradient-to-b from-amber-500/5 via-ui-card/60 to-ui-card text-center relative overflow-hidden group shadow-sm hover:border-accent transition-all cursor-pointer"
+            title="Login and Enter the Sanctuary in order to Seek the meanings of God's Word"
+          >
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-sans font-black uppercase tracking-wider flex items-center gap-1.5 border border-amber-500/30">
+                <Lock className="w-3 h-3" />
+                Test Drive • Read-Only
+              </span>
+            </div>
+            
+            <div className="space-y-1 px-2">
+              <h3 className="font-serif font-bold text-sm text-text-primary flex items-center justify-center gap-1.5">
+                Begin New Inquiry
+              </h3>
+              <p className="text-[11px] text-text-secondary leading-snug max-w-xs mx-auto font-medium">
+                The ability to Begin New Inquiry is turned off in Guest Mode. Please login and Enter the Sanctuary to Seek the Word.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPromptLogin?.();
+              }}
+              className="px-4 py-2 bg-text-primary text-bg-primary group-hover:bg-accent group-hover:text-bg-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer"
+            >
+              <span>Login to Enter Sanctuary</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onNewInquiry}
+            className="h-48 border-2 border-dashed border-ui-border rounded-2xl flex flex-col items-center justify-center gap-4 bg-ui-card/40 hover:bg-ui-card transition-all group cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+              <PlusCircle className="w-6 h-6 text-accent" />
+            </div>
+            <span className="font-sans font-bold text-sm text-text-primary tracking-wide">Begin New Inquiry</span>
+          </motion.button>
+        )}
 
         {/* Stats or Quotes */}
         <div className="h-48 rounded-3xl bg-text-primary text-bg-primary p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">

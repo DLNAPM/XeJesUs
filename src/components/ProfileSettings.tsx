@@ -22,28 +22,33 @@ const FEMALE_VOICE_PRESETS = [
 
 interface ProfileSettingsProps {
   onNavigatePage?: (page: 'privacy' | 'terms') => void;
+  onUpdateProfile?: (updated: UserProfile) => void;
+  userProfile?: UserProfile | null;
 }
 
-export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [bibleWebsite, setBibleWebsite] = useState('');
-  const [theme, setTheme] = useState('modern');
-  const [maleScholarVoice, setMaleScholarVoice] = useState('Joel Osteen');
-  const [femaleScholarVoice, setFemaleScholarVoice] = useState('Oprah Winfrey');
-  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>('male');
-  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(true);
+export default function ProfileSettings({ onNavigatePage, onUpdateProfile, userProfile }: ProfileSettingsProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(userProfile || null);
+  const [bibleWebsite, setBibleWebsite] = useState(userProfile?.bibleWebsite || '');
+  const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(userProfile?.theme || 'modern');
+  const [maleScholarVoice, setMaleScholarVoice] = useState(userProfile?.maleScholarVoice || 'Joel Osteen');
+  const [femaleScholarVoice, setFemaleScholarVoice] = useState(userProfile?.femaleScholarVoice || 'Oprah Winfrey');
+  const [activeScholarGender, setActiveScholarGender] = useState<'male' | 'female' | 'auto'>(userProfile?.activeScholarGender || 'male');
+  const [scholarsVoicesEnabled, setScholarsVoicesEnabled] = useState(userProfile?.scholarsVoicesEnabled !== false);
   const [customMaleVoice, setCustomMaleVoice] = useState('');
   const [customFemaleVoice, setCustomFemaleVoice] = useState('');
   const [testingVoice, setTestingVoice] = useState<'male' | 'female' | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!userProfile);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const auth = getAuthService();
-      if (!auth || !auth.currentUser) return;
+      if (!auth || !auth.currentUser) {
+        setLoading(false);
+        return;
+      }
 
       const db = getDbService();
       if (!db) {
@@ -135,25 +140,52 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
   const handleSave = async () => {
     const auth = getAuthService();
     const db = getDbService();
-    if (!auth || !auth.currentUser || !db) return;
+    const currentUser = auth?.currentUser;
 
     setSaving(true);
     const finalMaleVoice = maleScholarVoice === 'Custom' ? (customMaleVoice.trim() || 'Custom Male Voice') : maleScholarVoice;
     const finalFemaleVoice = femaleScholarVoice === 'Custom' ? (customFemaleVoice.trim() || 'Custom Female Voice') : femaleScholarVoice;
 
+    const updatedProfileData: UserProfile = {
+      uid: currentUser?.uid || profile?.uid || 'guest-user',
+      email: currentUser?.email || profile?.email || 'guest@xejesus.app',
+      displayName: currentUser?.displayName || profile?.displayName || 'Guest Pilgrim',
+      photoURL: currentUser?.photoURL || profile?.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=256',
+      bibleWebsite: bibleWebsite,
+      theme: theme,
+      maleScholarVoice: finalMaleVoice,
+      femaleScholarVoice: finalFemaleVoice,
+      activeScholarGender: activeScholarGender,
+      scholarsVoicesEnabled: scholarsVoicesEnabled
+    };
+
+    setProfile(updatedProfileData);
+    if (onUpdateProfile) {
+      onUpdateProfile(updatedProfileData);
+    }
+
+    // Cache to localStorage for guest & instant reloads
     try {
-      await setDoc(doc(db, 'users', auth.currentUser.uid), {
-        uid: auth.currentUser.uid,
-        email: auth.currentUser.email,
-        displayName: auth.currentUser.displayName,
-        photoURL: auth.currentUser.photoURL,
-        bibleWebsite: bibleWebsite,
-        theme: theme,
-        maleScholarVoice: finalMaleVoice,
-        femaleScholarVoice: finalFemaleVoice,
-        activeScholarGender: activeScholarGender,
-        scholarsVoicesEnabled: scholarsVoicesEnabled
-      }, { merge: true });
+      localStorage.setItem('xejesus_active_scholar_gender', activeScholarGender);
+      localStorage.setItem('xejesus_male_scholar_voice', finalMaleVoice);
+      localStorage.setItem('xejesus_female_scholar_voice', finalFemaleVoice);
+    } catch {}
+
+    try {
+      if (db && currentUser) {
+        await setDoc(doc(db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL,
+          bibleWebsite: bibleWebsite,
+          theme: theme,
+          maleScholarVoice: finalMaleVoice,
+          femaleScholarVoice: finalFemaleVoice,
+          activeScholarGender: activeScholarGender,
+          scholarsVoicesEnabled: scholarsVoicesEnabled
+        }, { merge: true });
+      }
       
       // Update theme in real-time
       document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
@@ -161,7 +193,13 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${auth.currentUser.uid}`);
+      // If user is guest/anonymous, firestore write failure is non-fatal
+      if (currentUser?.isAnonymous) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else if (currentUser) {
+        handleFirestoreError(error, OperationType.WRITE, `users/${currentUser.uid}`);
+      }
     } finally {
       setSaving(false);
     }
@@ -230,11 +268,11 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
+              {([
                 { id: 'modern', name: 'Modern Sanctuary', icon: Sun, desc: 'Clean & Technical' },
                 { id: 'midnight', name: 'Midnight Exegesis', icon: Moon, desc: 'Dark & Serene' },
                 { id: 'parchment', name: 'Traditional Parchment', icon: BookOpen, desc: 'Enhanced Classics' }
-              ].map((t) => (
+              ] as const).map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}

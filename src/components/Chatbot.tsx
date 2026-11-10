@@ -50,7 +50,7 @@ import {
   subscribeScholarSpeechProgress, 
   ScholarSpeechState 
 } from '../lib/ttsHelper';
-
+import { GUEST_SAVED_SESSIONS } from '../data/guestData';
 
 interface Message {
   role: 'user' | 'model';
@@ -377,7 +377,14 @@ export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: Ch
   const fetchSessions = async () => {
     const auth = getAuthService();
     const db = getDbService();
-    if (!auth || !auth.currentUser || !db) return;
+    const isGuest = Boolean(auth?.currentUser?.isAnonymous || userProfile?.email === 'guest@xejesus.app');
+
+    if (!auth || !auth.currentUser || !db) {
+      if (isGuest) {
+        setSessions(GUEST_SAVED_SESSIONS);
+      }
+      return;
+    }
 
     try {
       const q = query(
@@ -386,9 +393,23 @@ export default function Chatbot({ userProfile, openSignal, onUpdateProfile }: Ch
       );
       const snap = await getDocs(q);
       const fetchedSessions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChatSession));
+      
+      if (isGuest) {
+        const existingIds = new Set(fetchedSessions.map(s => s.id));
+        for (const gs of GUEST_SAVED_SESSIONS) {
+          if (!existingIds.has(gs.id)) {
+            fetchedSessions.push(gs);
+          }
+        }
+      }
+
       setSessions(fetchedSessions);
     } catch (error) {
-      console.error("Failed to fetch chat sessions", error);
+      if (isGuest) {
+        setSessions(GUEST_SAVED_SESSIONS);
+      } else {
+        console.error("Failed to fetch chat sessions", error);
+      }
     }
   };
 
