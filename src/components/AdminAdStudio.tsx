@@ -73,7 +73,8 @@ export type AdTopicId =
   | 'settings-profile'
   | 'settings-voices'
   | 'settings-sources'
-  | 'settings-canonical-link';
+  | 'settings-canonical-link'
+  | 'master-all-features';
 
 export type AspectRatio = '1:1' | '16:9' | '9:16';
 export type AdTheme = 'modern' | 'parchment' | 'midnight';
@@ -81,7 +82,7 @@ export type AdTheme = 'modern' | 'parchment' | 'midnight';
 interface AdTopicConfig {
   id: AdTopicId;
   name: string;
-  category: 'Sanctuary Portal' | 'Exegetical Tools' | 'Community & Dialogue' | 'Scholarship & Analytics' | 'Sanctuary Settings';
+  category: 'Sanctuary Portal' | 'Exegetical Tools' | 'Community & Dialogue' | 'Scholarship & Analytics' | 'Sanctuary Settings' | 'Sanctuary Master Showcase';
   isSubTopic?: boolean;
   parentName?: string;
   headline: string;
@@ -612,12 +613,53 @@ Every verse in your exegesis scrolls automatically links to your preferred tool 
   }
 ];
 
+export const MASTER_AD_TOPIC: AdTopicConfig = {
+  id: 'master-all-features',
+  name: 'Master Sanctuary Commercial',
+  category: 'Sanctuary Master Showcase',
+  headline: 'XeJesUs: The Living Exegesis Sanctuary',
+  subheadline: '14 Core Features • 6 Scholarly Pillars • Asher Wilson Ethiopian Canon • AI Voices',
+  guestModeDataSource: 'Complete Sanctuary guest walkthrough across all 14 portals, settings, scrolls, and lexicons.',
+  badge: 'COMPLETE SANCTUARY',
+  actionCallout: 'Experience the full Living Exegesis Sanctuary in Guest Mode or Cloud Authentication.',
+  howToSteps: [
+    { step: 1, title: 'Enter Sanctuary', desc: 'Sign in or Test Drive as Guest to access the 14 core modules.' },
+    { step: 2, title: 'Seek Any Scripture', desc: 'Explore Koine Greek roots, Ethiopian 81 books, and Patristic insights.' },
+    { step: 3, title: 'Listen & Cross-Check', desc: 'Hear scrolls in C.S. Lewis or Spurgeon voices and link to Bible portals.' }
+  ],
+  caption: `🌟 XeJesUs: The Complete Living Exegesis Sanctuary!
+
+Discover Jesus' authentic 1st Century voice through original Greek, Hebrew, and Ge'ez roots, synthesized across 6 foundational pillars including Asher Wilson's 81-book Ethiopian Bible canon.
+
+✨ Zero-Friction Guest Mode Access
+✨ Pre-loaded with Lazarus (John 11:35) & 153 Fish (John 21:11)
+✨ Then vs Now Antiquity-to-Modernity Cross-Referencing
+✨ Historical Scholar Voice Narration (C.S. Lewis & Charles Spurgeon)
+✨ Communal Study Groups & Shared Dialogues
+✨ Full Lexicon Glossary & Strong's Concordance
+
+👉 Test Drive now at https://xejesus.app
+#XeJesUs #BibleStudy #Exegesis #Hermeneutics #GospelOfJohn #ChurchHistory #ChristianTech`,
+  previewData: {
+    title: 'Master Exegesis Sanctuary',
+    verseOrTopic: '14 Features • 6 Pillars • Guest & Cloud Access',
+    details: [
+      'Source II: Asher Wilson 81-Book Ethiopian Canon',
+      'Original Koine Greek, Hebrew & Ge\'ez Etymologies',
+      'Then vs Now Antiquity & Contemporary Analysis'
+    ],
+    tag: 'All 14 Features',
+    keyMetric: 'Complete Platform'
+  }
+};
+
 function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; themeStyle: any }) {
   const id = topic.id;
 
   if (id === 'landing-page') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -630,30 +672,50 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-          {/* Action Button 1: Test Drive as Guest */}
+        {/* Golden Emblem Banner */}
+        <div className="flex items-center justify-center gap-3 py-1">
+          <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent flex items-center justify-center text-accent shadow-md shrink-0">
+            <Sparkles className="w-4 h-4 animate-spin-slow" />
+          </div>
+          <div>
+            <h4 className="font-serif font-black text-sm tracking-tight text-text-primary">XeJesUs</h4>
+            <p className="text-[9px] font-sans text-accent font-bold">The divine synthesis of Exegesis & Jesus Christ</p>
+          </div>
+        </div>
+
+        {/* 2 Primary CTAs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* CTA 1: Sign in with Google */}
+          <div className="p-3 rounded-xl bg-ui-card border border-current/20 text-text-primary font-sans font-bold text-xs flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">G</span>
+              <div>
+                <p className="font-bold text-xs">Enter the Sanctuary</p>
+                <p className="text-[9px] opacity-75">Sign in with Google Cloud</p>
+              </div>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-accent shrink-0" />
+          </div>
+
+          {/* CTA 2: Test Drive as Guest */}
           <div className="p-3 rounded-xl bg-accent text-bg-primary font-sans font-bold text-xs flex items-center justify-between shadow-md">
             <div className="flex items-center gap-2">
               <span className="p-1 rounded-md bg-black/20 text-bg-primary text-xs">🔑</span>
               <div>
                 <p className="font-black text-xs uppercase tracking-wide">Test Drive as Guest</p>
-                <p className="text-[9px] opacity-85">Instant Read-Only Sanctuary Access</p>
+                <p className="text-[9px] opacity-85">Explore Inquiries Read-Only</p>
               </div>
             </div>
             <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </div>
+        </div>
 
-          {/* Action Button 2: Sign in with Google */}
-          <div className="p-3 rounded-xl bg-ui-card border border-current/20 text-text-primary font-sans font-bold text-xs flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-black shrink-0">G</span>
-              <div>
-                <p className="font-bold text-xs">Sign in with Google</p>
-                <p className="text-[9px] opacity-75">Full Cloud Scholar Exegesis</p>
-              </div>
-            </div>
-            <ExternalLink className="w-3.5 h-3.5 opacity-60 shrink-0" />
-          </div>
+        {/* Guest Mode Notice Banner */}
+        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-[10px]">
+          <span className="text-amber-500 shrink-0">🔒</span>
+          <p className="font-sans font-medium text-amber-600 dark:text-amber-400 leading-tight">
+            <strong className="font-bold">Test Drive Notice:</strong> Read-only exploration of pre-loaded exegesis scrolls and historical voice settings.
+          </p>
         </div>
 
         {/* Guided Tour Video Banner */}
@@ -663,7 +725,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
               <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
             </div>
             <div>
-              <p className="font-sans font-bold text-[11px]">Guided Sanctuary Orientation Tour</p>
+              <p className="font-sans font-bold text-[11px]">Guided Sanctuary Orientation Video Tour</p>
               <p className="text-[9px] opacity-75">Learn how to seek truth across 6 foundational scholarly authorities</p>
             </div>
           </div>
@@ -676,6 +738,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'dashboard') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -688,34 +751,55 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           </span>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-current/5 border border-current/10 text-xs">
-          <Search className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span className="text-[11px] font-sans opacity-70 truncate">Search scripture inquiries (e.g. John 11:35, 153 Fish, Romans 8)...</span>
+        {/* Dashboard Title & Subtitle */}
+        <div className="space-y-0.5">
+          <h4 className="font-serif font-black text-sm text-text-primary">Exegesis Library</h4>
+          <p className="text-[10px] font-sans opacity-75">Welcome back. Continue your journey through the Word.</p>
         </div>
 
-        {/* 2 Inquiry Cards */}
+        {/* Amber Lock Banner */}
+        <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2 text-[10px]">
+          <span className="text-amber-500 shrink-0">🔒</span>
+          <p className="font-sans font-medium text-amber-600 dark:text-amber-400 leading-tight">
+            <strong className="font-bold">Test Drive • Read-Only Mode:</strong> You are previewing pre-loaded inquiries. Login and Enter the Sanctuary to begin new inquiries.
+          </p>
+        </div>
+
+        {/* Search Bar + Filter Pills */}
+        <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-current/5 border border-current/10 text-xs">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Search className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="text-[10px] font-sans opacity-70 truncate">Search inquiries, passages, or themes...</span>
+          </div>
+          <div className="flex items-center gap-1 shrink-0 text-[9px] font-sans font-bold">
+            <span className="px-1.5 py-0.5 rounded bg-accent text-bg-primary">All</span>
+            <span className="px-1.5 py-0.5 rounded bg-current/10">Gospels</span>
+            <span className="px-1.5 py-0.5 rounded bg-current/10">Epistles</span>
+          </div>
+        </div>
+
+        {/* 2 Authentic Inquiry Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div className="p-2.5 rounded-xl bg-current/5 border border-current/10 space-y-1.5">
             <div className="flex items-center justify-between text-[10px]">
               <span className="font-mono font-bold text-accent">John 11:35</span>
-              <span className="opacity-60 text-[9px]">Gospels</span>
+              <span className="opacity-60 text-[9px]">Gospel Narrative</span>
             </div>
-            <p className="text-xs font-serif font-bold italic line-clamp-1">"Why Jesus Wept at Lazarus' Tomb"</p>
+            <p className="text-xs font-serif font-bold italic line-clamp-1">"Why did Jesus weep if He already knew He would raise Lazarus?"</p>
             <div className="flex gap-1 flex-wrap pt-0.5">
-              <span className="text-[8px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-bold">Koine Greek</span>
-              <span className="text-[8px] px-1.5 py-0.5 rounded bg-current/10 font-bold">Bethany Levant</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-bold">Koine: ἐδάκρυσεν</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-current/10 font-bold">Bethany (al-Eizariya)</span>
             </div>
           </div>
 
           <div className="p-2.5 rounded-xl bg-current/5 border border-current/10 space-y-1.5">
             <div className="flex items-center justify-between text-[10px]">
               <span className="font-mono font-bold text-accent">John 21:11</span>
-              <span className="opacity-60 text-[9px]">Miracles</span>
+              <span className="opacity-60 text-[9px]">Post-Resurrection</span>
             </div>
-            <p className="text-xs font-serif font-bold italic line-clamp-1">"The 153 Fish & Peter's Calling"</p>
+            <p className="text-xs font-serif font-bold italic line-clamp-1">"The theological symbolism of the 153 fish in Peter's net"</p>
             <div className="flex gap-1 flex-wrap pt-0.5">
-              <span className="text-[8px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-bold">Patristics</span>
+              <span className="text-[8px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-bold">Patristics & G26</span>
               <span className="text-[8px] px-1.5 py-0.5 rounded bg-current/10 font-bold">Sea of Galilee</span>
             </div>
           </div>
@@ -723,8 +807,8 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
 
         {/* Stats Pill Row */}
         <div className="flex items-center justify-between text-[10px] font-sans font-bold opacity-80 pt-1 border-t border-current/10">
-          <span>Headquarters: 2 Sample Inquiries</span>
-          <span className="text-accent">6 Scholarly Pillars Active</span>
+          <span>Headquarters: 2 Pre-Loaded Inquiries</span>
+          <span className="text-accent">6 Scholarly Pillars Active ✓</span>
         </div>
       </div>
     );
@@ -733,6 +817,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'library') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -745,23 +830,33 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           </span>
         </div>
 
+        {/* Scripture Badge & Title */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent font-mono font-bold text-xs">John 11:35</span>
+            <h4 className="font-serif font-bold text-xs">Why Jesus Wept at Lazarus' Tomb</h4>
+          </div>
+          <span className="text-[9px] font-mono opacity-70">Gospel of John</span>
+        </div>
+
         {/* 6 Authority Pillars Badges Strip */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[9px] font-sans font-bold">
-          <span className="px-2 py-0.5 rounded bg-accent/15 text-accent shrink-0">I. Canon</span>
+          <span className="px-2 py-0.5 rounded bg-accent/20 text-accent shrink-0 border border-accent/40">I. Canon</span>
           <span className="px-2 py-0.5 rounded bg-current/10 shrink-0">II. Ethiopian 81 Books</span>
           <span className="px-2 py-0.5 rounded bg-current/10 shrink-0">III. Lexicons</span>
           <span className="px-2 py-0.5 rounded bg-current/10 shrink-0">IV. Church Fathers</span>
           <span className="px-2 py-0.5 rounded bg-current/10 shrink-0">V. Archaeology</span>
+          <span className="px-2 py-0.5 rounded bg-current/10 shrink-0">VI. Web Grounding</span>
         </div>
 
         {/* Linguistic Breakdown Card */}
         <div className="p-2.5 rounded-xl bg-current/5 border border-current/10 space-y-1.5 text-xs">
           <div className="flex items-center justify-between">
-            <span className="font-mono font-bold text-accent text-[11px]">ἐδάκρυσεν (edakrysen) vs ἔκλαυσεν (eklaisen)</span>
-            <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-bold">John 11:35</span>
+            <span className="font-mono font-bold text-accent text-[11px]">ἐδάκρυσεν (edakrysen) vs ἔκλαυσεν (eklausen)</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-bold">Koine Analysis</span>
           </div>
           <p className="text-[11px] font-serif italic opacity-90 leading-snug">
-            Christ shed quiet, sorrowful tears of compassion (edakrysen), distinct from loud funeral wailing (eklaisen) exhibited by the crowd.
+            Christ shed quiet, sorrowful tears of compassion (edakrysen), distinct from loud funeral wailing (eklausen) exhibited by the crowd.
           </p>
         </div>
 
@@ -769,9 +864,9 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
         <div className="flex items-center justify-between text-xs pt-1 border-t border-current/10">
           <div className="flex items-center gap-1.5 text-[10px] font-sans font-bold text-accent">
             <Headphones className="w-3.5 h-3.5" />
-            <span>Narrated by AI Scholar Voice</span>
+            <span>Listen with Scholar Voice</span>
           </div>
-          <div className="px-2.5 py-1 rounded-lg bg-current/10 text-[10px] font-sans font-bold flex items-center gap-1">
+          <div className="px-2.5 py-1 rounded-lg bg-accent text-bg-primary text-[10px] font-sans font-bold flex items-center gap-1 shadow-sm">
             <Download className="w-3 h-3" />
             <span>Export 2-Page PDF Scroll</span>
           </div>
@@ -783,6 +878,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'seek-word') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -793,6 +889,11 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
             Inquiry Engine
           </span>
+        </div>
+
+        <div className="space-y-0.5">
+          <h4 className="font-serif font-black text-sm text-text-primary">Seek the Word</h4>
+          <p className="text-[10px] font-sans opacity-75">Synthesize scripture across 6 foundational scholarly authorities</p>
         </div>
 
         {/* Inputs Mockup */}
@@ -810,14 +911,22 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           </div>
         </div>
 
-        {/* Depth Selector & CTA Button */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1 border-t border-current/10">
-          <div className="flex items-center gap-1 text-[9px] font-sans font-bold">
-            <span className="px-2 py-0.5 rounded bg-current/10">Pastoral</span>
+        {/* Quick Subject Pills & Depth Selector */}
+        <div className="flex items-center justify-between gap-1 text-[9px] font-sans font-bold pt-0.5">
+          <div className="flex items-center gap-1">
+            <span className="text-text-primary/60">Depth:</span>
             <span className="px-2 py-0.5 rounded bg-accent text-bg-primary font-black">Academic Exegesis ✓</span>
             <span className="px-2 py-0.5 rounded bg-current/10">Levant Historic</span>
           </div>
-          <div className="px-3 py-1.5 rounded-xl bg-accent text-bg-primary text-[10px] font-sans font-black uppercase tracking-wider flex items-center justify-center gap-1 shadow-sm">
+          <span className="text-accent font-mono text-[9px]">6 Pillars</span>
+        </div>
+
+        {/* CTA Button & Read-Only Badge */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-current/10">
+          <span className="text-[9px] font-sans font-medium text-amber-500">
+            🔒 Guest Mode is Read-Only. Login to seek live.
+          </span>
+          <div className="px-3 py-1.5 rounded-xl bg-accent text-bg-primary text-[10px] font-sans font-black uppercase tracking-wider flex items-center justify-center gap-1 shadow-sm shrink-0">
             <span>⚡ Begin Exegesis</span>
           </div>
         </div>
@@ -828,6 +937,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'then-vs-now') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -838,6 +948,14 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
             Antiquity vs 21st Century
           </span>
+        </div>
+
+        {/* 4 Category Switcher Tabs */}
+        <div className="grid grid-cols-4 gap-1 text-[9px] font-sans font-bold text-center">
+          <span className="p-1 rounded-md bg-accent text-bg-primary font-black">🏛️ Place</span>
+          <span className="p-1 rounded-md bg-current/10">👥 People</span>
+          <span className="p-1 rounded-md bg-current/10">📜 Event</span>
+          <span className="p-1 rounded-md bg-current/10">✨ Word</span>
         </div>
 
         {/* Comparative 2-Column Split */}
@@ -871,9 +989,12 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer Actions */}
         <div className="flex items-center justify-between text-[10px] font-sans font-bold opacity-80 pt-1 border-t border-current/10">
-          <span>Flagship Topic: Golgotha & Mount of Olives</span>
+          <div className="flex items-center gap-1.5 text-accent">
+            <Headphones className="w-3.5 h-3.5" />
+            <span>Listen to Comparative Audio</span>
+          </div>
           <span className="text-accent">2,000 Years Bridged</span>
         </div>
       </div>
@@ -883,6 +1004,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'study-groups') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -891,7 +1013,18 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
             </span>
           </div>
           <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
-            12 Pilgrims Active
+            3 Members Active
+          </span>
+        </div>
+
+        {/* Header + Action */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <h4 className="font-serif font-bold text-xs">My Study Groups</h4>
+            <p className="text-[9px] opacity-75">Communal Exegesis & Shared Theological Inquiries</p>
+          </div>
+          <span className="text-[9px] font-sans font-bold px-2 py-1 rounded-lg bg-accent text-bg-primary shadow-sm">
+            + Form Group
           </span>
         </div>
 
@@ -909,10 +1042,9 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
 
           {/* Member Avatars Row */}
           <div className="flex items-center gap-1.5 flex-wrap text-[9px] font-sans font-bold">
-            <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent">Leader: Elder Thomas</span>
+            <span className="px-2 py-0.5 rounded-full bg-accent/15 text-accent">Elder Thomas (Leader)</span>
             <span className="px-2 py-0.5 rounded-full bg-current/10">Sister Martha</span>
-            <span className="px-2 py-0.5 rounded-full bg-current/10">Pilgrim Guest</span>
-            <span className="px-2 py-0.5 rounded-full bg-current/5 opacity-70">+9 more</span>
+            <span className="px-2 py-0.5 rounded-full bg-current/10">Guest Pilgrim</span>
           </div>
         </div>
 
@@ -923,7 +1055,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
             <p className="text-[9px] opacity-75">8 discussion replies • 3 small group prayer notes</p>
           </div>
           <div className="px-2.5 py-1 rounded-lg bg-accent text-bg-primary font-sans font-bold text-[10px] shrink-0">
-            View Circle
+            Enter Circle →
           </div>
         </div>
       </div>
@@ -933,6 +1065,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'saved-chats') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -976,6 +1109,14 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
             </p>
           </div>
         </div>
+
+        {/* Footer Action */}
+        <div className="flex items-center justify-between text-xs pt-1 border-t border-current/10">
+          <span className="text-[9px] font-sans font-medium opacity-70">2 Saved Transcripts Available</span>
+          <div className="px-2 py-0.5 rounded-md bg-current/10 text-[9px] font-sans font-bold">
+            Export Literary Work (PDF)
+          </div>
+        </div>
       </div>
     );
   }
@@ -983,6 +1124,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'reports-menu') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -993,6 +1135,22 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
             100% Grounded
           </span>
+        </div>
+
+        {/* Split Left/Right: Seeking Selection & Registry Actions */}
+        <div className="flex items-center justify-between text-xs pb-1 border-b border-current/10">
+          <div className="space-y-0.5">
+            <span className="text-[9px] font-sans font-bold text-text-primary/70 block uppercase">Select a Seeking:</span>
+            <span className="font-mono font-bold text-accent text-[11px]">John 11:35 • John 21:11</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="px-2 py-1 rounded-lg bg-accent text-bg-primary text-[9px] font-bold shadow-sm">
+              Save PDF
+            </span>
+            <span className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-500 text-[9px] font-bold border border-amber-500/30">
+              ⭐ Print Registry
+            </span>
+          </div>
         </div>
 
         {/* 3 Metric KPI Cards */}
@@ -1023,12 +1181,6 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
             <div className="w-[25%] bg-amber-600 h-full"></div>
           </div>
         </div>
-
-        {/* Key Theological Themes */}
-        <div className="flex items-center justify-between text-[9px] font-sans font-bold opacity-80 pt-1 border-t border-current/10">
-          <span>Top Themes: Grace (98%) • Covenant (92%)</span>
-          <span className="text-accent">Audit Validated</span>
-        </div>
       </div>
     );
   }
@@ -1036,6 +1188,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'lexicon-glossary') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1044,23 +1197,39 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
             </span>
           </div>
           <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
-            Strong's H2617 & G26
+            12 Terms Defined
           </span>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-current/5 border border-current/10 text-xs">
-          <Search className="w-3.5 h-3.5 text-accent shrink-0" />
-          <span className="text-[11px] font-sans opacity-70">Search Strong's Hebrew / Greek Concordance...</span>
+        {/* Search Bar & Action Buttons */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-current/5 border border-current/10 text-xs flex-1">
+            <Search className="w-3.5 h-3.5 text-accent shrink-0" />
+            <span className="text-[11px] font-sans opacity-70 truncate">Search Strong's Hebrew, Greek, Ge'ez...</span>
+          </div>
+          <span className="text-[9px] font-bold px-2 py-1.5 rounded-lg bg-accent text-bg-primary shrink-0">
+            + Add Word
+          </span>
         </div>
 
-        {/* Lexicon Card */}
+        {/* Alphabet Jump Bar */}
+        <div className="flex items-center gap-1 text-[8px] font-mono font-bold overflow-x-auto pb-0.5">
+          <span className="px-1.5 py-0.5 rounded bg-accent text-bg-primary">All</span>
+          <span className="px-1.5 py-0.5 rounded bg-current/10">A</span>
+          <span className="px-1.5 py-0.5 rounded bg-current/10">B</span>
+          <span className="px-1.5 py-0.5 rounded bg-accent/20 text-accent font-black">H</span>
+          <span className="px-1.5 py-0.5 rounded bg-current/10">K</span>
+          <span className="px-1.5 py-0.5 rounded bg-current/10">L</span>
+          <span className="px-1.5 py-0.5 rounded bg-current/10">Z</span>
+        </div>
+
+        {/* Strong's Lexicon Card */}
         <div className="p-2.5 rounded-xl bg-current/5 border border-current/10 space-y-1.5">
           <div className="flex items-baseline justify-between">
-            <span className="text-lg font-serif font-black text-accent tracking-wide">חֶסֶד • Hesed</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/15 text-accent font-bold">Strong's H2617</span>
+            <span className="text-base font-serif font-black text-accent tracking-wide">חֶסֶד • Hesed</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/15 text-accent font-bold">Strong's H2617 & G26</span>
           </div>
-          <p className="text-[11px] font-mono opacity-75">Transliteration: chesed (kheh'-sed) • Noun Masculine</p>
+          <p className="text-[10px] font-mono opacity-75">Transliteration: chesed (kheh'-sed) • Noun Masculine</p>
           <p className="text-xs font-serif italic text-text-primary leading-snug">
             "Steadfast love, covenant faithfulness, and unfailing divine mercy across 248 Old Testament passages."
           </p>
@@ -1078,6 +1247,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'settings-profile') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1124,6 +1294,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'settings-voices') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1174,6 +1345,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'settings-sources') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1186,7 +1358,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
           </span>
         </div>
 
-        {/* 4 Pillars Highlight Grid */}
+        {/* 6 Pillars Highlight Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
             <span className="text-[10px] font-sans font-black text-accent uppercase">I. Primary Canonical Bible</span>
@@ -1221,6 +1393,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
   if (id === 'settings-canonical-link') {
     return (
       <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
         <div className="flex items-center justify-between pb-2 border-b border-current/10">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1250,7 +1423,7 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
             https://www.biblegateway.com/passage/?search={'{verse}'}
           </span>
           <span className="text-[9px] font-sans font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-            Connected
+            Connected ✓
           </span>
         </div>
 
@@ -1263,7 +1436,65 @@ function AdSectionPageMockup({ topic, themeStyle }: { topic: AdTopicConfig; them
     );
   }
 
-  // Fallback: Sanctuary Settings Hub
+  if (id === 'master-all-features') {
+    return (
+      <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
+        {/* Top Status Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-current/10">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-[10px] font-sans font-black uppercase tracking-wider">
+              XeJesUs Sanctuary • Master Commercial Showcase
+            </span>
+          </div>
+          <span className="text-[10px] font-sans font-bold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
+            All 14 Features
+          </span>
+        </div>
+
+        {/* Master 6-Pillar Platform Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+          <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
+            <span className="text-[10px] font-sans font-bold text-accent block">1. Sanctuary Portal</span>
+            <p className="text-[9px] opacity-75">Guest Mode & Google Sign-In with instant access</p>
+          </div>
+          <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
+            <span className="text-[10px] font-sans font-bold text-accent block">2. Exegesis Scrolls</span>
+            <p className="text-[9px] opacity-75">Lazarus (John 11:35) & 153 Fish (John 21:11)</p>
+          </div>
+          <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
+            <span className="text-[10px] font-sans font-bold text-accent block">3. Then vs Now</span>
+            <p className="text-[9px] opacity-75">33 A.D. Herodian Antiquity to 21st Century</p>
+          </div>
+          <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
+            <span className="text-[10px] font-sans font-bold text-accent block">4. AI Scholar Audio</span>
+            <p className="text-[9px] opacity-75">C.S. Lewis, Charles Spurgeon & Priscilla Shirer</p>
+          </div>
+          <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
+            <span className="text-[10px] font-sans font-bold text-accent block">5. Study Groups</span>
+            <p className="text-[9px] opacity-75">Bethany Study Circle & Shared Dialogues</p>
+          </div>
+          <div className="p-2 rounded-xl bg-current/5 border border-current/10 space-y-0.5">
+            <span className="text-[10px] font-sans font-bold text-accent block">6. Lexicon & Concordance</span>
+            <p className="text-[9px] opacity-75">Strong's H2617 (Hesed) & G26 (Agape) Roots</p>
+          </div>
+        </div>
+
+        {/* Asher Wilson Ethiopian Canon Banner */}
+        <div className="p-2 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-accent font-bold">📜</span>
+            <span className="font-serif font-bold text-[11px] text-accent">Source II: Asher Wilson's Ethiopian Canon (81 Books) Included</span>
+          </div>
+          <span className="text-[9px] font-sans font-bold px-2 py-0.5 rounded bg-accent text-bg-primary">
+            1 Enoch & Jubilees
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Sanctuary Settings Hub Card
   return (
     <div className={`p-4 rounded-2xl ${themeStyle.innerCard} border space-y-3`}>
       <div className="flex items-center justify-between pb-2 border-b border-current/10">
@@ -1351,7 +1582,9 @@ export default function AdminAdStudio() {
   const adCardRef = useRef<HTMLDivElement>(null);
 
   const isMasterTopic = selectedTopicId === 'master-all-features';
-  const selectedTopic = AD_TOPICS.find(t => t.id === selectedTopicId) || AD_TOPICS[0];
+  const selectedTopic = isMasterTopic
+    ? MASTER_AD_TOPIC
+    : (AD_TOPICS.find(t => t.id === selectedTopicId) || AD_TOPICS[0]);
 
   // Resolve current active script item and text
   const defaultScriptItem: AdScriptItem = isMasterTopic
@@ -2879,42 +3112,59 @@ function renderPageSectionToCanvas(
   const remainingH = cardH - (innerY - cardY) - 15;
   const id = topic.id;
 
+  // 1. LANDING PAGE
   if (id === 'landing-page') {
     const btnW = (contentW - 16) / 2;
-    const btnH = Math.min(remainingH * 0.48, 54);
+    const btnH = Math.min(remainingH * 0.44, 48);
 
-    // Left Button: Test Drive as Guest
-    drawRoundRect(ctx, contentX, innerY, btnW, btnH, 14);
-    ctx.fillStyle = pal.accentColor;
-    ctx.fill();
-    ctx.fillStyle = pal.badgeText;
-    ctx.font = '900 13px Inter, system-ui, sans-serif';
-    ctx.fillText('🔑 TEST DRIVE AS GUEST', contentX + 18, innerY + btnH * 0.45);
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
-    ctx.fillText('Instant Read-Only Sanctuary Access', contentX + 18, innerY + btnH * 0.78);
-
-    // Right Button: Google Sign-in
-    const rightBtnX = contentX + btnW + 16;
-    drawRoundRect(ctx, rightBtnX, innerY, btnW, btnH, 14);
+    // Left Button: Enter the Sanctuary (Google Auth)
+    drawRoundRect(ctx, contentX, innerY, btnW, btnH, 12);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
     ctx.lineWidth = 1.2;
     ctx.stroke();
+
     ctx.fillStyle = '#3b82f6';
-    ctx.font = '900 15px Inter, system-ui, sans-serif';
-    ctx.fillText('G', rightBtnX + 18, innerY + btnH * 0.58);
+    ctx.font = '900 14px Inter, system-ui, sans-serif';
+    ctx.fillText('G', contentX + 16, innerY + btnH * 0.58);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'bold 13px Inter, system-ui, sans-serif';
-    ctx.fillText('Sign in with Google', rightBtnX + 38, innerY + btnH * 0.45);
+    ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+    ctx.fillText('Enter the Sanctuary', contentX + 36, innerY + btnH * 0.45);
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
-    ctx.fillText('Full Cloud Scholar Exegesis', rightBtnX + 38, innerY + btnH * 0.78);
+    ctx.font = '500 10px Inter, system-ui, sans-serif';
+    ctx.fillText('Sign in with Google Cloud', contentX + 36, innerY + btnH * 0.78);
+
+    // Right Button: Test Drive as Guest
+    const rightBtnX = contentX + btnW + 16;
+    drawRoundRect(ctx, rightBtnX, innerY, btnW, btnH, 12);
+    ctx.fillStyle = pal.accentColor;
+    ctx.fill();
+
+    ctx.fillStyle = pal.badgeText;
+    ctx.font = '900 12px Inter, system-ui, sans-serif';
+    ctx.fillText('🔑 TEST DRIVE AS GUEST', rightBtnX + 16, innerY + btnH * 0.45);
+    ctx.font = '500 10px Inter, system-ui, sans-serif';
+    ctx.fillText('Explore Inquiries Read-Only', rightBtnX + 16, innerY + btnH * 0.78);
+
+    // Amber Guest Notice Banner
+    const noticeY = innerY + btnH + 8;
+    const noticeH = 24;
+    drawRoundRect(ctx, contentX, noticeY, contentW, noticeH, 8);
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('🔒 Test Drive Notice: Read-only exploration of pre-loaded scrolls & voices', contentX + 10, noticeY + 16);
 
     // Bottom video banner
-    const vidY = innerY + btnH + 12;
-    const vidH = Math.min(remainingH - btnH - 12, 44);
-    drawRoundRect(ctx, contentX, vidY, contentW, vidH, 12);
+    const vidY = noticeY + noticeH + 8;
+    const vidH = Math.min(remainingH - btnH - noticeH - 16, 38);
+    drawRoundRect(ctx, contentX, vidY, contentW, vidH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -2922,8 +3172,8 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 12px Inter, system-ui, sans-serif';
-    ctx.fillText('▶  Guided Sanctuary Orientation Video Tour', contentX + 16, vidY + vidH * 0.62);
+    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+    ctx.fillText('▶  Guided Sanctuary Orientation Video Tour', contentX + 14, vidY + vidH * 0.62);
 
     ctx.fillStyle = pal.textSecondary;
     ctx.font = 'bold 11px monospace';
@@ -2931,9 +3181,23 @@ function renderPageSectionToCanvas(
     return;
   }
 
+  // 2. DASHBOARD
   if (id === 'dashboard') {
-    const searchH = 32;
-    drawRoundRect(ctx, contentX, innerY, contentW, searchH, 10);
+    // Amber banner
+    const lockH = 24;
+    drawRoundRect(ctx, contentX, innerY, contentW, lockH, 8);
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('🔒 Test Drive • Read-Only Mode: Previewing pre-loaded inquiries. Login to seek live.', contentX + 10, innerY + 16);
+
+    const searchY = innerY + lockH + 8;
+    const searchH = 28;
+    drawRoundRect(ctx, contentX, searchY, contentW, searchH, 8);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -2941,15 +3205,19 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = '500 12px Inter, system-ui, sans-serif';
-    ctx.fillText('🔍  Search scripture inquiries (e.g. John 11:35, 153 Fish, Romans 8)...', contentX + 14, innerY + 21);
+    ctx.font = '500 11px Inter, system-ui, sans-serif';
+    ctx.fillText('🔍  Search inquiries, passages, or themes...', contentX + 12, searchY + 18);
 
-    const cardsY = innerY + searchH + 10;
+    ctx.fillStyle = pal.accentColor;
+    ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+    ctx.fillText('[ALL]  [GOSPELS]  [EPISTLES]', contentX + contentW - 170, searchY + 18);
+
+    const cardsY = searchY + searchH + 8;
     const cardItemW = (contentW - 16) / 2;
-    const cardItemH = Math.min(remainingH - searchH - 10, 80);
+    const cardItemH = Math.min(remainingH - lockH - searchH - 16, 76);
 
-    // Card 1
-    drawRoundRect(ctx, contentX, cardsY, cardItemW, cardItemH, 12);
+    // Inquiry 1
+    drawRoundRect(ctx, contentX, cardsY, cardItemW, cardItemH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -2957,18 +3225,18 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px monospace';
-    ctx.fillText('John 11:35 • Gospels', contentX + 14, cardsY + 22);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('John 11:35 • Gospel Narrative', contentX + 12, cardsY + 20);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'italic bold 13px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('"Why Jesus Wept at Lazarus\' Tomb"', contentX + 14, cardsY + 42);
+    ctx.font = 'italic bold 12px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('"Why did Jesus weep if He knew He would raise Lazarus?"', contentX + 12, cardsY + 38);
     ctx.fillStyle = pal.accentColor;
-    ctx.font = '600 10px Inter, system-ui, sans-serif';
-    ctx.fillText('• Koine Greek edakrysen  • Bethany Levant', contentX + 14, cardsY + 62);
+    ctx.font = '600 9px Inter, system-ui, sans-serif';
+    ctx.fillText('• Koine: ἐδάκρυσεν  • Bethany (al-Eizariya)', contentX + 12, cardsY + 58);
 
-    // Card 2
+    // Inquiry 2
     const c2X = contentX + cardItemW + 16;
-    drawRoundRect(ctx, c2X, cardsY, cardItemW, cardItemH, 12);
+    drawRoundRect(ctx, c2X, cardsY, cardItemW, cardItemH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -2976,34 +3244,35 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px monospace';
-    ctx.fillText('John 21:11 • Miracles', c2X + 14, cardsY + 22);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('John 21:11 • Post-Resurrection', c2X + 12, cardsY + 20);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'italic bold 13px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('"The 153 Fish & Peter\'s Calling"', c2X + 14, cardsY + 42);
+    ctx.font = 'italic bold 12px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('"The theological symbolism of the 153 fish in Peter\'s net"', c2X + 12, cardsY + 38);
     ctx.fillStyle = pal.accentColor;
-    ctx.font = '600 10px Inter, system-ui, sans-serif';
-    ctx.fillText('• Patristic Notes  • Sea of Galilee', c2X + 14, cardsY + 62);
+    ctx.font = '600 9px Inter, system-ui, sans-serif';
+    ctx.fillText('• Patristics & G26  • Sea of Galilee', c2X + 12, cardsY + 58);
     return;
   }
 
+  // 3. EXEGESIS SCROLL / LIBRARY
   if (id === 'library') {
-    const pills = ['I. Canon', 'II. Ethiopian (81 Books)', 'III. Lexicons', 'IV. Fathers', 'V. Archaeology'];
+    const pills = ['I. Canon', 'II. Ethiopian 81 Books', 'III. Lexicons', 'IV. Fathers', 'V. Archaeology', 'VI. Web'];
     let pillX = contentX;
     pills.forEach((p, idx) => {
-      ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-      const pw = ctx.measureText(p).width + 16;
-      drawRoundRect(ctx, pillX, innerY, pw, 24, 6);
+      ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+      const pw = ctx.measureText(p).width + 14;
+      drawRoundRect(ctx, pillX, innerY, pw, 22, 6);
       ctx.fillStyle = idx === 0 ? pal.tagBg : pal.chipBg;
       ctx.fill();
       ctx.fillStyle = idx === 0 ? pal.accentColor : pal.textSecondary;
-      ctx.fillText(p, pillX + 8, innerY + 16);
-      pillX += pw + 8;
+      ctx.fillText(p, pillX + 7, innerY + 15);
+      pillX += pw + 6;
     });
 
-    const lY = innerY + 32;
-    const lH = 60;
-    drawRoundRect(ctx, contentX, lY, contentW, lH, 12);
+    const lY = innerY + 30;
+    const lH = 64;
+    drawRoundRect(ctx, contentX, lY, contentW, lH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -3011,23 +3280,24 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 12px monospace';
-    ctx.fillText('ἐδάκρυσεν (edakrysen) vs ἔκλαυσεν (eklaisen)', contentX + 14, lY + 22);
+    ctx.font = 'bold 11px monospace';
+    ctx.fillText('ἐδάκρυσεν (edakrysen) vs ἔκλαυσεν (eklausen) • John 11:35', contentX + 12, lY + 22);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'italic 12px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('Quiet tears of compassion (edakrysen) vs loud funeral mourning (eklaisen) at Bethany.', contentX + 14, lY + 44);
+    ctx.font = 'italic 11px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('Christ shed quiet, sorrowful tears of compassion (edakrysen), distinct from loud mourning (eklausen) at Bethany.', contentX + 12, lY + 44);
 
     const bY = lY + lH + 8;
     ctx.fillStyle = pal.accentColor;
     ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.fillText('🎧  Narrated by AI Scholar Voice (C.S. Lewis / Spurgeon)', contentX, bY + 14);
+    ctx.fillText('🎧  Listen with Scholar Voice (C.S. Lewis / Spurgeon)', contentX, bY + 14);
     ctx.fillStyle = pal.textSecondary;
     ctx.fillText('📥  Export 2-Page PDF Scroll', contentX + contentW - 165, bY + 14);
     return;
   }
 
+  // 4. SEEK THE WORD
   if (id === 'seek-word') {
-    const refH = 28;
+    const refH = 26;
     drawRoundRect(ctx, contentX, innerY, contentW, refH, 8);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
@@ -3035,14 +3305,14 @@ function renderPageSectionToCanvas(
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.fillText('Scripture Passage: ', contentX + 12, innerY + 18);
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('Scripture Passage: ', contentX + 12, innerY + 17);
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px monospace';
-    ctx.fillText('Romans 8:28 / John 11:35', contentX + 130, innerY + 18);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('Romans 8:28 / John 11:35', contentX + 125, innerY + 17);
 
     const promptY = innerY + refH + 8;
-    const promptH = 46;
+    const promptH = 44;
     drawRoundRect(ctx, contentX, promptY, contentW, promptH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
@@ -3050,18 +3320,18 @@ function renderPageSectionToCanvas(
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.font = 'bold 9px Inter, system-ui, sans-serif';
     ctx.fillText('Theological Inquiry Query:', contentX + 12, promptY + 16);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'italic bold 13px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('"Why did Jesus weep if He already knew He would raise Lazarus?"', contentX + 12, promptY + 35);
+    ctx.font = 'italic bold 12px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('"Why did Jesus weep if He already knew He would raise Lazarus from the dead?"', contentX + 12, promptY + 34);
 
     const actY = promptY + promptH + 8;
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-    ctx.fillText('Depth: Pastoral  |  Academic Exegesis ✓  |  Historical-Grammatical', contentX, actY + 18);
+    ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+    ctx.fillText('Depth: Pastoral  |  Academic Exegesis ✓  |  Levant Historical', contentX, actY + 18);
 
-    const btnW = 160;
+    const btnW = 165;
     const btnX = contentX + contentW - btnW;
     drawRoundRect(ctx, btnX, actY, btnW, 28, 8);
     ctx.fillStyle = pal.accentColor;
@@ -3072,12 +3342,28 @@ function renderPageSectionToCanvas(
     return;
   }
 
+  // 5. THEN VS NOW
   if (id === 'then-vs-now') {
+    // 4 Category pills
+    const cats = ['🏛️ Place', '👥 People', '📜 Event', '✨ Word'];
+    let cX = contentX;
+    cats.forEach((c, idx) => {
+      ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+      const cw = (contentW - 24) / 4;
+      drawRoundRect(ctx, cX, innerY, cw, 22, 6);
+      ctx.fillStyle = idx === 0 ? pal.accentColor : pal.chipBg;
+      ctx.fill();
+      ctx.fillStyle = idx === 0 ? pal.badgeText : pal.textSecondary;
+      ctx.fillText(c, cX + 10, innerY + 15);
+      cX += cw + 8;
+    });
+
+    const colY = innerY + 30;
     const colW = (contentW - 16) / 2;
-    const colH = Math.min(remainingH, 120);
+    const colH = Math.min(remainingH - 30, 110);
 
     // Left Column (THEN)
-    drawRoundRect(ctx, contentX, innerY, colW, colH, 14);
+    drawRoundRect(ctx, contentX, colY, colW, colH, 12);
     ctx.fillStyle = theme === 'parchment' ? 'rgba(139, 90, 43, 0.08)' : 'rgba(245, 158, 11, 0.1)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
@@ -3085,20 +3371,20 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = '#f59e0b';
-    ctx.font = '900 11px Inter, system-ui, sans-serif';
-    ctx.fillText('THEN • 33 A.D. HERODIAN LEVANT', contentX + 14, innerY + 22);
+    ctx.font = '900 10px Inter, system-ui, sans-serif';
+    ctx.fillText('THEN • 33 A.D. HERODIAN LEVANT', contentX + 12, colY + 20);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'bold 14px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('Golgotha outside Gennath Gate', contentX + 14, innerY + 44);
+    ctx.font = 'bold 13px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('Golgotha outside Gennath Gate', contentX + 12, colY + 38);
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
-    ctx.fillText('• Roman public execution site', contentX + 14, innerY + 64);
-    ctx.fillText('• Roman occupation & imperial terror', contentX + 14, innerY + 84);
-    ctx.fillText('• Skull Hill topography & ancient tombs', contentX + 14, innerY + 104);
+    ctx.font = '500 10px Inter, system-ui, sans-serif';
+    ctx.fillText('• Roman public execution site', contentX + 12, colY + 56);
+    ctx.fillText('• Imperial terror & Roman occupation', contentX + 12, colY + 72);
+    ctx.fillText('• Skull Hill topography & ancient tombs', contentX + 12, colY + 88);
 
     // Right Column (NOW)
     const rightColX = contentX + colW + 16;
-    drawRoundRect(ctx, rightColX, innerY, colW, colH, 14);
+    drawRoundRect(ctx, rightColX, colY, colW, colH, 12);
     ctx.fillStyle = theme === 'parchment' ? 'rgba(56, 189, 248, 0.06)' : 'rgba(56, 189, 248, 0.1)';
     ctx.fill();
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
@@ -3106,22 +3392,23 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = '900 11px Inter, system-ui, sans-serif';
-    ctx.fillText('NOW • 21st CENTURY CONTEMPORARY', rightColX + 14, innerY + 22);
+    ctx.font = '900 10px Inter, system-ui, sans-serif';
+    ctx.fillText('NOW • 21st CENTURY CONTEMPORARY', rightColX + 12, colY + 20);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'bold 14px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('Church of the Holy Sepulchre', rightColX + 14, innerY + 44);
+    ctx.font = 'bold 13px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('Church of the Holy Sepulchre', rightColX + 12, colY + 38);
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
-    ctx.fillText('• Global Christian veneration site', rightColX + 14, innerY + 64);
-    ctx.fillText('• Moral imperative: Bearing one\'s cross', rightColX + 14, innerY + 84);
-    ctx.fillText('• Levant GPS & archaeology verified', rightColX + 14, innerY + 104);
+    ctx.font = '500 10px Inter, system-ui, sans-serif';
+    ctx.fillText('• Global Christian veneration basilica', rightColX + 12, colY + 56);
+    ctx.fillText('• Moral mandate: Bearing one\'s cross', rightColX + 12, colY + 72);
+    ctx.fillText('• Levant GPS & archaeology verified', rightColX + 12, colY + 88);
     return;
   }
 
+  // 6. STUDY GROUPS
   if (id === 'study-groups') {
-    const gH = 44;
-    drawRoundRect(ctx, contentX, innerY, contentW, gH, 12);
+    const gH = 38;
+    drawRoundRect(ctx, contentX, innerY, contentW, gH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -3129,42 +3416,43 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'bold 14px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('🕊️  Bethany Study Circle', contentX + 14, innerY + 27);
+    ctx.font = 'bold 13px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('🕊️  Bethany Study Circle', contentX + 12, innerY + 24);
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.fillText('12 Pilgrims Active • Sacred Small Group', contentX + 200, innerY + 27);
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('3 Pilgrims Active • Sacred Small Group', contentX + 185, innerY + 24);
 
     const mY = innerY + gH + 10;
-    const members = ['Elder Thomas (Leader)', 'Sister Martha', 'Guest Pilgrim', '+9 More'];
+    const members = ['Elder Thomas (Leader)', 'Sister Martha', 'Guest Pilgrim'];
     let mX = contentX;
     members.forEach((m, idx) => {
-      ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-      const mw = ctx.measureText(m).width + 18;
-      drawRoundRect(ctx, mX, mY, mw, 24, 12);
+      ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+      const mw = ctx.measureText(m).width + 16;
+      drawRoundRect(ctx, mX, mY, mw, 22, 10);
       ctx.fillStyle = idx === 0 ? pal.tagBg : pal.chipBg;
       ctx.fill();
       ctx.fillStyle = idx === 0 ? pal.accentColor : pal.textSecondary;
-      ctx.fillText(m, mX + 9, mY + 16);
+      ctx.fillText(m, mX + 8, mY + 15);
       mX += mw + 8;
     });
 
-    const sY = mY + 32;
-    drawRoundRect(ctx, contentX, sY, contentW, 38, 10);
+    const sY = mY + 30;
+    drawRoundRect(ctx, contentX, sY, contentW, 36, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'bold 12px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('Shared Exegesis: John 11:35 & The Raising of Lazarus (8 Comments)', contentX + 14, sY + 23);
+    ctx.font = 'bold 11px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('Shared Exegesis: John 11:35 & The Raising of Lazarus (8 Comments)', contentX + 12, sY + 22);
     return;
   }
 
+  // 7. SAVED CHAT SESSIONS
   if (id === 'saved-chats') {
-    const aH = 32;
-    drawRoundRect(ctx, contentX, innerY, contentW, aH, 10);
+    const aH = 30;
+    drawRoundRect(ctx, contentX, innerY, contentW, aH, 8);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -3172,20 +3460,20 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.fillText('▶  Playing Charles Spurgeon Voice   ━━━━━●━━━━  02:45 / 05:10', contentX + 14, innerY + 20);
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('▶  Playing Charles Spurgeon Voice   ━━━━━●━━━━  02:45 / 05:10', contentX + 12, innerY + 19);
 
     const qY = innerY + aH + 8;
-    const bW = contentW - 40;
-    drawRoundRect(ctx, contentX + 40, qY, bW, 34, 10);
+    const bW = contentW - 30;
+    drawRoundRect(ctx, contentX + 30, qY, bW, 32, 8);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.fillStyle = pal.textSecondary;
     ctx.font = 'italic 11px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('Pilgrim: "What is the true distinction between Hebrew hesed and Greek agape?"', contentX + 54, qY + 21);
+    ctx.fillText('Pilgrim: "What is the true distinction between Hebrew hesed and Greek agape?"', contentX + 42, qY + 20);
 
-    const ansY = qY + 40;
-    drawRoundRect(ctx, contentX, ansY, bW, 42, 10);
+    const ansY = qY + 38;
+    drawRoundRect(ctx, contentX, ansY, bW, 40, 8);
     ctx.fillStyle = pal.tagBg;
     ctx.fill();
     ctx.strokeStyle = pal.cardBorder;
@@ -3193,13 +3481,14 @@ function renderPageSectionToCanvas(
     ctx.stroke();
     ctx.fillStyle = pal.textPrimary;
     ctx.font = 'italic 11px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('Scholar: "Hesed denotes covenant faithfulness & loyalty; agape is sacrificial unconditional love."', contentX + 14, ansY + 25);
+    ctx.fillText('Scholar: "Hesed denotes covenant faithfulness & loyalty; agape is sacrificial unconditional love."', contentX + 12, ansY + 24);
     return;
   }
 
+  // 8. REPORTS MENU
   if (id === 'reports-menu') {
     const kpiW = (contentW - 16) / 3;
-    const kpiH = 48;
+    const kpiH = 44;
     const kpis = [
       { label: 'STUDY TIME', val: '18.5 hrs', col: pal.accentColor },
       { label: 'GROUNDING', val: '100% Score', col: '#10b981' },
@@ -3208,7 +3497,7 @@ function renderPageSectionToCanvas(
 
     kpis.forEach((k, idx) => {
       const kX = contentX + idx * (kpiW + 8);
-      drawRoundRect(ctx, kX, innerY, kpiW, kpiH, 10);
+      drawRoundRect(ctx, kX, innerY, kpiW, kpiH, 8);
       ctx.fillStyle = pal.chipBg;
       ctx.fill();
       ctx.strokeStyle = pal.chipBorder;
@@ -3216,21 +3505,21 @@ function renderPageSectionToCanvas(
       ctx.stroke();
 
       ctx.fillStyle = pal.textSecondary;
-      ctx.font = '900 9px Inter, system-ui, sans-serif';
-      ctx.fillText(k.label, kX + 10, innerY + 17);
+      ctx.font = '900 8px Inter, system-ui, sans-serif';
+      ctx.fillText(k.label, kX + 10, innerY + 15);
       ctx.fillStyle = k.col;
-      ctx.font = 'bold 15px monospace';
-      ctx.fillText(k.val, kX + 10, innerY + 36);
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(k.val, kX + 10, innerY + 33);
     });
 
-    const distY = innerY + kpiH + 12;
+    const distY = innerY + kpiH + 10;
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
     ctx.fillText('Canonical Balance: Gospels (45%) • Epistles (30%) • Torah/OT (25%)', contentX, distY);
 
-    const barY = distY + 8;
-    const barH = 12;
-    drawRoundRect(ctx, contentX, barY, contentW, barH, 6);
+    const barY = distY + 6;
+    const barH = 10;
+    drawRoundRect(ctx, contentX, barY, contentW, barH, 5);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
 
@@ -3243,21 +3532,22 @@ function renderPageSectionToCanvas(
     return;
   }
 
+  // 9. LEXICON GLOSSARY
   if (id === 'lexicon-glossary') {
-    const sH = 30;
-    drawRoundRect(ctx, contentX, innerY, contentW, sH, 8);
+    const sH = 26;
+    drawRoundRect(ctx, contentX, innerY, contentW, sH, 7);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = '500 11px Inter, system-ui, sans-serif';
-    ctx.fillText('🔍  Search Strong\'s Hebrew / Greek Concordance...', contentX + 12, innerY + 19);
+    ctx.font = '500 10px Inter, system-ui, sans-serif';
+    ctx.fillText('🔍  Search Strong\'s Hebrew / Greek Concordance...', contentX + 10, innerY + 17);
 
-    const lY = innerY + sH + 10;
-    const lH = 76;
-    drawRoundRect(ctx, contentX, lY, contentW, lH, 12);
+    const lY = innerY + sH + 8;
+    const lH = 72;
+    drawRoundRect(ctx, contentX, lY, contentW, lH, 10);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -3265,20 +3555,21 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 18px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('חֶסֶד  •  Hesed (Strong\'s H2617)', contentX + 14, lY + 24);
+    ctx.font = 'bold 16px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('חֶסֶד  •  Hesed (Strong\'s H2617 & G26)', contentX + 12, lY + 22);
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = 'bold 11px monospace';
-    ctx.fillText('chesed (kheh\'-sed) • Noun Masculine • 248 Old Testament passages', contentX + 14, lY + 44);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('chesed (kheh\'-sed) • Noun Masculine • 248 Old Testament passages', contentX + 12, lY + 40);
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'italic 12px Cormorant Garamond, Georgia, serif';
-    ctx.fillText('"God\'s unfailing covenant loyal love, steadfast loving-kindness, and mercy."', contentX + 14, lY + 65);
+    ctx.font = 'italic 11px Cormorant Garamond, Georgia, serif';
+    ctx.fillText('"God\'s unfailing covenant loyal love, steadfast loving-kindness, and mercy."', contentX + 12, lY + 60);
     return;
   }
 
+  // 10. SETTINGS PROFILE
   if (id === 'settings-profile') {
     const thW = (contentW - 16) / 3;
-    const thH = 70;
+    const thH = 65;
     const themes = [
       { name: 'Modern', sub: 'Ivory & Gold', active: true },
       { name: 'Midnight', sub: 'Obsidian & Gold', active: false },
@@ -3287,7 +3578,7 @@ function renderPageSectionToCanvas(
 
     themes.forEach((t, idx) => {
       const tX = contentX + idx * (thW + 8);
-      drawRoundRect(ctx, tX, innerY, thW, thH, 12);
+      drawRoundRect(ctx, tX, innerY, thW, thH, 10);
       ctx.fillStyle = t.active ? pal.tagBg : pal.chipBg;
       ctx.fill();
       ctx.strokeStyle = t.active ? pal.accentColor : pal.chipBorder;
@@ -3295,28 +3586,29 @@ function renderPageSectionToCanvas(
       ctx.stroke();
 
       ctx.fillStyle = t.active ? pal.accentColor : pal.textPrimary;
-      ctx.font = '900 12px Inter, system-ui, sans-serif';
-      ctx.fillText(t.name.toUpperCase(), tX + 12, innerY + 24);
+      ctx.font = '900 11px Inter, system-ui, sans-serif';
+      ctx.fillText(t.name.toUpperCase(), tX + 10, innerY + 22);
       ctx.fillStyle = pal.textSecondary;
-      ctx.font = '500 11px Inter, system-ui, sans-serif';
-      ctx.fillText(t.sub, tX + 12, innerY + 42);
+      ctx.font = '500 10px Inter, system-ui, sans-serif';
+      ctx.fillText(t.sub, tX + 10, innerY + 38);
       if (t.active) {
         ctx.fillStyle = pal.accentColor;
-        ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-        ctx.fillText('Selected ✓', tX + 12, innerY + 58);
+        ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+        ctx.fillText('Selected ✓', tX + 10, innerY + 54);
       }
     });
 
-    const idY = innerY + thH + 10;
+    const idY = innerY + thH + 8;
     ctx.fillStyle = pal.textSecondary;
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.fillText('Pilgrim Identity: Guest Mode (Test Drive) • Instant Theme Transition Across Sanctuary', contentX, idY + 14);
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('Pilgrim Identity: Guest Mode (Test Drive) • Instant Atmosphere Transition', contentX, idY + 14);
     return;
   }
 
+  // 11. SETTINGS VOICES
   if (id === 'settings-voices') {
     const vW = (contentW - 16) / 3;
-    const vH = 70;
+    const vH = 65;
     const voices = [
       { name: 'C.S. Lewis', desc: 'Oxford Contemplative', active: true },
       { name: 'C. Spurgeon', desc: 'Victorian Orator', active: false },
@@ -3325,7 +3617,7 @@ function renderPageSectionToCanvas(
 
     voices.forEach((v, idx) => {
       const vX = contentX + idx * (vW + 8);
-      drawRoundRect(ctx, vX, innerY, vW, vH, 12);
+      drawRoundRect(ctx, vX, innerY, vW, vH, 10);
       ctx.fillStyle = v.active ? pal.tagBg : pal.chipBg;
       ctx.fill();
       ctx.strokeStyle = v.active ? pal.accentColor : pal.chipBorder;
@@ -3333,31 +3625,32 @@ function renderPageSectionToCanvas(
       ctx.stroke();
 
       ctx.fillStyle = v.active ? pal.accentColor : pal.textPrimary;
-      ctx.font = '900 12px Inter, system-ui, sans-serif';
-      ctx.fillText(v.name, vX + 12, innerY + 24);
+      ctx.font = '900 11px Inter, system-ui, sans-serif';
+      ctx.fillText(v.name, vX + 10, innerY + 22);
       ctx.fillStyle = pal.textSecondary;
-      ctx.font = '500 10px Inter, system-ui, sans-serif';
-      ctx.fillText(v.desc, vX + 12, innerY + 42);
+      ctx.font = '500 9px Inter, system-ui, sans-serif';
+      ctx.fillText(v.desc, vX + 10, innerY + 38);
       if (v.active) {
         ctx.fillStyle = pal.accentColor;
-        ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-        ctx.fillText('Active Voice ✓', vX + 12, innerY + 58);
+        ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+        ctx.fillText('Active Voice ✓', vX + 10, innerY + 54);
       }
     });
 
-    const tY = innerY + vH + 10;
-    drawRoundRect(ctx, contentX, tY, contentW, 30, 8);
+    const tY = innerY + vH + 8;
+    drawRoundRect(ctx, contentX, tY, contentW, 28, 7);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
-    ctx.fillText('▶  Sample Voice Audio: Expressive Text-to-Speech Synthesis', contentX + 14, tY + 19);
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+    ctx.fillText('▶  Sample Voice Audio: Expressive Text-to-Speech Synthesis', contentX + 12, tY + 18);
     return;
   }
 
+  // 12. SETTINGS SOURCES
   if (id === 'settings-sources') {
-    const sW = (contentW - 14) / 2;
-    const sH = 46;
+    const sW = (contentW - 12) / 2;
+    const sH = 42;
     const sources = [
       'I. Canonical Bible (Gen-Rev)',
       'II. Ethiopian Canon (81 Books)',
@@ -3368,10 +3661,10 @@ function renderPageSectionToCanvas(
     sources.forEach((s, idx) => {
       const col = idx % 2;
       const row = Math.floor(idx / 2);
-      const sX = contentX + col * (sW + 14);
-      const curSY = innerY + row * (sH + 8);
+      const sX = contentX + col * (sW + 12);
+      const curSY = innerY + row * (sH + 6);
 
-      drawRoundRect(ctx, sX, curSY, sW, sH, 10);
+      drawRoundRect(ctx, sX, curSY, sW, sH, 8);
       ctx.fillStyle = idx === 1 ? pal.tagBg : pal.chipBg;
       ctx.fill();
       ctx.strokeStyle = idx === 1 ? pal.accentColor : pal.chipBorder;
@@ -3379,30 +3672,31 @@ function renderPageSectionToCanvas(
       ctx.stroke();
 
       ctx.fillStyle = idx === 1 ? pal.accentColor : pal.textPrimary;
-      ctx.font = 'bold 12px Inter, system-ui, sans-serif';
-      ctx.fillText(s, sX + 12, curSY + 28);
+      ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+      ctx.fillText(s, sX + 10, curSY + 26);
     });
     return;
   }
 
+  // 13. SETTINGS CANONICAL LINK
   if (id === 'settings-canonical-link') {
     const bW = (contentW - 24) / 4;
-    const bH = 32;
+    const bH = 28;
     const presets = ['BibleGateway ✓', 'Blue Letter Bible', 'BibleHub', 'Ethiopian Portal'];
 
     presets.forEach((p, idx) => {
       const pX = contentX + idx * (bW + 8);
-      drawRoundRect(ctx, pX, innerY, bW, bH, 8);
+      drawRoundRect(ctx, pX, innerY, bW, bH, 7);
       ctx.fillStyle = idx === 0 ? pal.accentColor : pal.chipBg;
       ctx.fill();
       ctx.fillStyle = idx === 0 ? pal.badgeText : pal.textSecondary;
-      ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-      ctx.fillText(p, pX + 8, innerY + 20);
+      ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+      ctx.fillText(p, pX + 6, innerY + 18);
     });
 
-    const uY = innerY + bH + 12;
-    const uH = 38;
-    drawRoundRect(ctx, contentX, uY, contentW, uH, 10);
+    const uY = innerY + bH + 10;
+    const uH = 34;
+    drawRoundRect(ctx, contentX, uY, contentW, uH, 8);
     ctx.fillStyle = pal.chipBg;
     ctx.fill();
     ctx.strokeStyle = pal.chipBorder;
@@ -3410,11 +3704,61 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.accentColor;
-    ctx.font = 'bold 11px monospace';
-    ctx.fillText('https://www.biblegateway.com/passage/?search={verse}', contentX + 14, uY + 24);
+    ctx.font = 'bold 10px monospace';
+    ctx.fillText('https://www.biblegateway.com/passage/?search={verse}', contentX + 12, uY + 22);
     ctx.fillStyle = '#10b981';
+    ctx.font = 'bold 9px Inter, system-ui, sans-serif';
+    ctx.fillText('Connected ✓', contentX + contentW - 80, uY + 22);
+    return;
+  }
+
+  // 14. MASTER SANCTUARY COMMERCIAL SHOWCASE
+  if (id === 'master-all-features') {
+    const gridCols = 3;
+    const gridItemW = (contentW - 16) / gridCols;
+    const gridItemH = 42;
+    const features = [
+      { num: '1', title: 'Sanctuary Portal', desc: 'Guest Mode & Google Sign-In' },
+      { num: '2', title: 'Exegesis Scrolls', desc: 'John 11:35 & 21:11 (6 Pillars)' },
+      { num: '3', title: 'Then vs Now', desc: '33 A.D. Herodian to 21st C.' },
+      { num: '4', title: 'Scholar AI Audio', desc: 'C.S. Lewis & Spurgeon Voices' },
+      { num: '5', title: 'Study Groups', desc: 'Bethany Circle & Discussions' },
+      { num: '6', title: 'Concordance', desc: 'Strong\'s H2617 & G26 Roots' }
+    ];
+
+    features.forEach((f, idx) => {
+      const col = idx % gridCols;
+      const row = Math.floor(idx / gridCols);
+      const fX = contentX + col * (gridItemW + 8);
+      const fY = innerY + row * (gridItemH + 6);
+
+      drawRoundRect(ctx, fX, fY, gridItemW, gridItemH, 8);
+      ctx.fillStyle = pal.chipBg;
+      ctx.fill();
+      ctx.strokeStyle = pal.chipBorder;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = pal.accentColor;
+      ctx.font = '900 10px Inter, system-ui, sans-serif';
+      ctx.fillText(`${f.num}. ${f.title}`, fX + 10, fY + 18);
+      ctx.fillStyle = pal.textSecondary;
+      ctx.font = '500 9px Inter, system-ui, sans-serif';
+      ctx.fillText(f.desc, fX + 10, fY + 32);
+    });
+
+    const bannerY = innerY + (gridItemH * 2) + 14;
+    const bannerH = 26;
+    drawRoundRect(ctx, contentX, bannerY, contentW, bannerH, 7);
+    ctx.fillStyle = pal.tagBg;
+    ctx.fill();
+    ctx.strokeStyle = pal.accentColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = pal.accentColor;
     ctx.font = 'bold 10px Inter, system-ui, sans-serif';
-    ctx.fillText('Connected ✓', contentX + contentW - 90, uY + 24);
+    ctx.fillText('📜  Source II: Asher Wilson\'s Ethiopian Canon (81 Books preserving Enoch & Jubilees) Included', contentX + 10, bannerY + 17);
     return;
   }
 
@@ -3422,10 +3766,10 @@ function renderPageSectionToCanvas(
   const cardItemW = (contentW - 14) / 2;
   const cardItemH = 46;
   const hubCards = [
-    'Pilgrim Profile & Themes',
-    'Scholars Voices (AI Narration)',
-    '6 Primary Sources Framework',
-    'Bible Canonical Link Gateway'
+    'Pilgrim Profile & 3 Atmosphere Themes',
+    'Scholars Voices (AI Audio Narration)',
+    '6 Primary Sources Framework (81 Books)',
+    'Bible Canonical Link Gateways'
   ];
 
   hubCards.forEach((h, idx) => {
@@ -3442,8 +3786,8 @@ function renderPageSectionToCanvas(
     ctx.stroke();
 
     ctx.fillStyle = pal.textPrimary;
-    ctx.font = 'bold 12px Inter, system-ui, sans-serif';
-    ctx.fillText(h, hX + 14, curHY + 28);
+    ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+    ctx.fillText(h, hX + 12, curHY + 28);
   });
 }
 
