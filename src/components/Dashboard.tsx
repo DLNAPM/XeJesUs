@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType, getDoc, doc, deleteDoc } from '../lib/firebase';
 import { Inquiry } from '../types';
-import { BookOpen, Clock, ChevronRight, PlusCircle, Share2, Trash2, Loader2, Lock } from 'lucide-react';
+import { BookOpen, Clock, ChevronRight, PlusCircle, Share2, Trash2, Loader2, Lock, GraduationCap, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GUEST_TEST_INQUIRIES } from '../data/guestData';
 
@@ -10,6 +10,8 @@ interface DashboardProps {
   onNewInquiry: () => void;
   isGuest?: boolean;
   onPromptLogin?: () => void;
+  isTutee?: boolean;
+  onNavigateToGroups?: () => void;
 }
 
 const TEST_INQUIRIES: Inquiry[] = [
@@ -51,7 +53,14 @@ const TEST_INQUIRIES: Inquiry[] = [
   }
 ];
 
-export default function Dashboard({ onSelectInquiry, onNewInquiry, isGuest: propIsGuest, onPromptLogin }: DashboardProps) {
+export default function Dashboard({ 
+  onSelectInquiry, 
+  onNewInquiry, 
+  isGuest: propIsGuest, 
+  onPromptLogin,
+  isTutee,
+  onNavigateToGroups
+}: DashboardProps) {
   const [recentInquiries, setRecentInquiries] = useState<Inquiry[]>([]);
   const [sharedInquiries, setSharedInquiries] = useState<(Inquiry & { shareId?: string })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,9 +189,46 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry, isGuest: prop
   return (
     <div className="max-w-4xl mx-auto">
       <header className="mb-8 md:mb-12">
-        <h1 className="text-4xl font-serif text-text-primary mb-2">Exegesis Library</h1>
-        <p className="text-text-secondary italic font-medium">Welcome back. Continue your journey through the Word.</p>
+        <h1 className="text-4xl font-serif text-text-primary mb-2">
+          {isTutee ? 'Shared Seekings' : 'Exegesis Library'}
+        </h1>
+        <p className="text-text-secondary italic font-medium">
+          {isTutee 
+            ? 'Guided study library. Review exegeses shared directly and from your study circles.' 
+            : 'Welcome back. Continue your journey through the Word.'}
+        </p>
       </header>
+
+      {/* Tutee Mode Informational Banner */}
+      {isTutee && (
+        <div className="mb-8 p-5 rounded-3xl bg-gradient-to-r from-purple-500/15 via-ui-card to-ui-card border-2 border-purple-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30 mt-0.5">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-sans font-black uppercase tracking-widest">
+                  Tutee Pilgrim • Guided Sanctuary Pathway
+                </span>
+              </div>
+              <p className="text-xs text-text-primary leading-relaxed font-medium">
+                Your role is focused on guided learning. Access your <strong className="text-text-primary font-bold">Shared Seekings</strong>, collaborate with peers in <strong className="text-text-primary font-bold">My Study Groups</strong>, listen to <strong className="text-text-primary font-bold">Saved Chat Sessions</strong>, and consult <strong className="text-text-primary font-bold">Reports</strong> and <strong className="text-text-primary font-bold">Lexicons</strong>. Direct exegesis inquiry synthesis is reserved for mentors and full pilgrims.
+              </p>
+            </div>
+          </div>
+
+          {onNavigateToGroups && (
+            <button
+              onClick={onNavigateToGroups}
+              className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition-all font-sans font-bold text-xs uppercase tracking-wider shrink-0 shadow-md flex items-center gap-2 active:scale-95 cursor-pointer"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Study Groups</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Guest Mode Informational Banner */}
       {isGuest && (
@@ -214,8 +260,39 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry, isGuest: prop
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* New Inquiry Card - Disabled & Read-Only in Guest Mode */}
-        {isGuest ? (
+        {/* New Inquiry Card - Disabled & Read-Only in Guest Mode or Tutee Guided Mode */}
+        {isTutee ? (
+          <div 
+            className="h-48 border-2 border-dashed border-purple-500/40 rounded-2xl flex flex-col items-center justify-between p-5 bg-gradient-to-b from-purple-500/5 via-ui-card/60 to-ui-card text-center relative overflow-hidden group shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[10px] font-sans font-black uppercase tracking-wider flex items-center gap-1.5 border border-purple-500/30">
+                <GraduationCap className="w-3 h-3 text-purple-500" />
+                Tutee Guided Pathway
+              </span>
+            </div>
+            
+            <div className="space-y-1 px-2">
+              <h3 className="font-serif font-bold text-sm text-text-primary flex items-center justify-center gap-1.5">
+                Seek the Word Reserved
+              </h3>
+              <p className="text-[11px] text-text-secondary leading-snug max-w-xs mx-auto font-medium">
+                Direct inquiry synthesis is handled by mentors and full pilgrims. As a Tutee, explore shared seekings below or collaborate in your study groups.
+              </p>
+            </div>
+
+            {onNavigateToGroups && (
+              <button
+                type="button"
+                onClick={onNavigateToGroups}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Open Study Groups</span>
+              </button>
+            )}
+          </div>
+        ) : isGuest ? (
           <div 
             onClick={onPromptLogin}
             className="h-48 border-2 border-dashed border-amber-500/40 rounded-2xl flex flex-col items-center justify-between p-5 bg-gradient-to-b from-amber-500/5 via-ui-card/60 to-ui-card text-center relative overflow-hidden group shadow-sm hover:border-accent transition-all cursor-pointer"
@@ -276,70 +353,35 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry, isGuest: prop
         </div>
       </div>
 
-      <section className="mt-16">
+      {/* Shared Seekings Section - Prioritized for Tutees */}
+      <section className="mt-16 pb-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-serif text-text-primary flex items-center gap-2">
-            <Clock className="w-5 h-5 text-accent" />
-            Recent Seekings
+            <Share2 className="w-5 h-5 text-accent" />
+            Shared Seekings
           </h2>
+          {sharedInquiries.length > 0 && (
+            <span className="px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-bold font-sans">
+              {sharedInquiries.length} Shared
+            </span>
+          )}
         </div>
 
         {loading ? (
           <div className="space-y-4">
-            {[1, 2, 3].map(i => (
+            {[1, 2].map(i => (
               <div key={i} className="h-20 bg-ui-sidebar animate-pulse rounded-xl" />
             ))}
           </div>
-        ) : recentInquiries.length === 0 ? (
-          <div className="text-center py-20 bg-ui-card/20 rounded-2xl border border-ui-border">
-            <p className="text-text-secondary italic">No inquiries found. Your journey begins with a single question.</p>
+        ) : sharedInquiries.length === 0 ? (
+          <div className="text-center py-12 bg-ui-card/30 rounded-2xl border border-ui-border p-6">
+            <Share2 className="w-8 h-8 text-text-secondary/40 mx-auto mb-2" />
+            <h3 className="text-sm font-serif italic text-text-primary mb-1">No Shared Seekings Yet</h3>
+            <p className="text-xs text-text-secondary italic max-w-md mx-auto">
+              Exegeses shared directly with your email or shared in your Study Groups will appear here for guided reflection.
+            </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {recentInquiries.map((inquiry) => (
-              <motion.div
-                key={inquiry.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="group relative"
-              >
-                <button
-                  onClick={() => onSelectInquiry(inquiry.id!)}
-                  className="w-full bg-ui-card p-6 rounded-2xl shadow-sm border border-ui-border flex items-center justify-between group-hover:shadow-md transition-all text-left pr-16"
-                >
-                  <div className="overflow-hidden">
-                    <span className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
-                    <h3 className="font-serif text-lg text-text-primary line-clamp-1 italic">{inquiry.query}</h3>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-ui-border group-hover:text-accent transition-colors absolute right-6 top-1/2 -translate-y-1/2" />
-                </button>
-                
-                <button
-                  onClick={(e) => handleDelete(e, inquiry.id!)}
-                  disabled={deletingId === inquiry.id}
-                  className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-40 md:opacity-0 group-hover:opacity-100 disabled:opacity-50 cursor-pointer"
-                  title="Remove Seeking"
-                >
-                  {deletingId === inquiry.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </button>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {sharedInquiries.length > 0 && (
-        <section className="mt-16 pb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-serif text-text-primary flex items-center gap-2">
-              <Share2 className="w-5 h-5 text-accent" />
-              Shared Seekings
-            </h2>
-          </div>
           <div className="space-y-4">
             {sharedInquiries.map((inquiry) => (
               <motion.div
@@ -374,6 +416,65 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry, isGuest: prop
               </motion.div>
             ))}
           </div>
+        )}
+      </section>
+
+      {/* Recent Seekings Section - For Non-Tutees or If User Has Prior Personal Inquiries */}
+      {(!isTutee || recentInquiries.length > 0) && (
+        <section className="mt-8 pb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-serif text-text-primary flex items-center gap-2">
+              <Clock className="w-5 h-5 text-accent" />
+              {isTutee ? "Archived Personal Seekings" : "Recent Seekings"}
+            </h2>
+          </div>
+
+          {loading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-20 bg-ui-sidebar animate-pulse rounded-xl" />
+              ))}
+            </div>
+          ) : recentInquiries.length === 0 ? (
+            <div className="text-center py-16 bg-ui-card/20 rounded-2xl border border-ui-border">
+              <p className="text-text-secondary italic">No inquiries found. Your journey begins with a single question.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentInquiries.map((inquiry) => (
+                <motion.div
+                  key={inquiry.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="group relative"
+                >
+                  <button
+                    onClick={() => onSelectInquiry(inquiry.id!)}
+                    className="w-full bg-ui-card p-6 rounded-2xl shadow-sm border border-ui-border flex items-center justify-between group-hover:shadow-md transition-all text-left pr-16"
+                  >
+                    <div className="overflow-hidden">
+                      <span className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
+                      <h3 className="font-serif text-lg text-text-primary line-clamp-1 italic">{inquiry.query}</h3>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-ui-border group-hover:text-accent transition-colors absolute right-6 top-1/2 -translate-y-1/2" />
+                  </button>
+                  
+                  <button
+                    onClick={(e) => handleDelete(e, inquiry.id!)}
+                    disabled={deletingId === inquiry.id}
+                    className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-40 md:opacity-0 group-hover:opacity-100 disabled:opacity-50 cursor-pointer"
+                    title="Remove Seeking"
+                  >
+                    {deletingId === inquiry.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

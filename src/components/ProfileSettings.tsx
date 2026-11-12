@@ -243,6 +243,12 @@ export default function ProfileSettings({ onNavigatePage, onUpdateProfile, userP
                     {profile.tier === 'premium' && <Crown className="w-3 h-3" />}
                     {profile.tier === 'premium' ? 'Premium Pilgrim' : 'Basic Pilgrim'}
                   </span>
+                  {profile.role === 'tutee' && (
+                    <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-[0.1em] bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-300 shadow-sm">
+                      <GraduationCap className="w-3.5 h-3.5 text-purple-500" />
+                      Tutee Pilgrim
+                    </span>
+                  )}
                   {profile.role === 'admin' && (
                     <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-[0.1em] bg-text-primary text-bg-primary">
                       <Shield className="w-3 h-3 text-accent" />
@@ -250,6 +256,13 @@ export default function ProfileSettings({ onNavigatePage, onUpdateProfile, userP
                     </span>
                   )}
                 </div>
+                {profile.role === 'tutee' && (
+                  <div className="mt-4 p-3 rounded-xl bg-purple-500/10 border border-purple-500/25 text-left">
+                    <p className="text-xs text-purple-700 dark:text-purple-300 font-medium leading-relaxed">
+                      <strong className="font-bold">Guided Study Role:</strong> As a Tutee, you have access to <span className="underline decoration-purple-400">Shared Seekings</span>, <span className="underline decoration-purple-400">My Study Groups</span>, <span className="underline decoration-purple-400">Saved Chat Sessions</span>, <span className="underline decoration-purple-400">Reports Menu</span>, <span className="underline decoration-purple-400">Lexicon Glossary</span>, and <span className="underline decoration-purple-400">Sanctuary Settings</span>. Direct exegesis inquiries are facilitated through your mentors and study circles.
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           )}

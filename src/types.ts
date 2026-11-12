@@ -65,7 +65,7 @@ export interface UserProfile {
   displayName: string;
   photoURL: string;
   bibleWebsite?: string;
-  role?: 'user' | 'admin';
+  role?: 'user' | 'admin' | 'tutee';
   tier?: 'basic' | 'premium';
   isFrozen?: boolean;
   theme?: 'modern' | 'midnight' | 'parchment';

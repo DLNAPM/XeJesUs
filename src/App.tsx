@@ -188,6 +188,7 @@ export default function App() {
   const [versionStatus, setVersionStatus] = useState<AppVersionStatus | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [showTuteeRestrictedModal, setShowTuteeRestrictedModal] = useState(false);
 
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = safeLocalStorage.getItem('xejesus-theme');
@@ -310,6 +311,8 @@ export default function App() {
   const isAdmin = userProfile?.role === 'admin' || 
     user?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
     user?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
+
+  const isTutee = userProfile?.role === 'tutee';
 
   const isPremium = userProfile?.tier === 'premium' || isAdmin;
 
@@ -560,11 +563,15 @@ export default function App() {
   };
 
   const navigateToPage = (page: Page, label: string) => {
+    if ((page === 'inquiry' || page === 'then-vs-now') && isTutee) {
+      setShowTuteeRestrictedModal(true);
+      return;
+    }
     if (page === 'inquiry' && isGuest) {
       setShowEnterSanctuaryModal(true);
       return;
     }
-    if ((page === 'reports' || page === 'glossary') && !isPremium) {
+    if ((page === 'reports' || page === 'glossary') && !isPremium && !isTutee) {
       setPremiumModal({ isOpen: true, feature: label });
       return;
     }
@@ -865,18 +872,20 @@ export default function App() {
            <button 
              onClick={() => setCurrentPage('groups')} 
              className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-primary")}
-             title="Groups"
+             title="My Study Groups"
            >
              <Users className="w-5 h-5" />
            </button>
-           <button 
-             onClick={() => navigateToPage('then-vs-now', 'Then vs Now')} 
-             className={cn("p-2 transition-colors relative", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary")}
-             title="Then vs Now (Premium)"
-           >
-             <Compass className="w-5 h-5" />
-             <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 absolute top-1 right-1 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
-           </button>
+           {!isTutee && (
+             <button 
+               onClick={() => navigateToPage('then-vs-now', 'Then vs Now')} 
+               className={cn("p-2 transition-colors relative", currentPage === 'then-vs-now' ? "text-accent" : "text-text-primary")}
+               title="Then vs Now (Premium)"
+             >
+               <Compass className="w-5 h-5" />
+               <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 absolute top-1 right-1 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+             </button>
+           )}
            <button 
              onClick={openSavedChatSessions} 
              className="p-2 transition-colors text-text-primary hover:text-accent"
@@ -887,10 +896,12 @@ export default function App() {
            <button 
              onClick={() => navigateToPage('reports', 'Reports Menu')} 
              className={cn("p-2 transition-colors relative", currentPage === 'reports' ? "text-accent" : "text-text-primary")}
-             title="Reports (Premium)"
+             title={isTutee ? "Reports Menu" : "Reports (Premium)"}
            >
              <FileText className="w-5 h-5" />
-             <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 absolute top-1 right-1 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+             {!isTutee && (
+               <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 absolute top-1 right-1 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+             )}
            </button>
            <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
            {hasInquiries === false && (
@@ -967,7 +978,14 @@ export default function App() {
         </div>
         
         <div className="flex-1 space-y-1">
-          {[
+          {(isTutee ? [
+            { id: 'dashboard', label: 'Shared Seekings', icon: Share2 },
+            { id: 'groups', label: 'My Study Groups', icon: Users },
+            { id: 'saved-chats', label: 'Saved Chat Sessions', icon: History, onClick: openSavedChatSessions },
+            { id: 'reports', label: 'Reports Menu', icon: FileText },
+            { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap },
+            { id: 'settings', label: 'Sanctuary Settings', icon: SettingsIcon },
+          ] : [
             { id: 'dashboard', label: 'Exegesis Library', icon: BookOpen },
             { 
               id: 'inquiry', 
@@ -994,7 +1012,7 @@ export default function App() {
               icon: Shield,
               badge: maintenanceConfig?.enabled ? 'MAINT' : undefined 
             }] : []),
-          ].map((item: any) => (
+          ]).map((item: any) => (
             <button
               key={item.id}
               onClick={() => item.onClick ? item.onClick() : navigateToPage(item.id as Page, item.label)}
@@ -1055,7 +1073,14 @@ export default function App() {
               </div>
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-bold truncate text-text-primary">{user?.displayName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold truncate text-text-primary">{user?.displayName}</p>
+                {isTutee && (
+                  <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[8px] font-black uppercase tracking-wider shrink-0 border border-purple-500/30">
+                    TUTEE
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user?.email}</p>
             </div>
           </div>
@@ -1111,12 +1136,22 @@ export default function App() {
             {currentPage === 'dashboard' && (
               <Dashboard 
                 onSelectInquiry={navigateToDetails} 
-                onNewInquiry={() => isGuest ? setShowEnterSanctuaryModal(true) : setCurrentPage('inquiry')} 
+                onNewInquiry={() => {
+                  if (isTutee) {
+                    setShowTuteeRestrictedModal(true);
+                  } else if (isGuest) {
+                    setShowEnterSanctuaryModal(true);
+                  } else {
+                    setCurrentPage('inquiry');
+                  }
+                }} 
                 isGuest={isGuest}
+                isTutee={isTutee}
                 onPromptLogin={() => setShowEnterSanctuaryModal(true)}
+                onNavigateToGroups={() => setCurrentPage('groups')}
               />
             )}
-            {currentPage === 'inquiry' && (
+            {currentPage === 'inquiry' && !isTutee && (
               <InquiryTool 
                 onComplete={(id) => navigateToDetails(id)} 
                 isPremium={isPremium} 
@@ -1124,12 +1159,46 @@ export default function App() {
                 onPromptLogin={() => setShowEnterSanctuaryModal(true)}
               />
             )}
-            {currentPage === 'then-vs-now' && (
+            {currentPage === 'inquiry' && isTutee && (
+              <div className="max-w-xl mx-auto py-16 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center mx-auto mb-4 text-purple-600 dark:text-purple-400">
+                  <GraduationCap className="w-9 h-9" />
+                </div>
+                <h2 className="text-2xl font-serif italic font-bold text-text-primary mb-2">Seek the Word is Reserved for Mentors</h2>
+                <p className="text-xs text-text-secondary mb-6 leading-relaxed max-w-md mx-auto">
+                  As a Tutee pilgrim, your sanctuary path is dedicated to guided study through Shared Seekings, Study Groups, Saved Chat Sessions, Reports, Lexicons, and Settings.
+                </p>
+                <button
+                  onClick={() => setCurrentPage('dashboard')}
+                  className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  Return to Shared Seekings
+                </button>
+              </div>
+            )}
+            {currentPage === 'then-vs-now' && !isTutee && (
               <ThenVsNow 
                 isPremium={isPremium} 
                 onUpgradeRequest={() => setPremiumModal({ isOpen: true, feature: 'Then vs Now Antiquity & Modern Reality' })}
                 userProfile={userProfile}
               />
+            )}
+            {currentPage === 'then-vs-now' && isTutee && (
+              <div className="max-w-xl mx-auto py-16 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center mx-auto mb-4 text-purple-600 dark:text-purple-400">
+                  <GraduationCap className="w-9 h-9" />
+                </div>
+                <h2 className="text-2xl font-serif italic font-bold text-text-primary mb-2">Section Reserved</h2>
+                <p className="text-xs text-text-secondary mb-6 leading-relaxed max-w-md mx-auto">
+                  Tutee pilgrims have guided access to Shared Seekings, My Study Groups, Saved Chat Sessions, Reports Menu, Lexicon Glossary, and Sanctuary Settings.
+                </p>
+                <button
+                  onClick={() => setCurrentPage('dashboard')}
+                  className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
+                >
+                  Return to Shared Seekings
+                </button>
+              </div>
             )}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
@@ -1312,6 +1381,94 @@ export default function App() {
               </motion.div>
             </div>
           )}
+
+          {/* Tutee Role Restriction Modal */}
+          {showTuteeRestrictedModal && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowTuteeRestrictedModal(false)}
+                className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                className="relative z-10 max-w-md w-full bg-ui-card border-2 border-purple-500/30 rounded-[2.5rem] p-6 md:p-8 shadow-2xl text-center overflow-hidden"
+              >
+                <div className="w-16 h-16 rounded-3xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center mx-auto mb-5 text-purple-600 dark:text-purple-400 shadow-inner">
+                  <GraduationCap className="w-9 h-9" />
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-[10px] font-sans font-black uppercase tracking-wider text-purple-600 dark:text-purple-300 mb-3">
+                  Tutee Pilgrim Role
+                </div>
+
+                <h3 className="text-2xl font-serif font-bold italic text-text-primary mb-2">
+                  Sanctuary Guided Boundary
+                </h3>
+
+                <p className="text-xs text-text-secondary leading-relaxed font-medium mb-6">
+                  The <strong className="text-text-primary">Tutee role</strong> is specifically dedicated to guided scriptural study. Direct <strong className="text-text-primary">"Seek the Word"</strong> inquiry generation is reserved for mentors and full pilgrims.
+                </p>
+
+                <div className="p-4 rounded-2xl bg-ui-sidebar/80 border border-ui-border text-left mb-6 space-y-2">
+                  <p className="text-[10px] font-sans font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                    Your Granted Sanctuary Access:
+                  </p>
+                  <ul className="text-xs text-text-primary space-y-1.5 font-medium">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      <span><strong>Shared Seekings:</strong> View exegeses shared with you</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      <span><strong>My Study Groups:</strong> Circle discussions & communal study</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      <span><strong>Saved Chat Sessions:</strong> Scholar voice dialogues</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      <span><strong>Reports Menu:</strong> Exegesis reports & summaries</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      <span><strong>Lexicon Glossary:</strong> Original language cross-references</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                      <span><strong>Sanctuary Settings:</strong> Profile, Scholar voices & canonical Bible</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    onClick={() => {
+                      setShowTuteeRestrictedModal(false);
+                      setCurrentPage('dashboard');
+                    }}
+                    className="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+                  >
+                    Go to Shared Seekings
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowTuteeRestrictedModal(false);
+                      setCurrentPage('groups');
+                    }}
+                    className="py-3 px-4 bg-ui-sidebar hover:bg-accent/10 text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-wider transition-all border border-ui-border active:scale-95 cursor-pointer"
+                  >
+                    Open Study Groups
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>
       </main>
 
@@ -1321,11 +1478,26 @@ export default function App() {
           <Home className="w-7 h-7" />
         </button>
         <button 
-          onClick={() => isGuest ? setShowEnterSanctuaryModal(true) : setCurrentPage('inquiry')} 
+          onClick={() => {
+            if (isTutee) {
+              setShowTuteeRestrictedModal(true);
+            } else if (isGuest) {
+              setShowEnterSanctuaryModal(true);
+            } else {
+              setCurrentPage('inquiry');
+            }
+          }} 
           className={cn("p-2 transition-colors relative", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}
-          title={isGuest ? "Seek the Word (Login Required)" : "Seek the Word"}
+          title={isTutee ? "Seek the Word (Guided Role)" : isGuest ? "Seek the Word (Login Required)" : "Seek the Word"}
         >
-          <Search className="w-7 h-7" />
+          {isTutee ? (
+            <div className="relative">
+              <Search className="w-7 h-7 opacity-40" />
+              <Lock className="w-3.5 h-3.5 text-purple-500 absolute -bottom-1 -right-1" />
+            </div>
+          ) : (
+            <Search className="w-7 h-7" />
+          )}
           {isGuest && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full flex items-center justify-center text-[8px] font-bold text-bg-primary">
               !
@@ -1374,16 +1546,38 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                  <button 
-                    onClick={() => navigateToPage('then-vs-now', 'Then vs Now')}
-                    className="flex flex-col items-center justify-center p-6 bg-accent/10 rounded-2xl border border-accent/30 gap-3 text-accent hover:bg-accent/20 transition-all col-span-2 shadow-sm"
-                  >
-                    <Compass className="w-6 h-6 text-accent" />
-                    <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary flex items-center gap-1.5">
-                      <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]" />
-                      Then vs Now (Antiquity vs Modern)
-                    </span>
-                  </button>
+                  {isTutee ? (
+                    <>
+                      <button 
+                        onClick={() => navigateToPage('dashboard', 'Shared Seekings')}
+                        className="flex flex-col items-center justify-center p-6 bg-purple-500/10 rounded-2xl border border-purple-500/30 gap-3 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all col-span-2 shadow-sm"
+                      >
+                        <Share2 className="w-6 h-6 text-purple-500" />
+                        <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5 text-purple-500" />
+                          Shared Seekings (Guided Library)
+                        </span>
+                      </button>
+                      <button 
+                        onClick={() => navigateToPage('groups', 'My Study Groups')}
+                        className="flex flex-col items-center justify-center p-6 bg-ui-card rounded-2xl border border-ui-border gap-3 text-text-primary hover:text-accent transition-all col-span-2 shadow-sm"
+                      >
+                        <Users className="w-6 h-6 text-accent" />
+                        <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary">My Study Groups</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={() => navigateToPage('then-vs-now', 'Then vs Now')}
+                      className="flex flex-col items-center justify-center p-6 bg-accent/10 rounded-2xl border border-accent/30 gap-3 text-accent hover:bg-accent/20 transition-all col-span-2 shadow-sm"
+                    >
+                      <Compass className="w-6 h-6 text-accent" />
+                      <span className="text-xs font-sans font-bold uppercase tracking-widest text-text-primary flex items-center gap-1.5">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0 drop-shadow-[0_0_4px_rgba(251,191,36,0.6)]" />
+                        Then vs Now (Antiquity vs Modern)
+                      </span>
+                    </button>
+                  )}
                   <button 
                     onClick={openSavedChatSessions}
                     className="flex flex-col items-center justify-center p-6 bg-accent/5 rounded-2xl border border-accent/20 gap-3 text-accent hover:bg-accent/10 transition-all col-span-2"
@@ -1397,7 +1591,7 @@ export default function App() {
                   >
                     <FileText className="w-6 h-6" />
                     <span className="text-[10px] font-sans font-bold uppercase tracking-widest flex items-center gap-1">
-                      <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />
+                      {!isTutee && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />}
                       Reports
                     </span>
                   </button>
@@ -1407,7 +1601,7 @@ export default function App() {
                   >
                     <GraduationCap className="w-6 h-6" />
                     <span className="text-[10px] font-sans font-bold uppercase tracking-widest flex items-center gap-1">
-                      <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />
+                      {!isTutee && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />}
                       Glossary
                     </span>
                   </button>

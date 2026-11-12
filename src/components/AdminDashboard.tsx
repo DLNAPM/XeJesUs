@@ -40,7 +40,8 @@ import {
   AlertOctagon,
   Wrench,
   Megaphone,
-  ArrowUpCircle
+  ArrowUpCircle,
+  GraduationCap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -137,7 +138,7 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
     init().catch(err => console.error("Error in init:", err));
   }, []);
 
-  const handleUpdateRole = async (uid: string, role: 'user' | 'admin') => {
+  const handleUpdateRole = async (uid: string, role: 'user' | 'admin' | 'tutee') => {
     try {
       await updateDoc(doc(db, 'users', uid), { role });
       if (role === 'admin') {
@@ -439,18 +440,25 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
         </div>
 
         <div className="md:col-span-1 flex flex-col gap-4">
-          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between flex-1">
-            <UsersIcon className="w-8 h-8 text-accent opacity-40" />
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-6 flex flex-col justify-between flex-1">
+            <UsersIcon className="w-7 h-7 text-accent opacity-40" />
             <div>
-              <p className="text-4xl font-serif italic text-text-primary">{users.length}</p>
+              <p className="text-3xl font-serif italic text-text-primary">{users.length}</p>
               <p className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.2em]">Total Pilgrims</p>
             </div>
           </div>
-          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between flex-1">
-            <Crown className="w-8 h-8 text-[#3b82f6] opacity-40" />
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-6 flex flex-col justify-between flex-1">
+            <Crown className="w-7 h-7 text-[#3b82f6] opacity-40" />
             <div>
-              <p className="text-4xl font-serif italic text-text-primary">{users.filter(u => u.tier === 'premium').length}</p>
+              <p className="text-3xl font-serif italic text-text-primary">{users.filter(u => u.tier === 'premium').length}</p>
               <p className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.2em]">Premium Seekers</p>
+            </div>
+          </div>
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-6 flex flex-col justify-between flex-1">
+            <GraduationCap className="w-7 h-7 text-purple-500 opacity-60" />
+            <div>
+              <p className="text-3xl font-serif italic text-purple-600 dark:text-purple-400">{users.filter(u => u.role === 'tutee').length}</p>
+              <p className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.2em]">Tutee Pilgrims</p>
             </div>
           </div>
         </div>
@@ -593,14 +601,23 @@ export default function AdminDashboard({ initialTab = 'alarms' }: AdminDashboard
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <select 
-                      value={u.role || 'user'} 
-                      onChange={(e) => handleUpdateRole(u.uid, e.target.value as any)}
-                      className="bg-bg-primary border border-ui-border rounded px-2 py-1 focus:outline-none focus:border-accent"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                    <div className="flex flex-col gap-1.5">
+                      <select 
+                        value={u.role || 'user'} 
+                        onChange={(e) => handleUpdateRole(u.uid, e.target.value as any)}
+                        className="bg-bg-primary border border-ui-border rounded px-2.5 py-1 text-xs font-medium focus:outline-none focus:border-accent"
+                      >
+                        <option value="user">User (Full Pilgrim)</option>
+                        <option value="tutee">Tutee (Guided)</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      {u.role === 'tutee' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 w-fit">
+                          <GraduationCap className="w-2.5 h-2.5 text-purple-500" />
+                          Tutee Guided
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-8 py-6">
                     <select 
