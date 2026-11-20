@@ -10,7 +10,7 @@
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
         "bibleWebsite": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "admin"] },
+        "role": { "type": "string", "enum": ["user", "admin", "tutee"] },
         "tier": { "type": "string", "enum": ["basic", "premium"] },
         "isFrozen": { "type": "boolean" }
       },

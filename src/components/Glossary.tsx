@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { getDbService, getAuthService, collection, query, orderBy, getDocs, deleteDoc, doc, addDoc, serverTimestamp, handleFirestoreError, OperationType } from '../lib/firebase';
+import { fetchDefinition } from '../lib/gemini';
 import { Book, Search, Trash2, Loader2, ChevronRight, Lightbulb, Sparkles, Filter, X, Plus, AlertTriangle, ShieldCheck, CheckCircle2, Check, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -30,6 +31,7 @@ export default function Glossary() {
   const [newDefinition, setNewDefinition] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLookingUpWord, setIsLookingUpWord] = useState(false);
   const [addSuccessNotice, setAddSuccessNotice] = useState<string | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -126,7 +128,34 @@ export default function Glossary() {
 
   useEffect(() => {
     fetchEntries().catch(err => console.error("Error in fetchEntries:", err));
+
+    const handleLexiconUpdated = () => {
+      fetchEntries().catch(err => console.error("Error refreshing lexicon:", err));
+    };
+    window.addEventListener('xejesus-lexicon-updated', handleLexiconUpdated);
+    return () => {
+      window.removeEventListener('xejesus-lexicon-updated', handleLexiconUpdated);
+    };
   }, []);
+
+  const handleLookupInModal = async () => {
+    const target = newWord.trim();
+    if (!target) {
+      setAddError("Enter a word or phrase first to look it up in XeJesUs.");
+      return;
+    }
+    setAddError(null);
+    setIsLookingUpWord(true);
+    try {
+      const def = await fetchDefinition(target, 'XeJesUs Lexicon Glossary manual theological lookup');
+      setNewDefinition(def.trim());
+    } catch (err: any) {
+      console.error("Failed to lookup definition in modal:", err);
+      setAddError(err?.message || "Unable to retrieve definition from XeJesUs. Please try again.");
+    } finally {
+      setIsLookingUpWord(false);
+    }
+  };
 
   // Real-time check if newWord matches an existing entry (case-insensitive & trimmed)
   const existingDuplicateMatch = useMemo(() => {
@@ -183,17 +212,20 @@ export default function Glossary() {
         return;
       }
 
+      const safeWord = wordTrimmed.slice(0, 200);
+      const safeDefinition = defTrimmed.slice(0, 5000);
+
       const docRef = await addDoc(collection(db, path), {
         userId: auth.currentUser.uid,
-        word: wordTrimmed,
-        definition: defTrimmed,
+        word: safeWord,
+        definition: safeDefinition,
         createdAt: serverTimestamp()
       });
 
       const newEntry: GlossaryEntry = {
         id: docRef.id,
-        word: wordTrimmed,
-        definition: defTrimmed,
+        word: safeWord,
+        definition: safeDefinition,
         createdAt: new Date()
       };
 
@@ -201,7 +233,7 @@ export default function Glossary() {
       setNewWord('');
       setNewDefinition('');
       setShowAddModal(false);
-      setAddSuccessNotice(`"${wordTrimmed}" successfully added to your Lexicon.`);
+      setAddSuccessNotice(`"${safeWord}" successfully added to your Lexicon.`);
       setTimeout(() => setAddSuccessNotice(null), 4000);
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, path);
@@ -473,15 +505,15 @@ export default function Glossary() {
               </p>
               <div className="grid sm:grid-cols-3 gap-3 sm:gap-4 pt-1">
                 <div className="bg-bg-primary/60 p-3.5 rounded-xl border border-ui-border">
-                  <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-1">1. Highlight in Studies</h4>
+                  <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-1">1. Highlight Anywhere</h4>
                   <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
-                    Highlight any term inside an exegesis result to trigger the <span className="text-text-primary font-semibold">"Ask for Meaning"</span> tooltip.
+                    Highlight any word or phrase on any XeJesUs study page to reveal the <span className="text-text-primary font-semibold">&ldquo;Lookup in XeJesUs&rdquo;</span> option.
                   </p>
                 </div>
                 <div className="bg-bg-primary/60 p-3.5 rounded-xl border border-ui-border">
                   <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-1">2. Save to Lexicon</h4>
                   <p className="text-xs text-text-secondary font-serif italic leading-relaxed">
-                    Tap <span className="text-text-primary font-semibold inline-flex items-center gap-0.5">Add to Lexicon <ChevronRight className="w-3 h-3" /></span> to catalog the definition permanently here.
+                    Review the biblical meaning and tap <span className="text-text-primary font-semibold inline-flex items-center gap-0.5">Add to Lexicon Glossary <ChevronRight className="w-3 h-3" /></span> to catalog it permanently here.
                   </p>
                 </div>
                 <div className="bg-bg-primary/60 p-3.5 rounded-xl border border-ui-border">
@@ -714,17 +746,37 @@ export default function Glossary() {
                   <label className="block text-xs font-sans font-bold uppercase tracking-wider text-text-secondary mb-1.5">
                     Word or Phrase
                   </label>
-                  <input
-                    type="text"
-                    value={newWord}
-                    onChange={(e) => {
-                      setNewWord(e.target.value);
-                      if (addError) setAddError(null);
-                    }}
-                    placeholder="e.g. Hesed, Shalom, Logos, Ruach..."
-                    className="w-full bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 font-serif text-base text-text-primary focus:outline-none focus:border-accent transition-colors placeholder:text-text-secondary/40"
-                    autoFocus
-                  />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      value={newWord}
+                      onChange={(e) => {
+                        setNewWord(e.target.value);
+                        if (addError) setAddError(null);
+                      }}
+                      placeholder="e.g. Hesed, Shalom, Logos, Ruach..."
+                      className="flex-1 bg-ui-card border border-ui-border rounded-xl px-4 py-2.5 font-serif text-base text-text-primary focus:outline-none focus:border-accent transition-colors placeholder:text-text-secondary/40"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleLookupInModal}
+                      disabled={isLookingUpWord || !newWord.trim()}
+                      className="px-4 py-2.5 rounded-xl bg-accent/15 border border-accent/30 text-accent hover:bg-accent hover:text-bg-primary text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                    >
+                      {isLookingUpWord ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Looking up...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Lookup in XeJesUs</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Real-time Duplicate Warning Banner */}

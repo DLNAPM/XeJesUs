@@ -30,7 +30,8 @@ import {
   where,
   serverTimestamp,
   signInAnonymously,
-  updateDoc
+  updateDoc,
+  onSnapshot
 } from './lib/firebase';
 import { 
   Home, 
@@ -90,6 +91,7 @@ import PrivacyPolicyPage from './components/PrivacyPolicyPage';
 import TermsOfUsePage from './components/TermsOfUsePage';
 import MaintenanceNoticeCard from './components/MaintenanceNoticeCard';
 import VersionUpgradeModal from './components/VersionUpgradeModal';
+import LexiconSelectionLookup from './components/LexiconSelectionLookup';
 import { MaintenanceConfig, AppVersionStatus, AppVersionInfo } from './types';
 import { subscribeToMaintenance } from './services/maintenanceService';
 import { checkAppVersion, subscribeToAppVersion, isUpgradeNeeded } from './services/versionService';
@@ -314,7 +316,28 @@ export default function App() {
 
   const isTutee = userProfile?.role === 'tutee';
 
-  const isPremium = userProfile?.tier === 'premium' || isAdmin;
+  const isPremium = String(userProfile?.tier || '').toLowerCase() === 'premium' || isAdmin;
+  const hasLexiconAccess = isPremium || isTutee;
+
+  // Real-time sync of userProfile (e.g., if an Admin upgrades Pilgrim to Premium or updates role)
+  useEffect(() => {
+    if (!user || user.isAnonymous) return;
+    const db = getDbService();
+    if (!db) return;
+    const unsub = onSnapshot(
+      doc(db, 'users', user.uid),
+      (snap) => {
+        if (snap.exists()) {
+          const liveData = snap.data() as UserProfile;
+          setUserProfile(prev => (prev ? { ...prev, ...liveData } : liveData));
+        }
+      },
+      (err) => {
+        console.warn('User profile real-time sync notice:', err);
+      }
+    );
+    return () => unsub();
+  }, [user]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -1229,6 +1252,14 @@ export default function App() {
         {/* Global Modals */}
         <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
         <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+        <LexiconSelectionLookup
+          hasLexiconAccess={hasLexiconAccess}
+          isGuest={isGuest}
+          currentPage={currentPage}
+          onUpgradeRequest={(feature) => setPremiumModal({ isOpen: true, feature })}
+          onPromptLogin={() => setShowEnterSanctuaryModal(true)}
+          onOpenGlossary={() => navigateToPage('glossary', 'Lexicon Glossary')}
+        />
         
         {/* How To Video Modal */}
         <AnimatePresence>

@@ -1,12 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService, deleteDoc } from '../lib/firebase';
-import { Inquiry, BibleGroup } from '../types';
-import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe, Trash2, AlertTriangle, Star } from 'lucide-react';
+import { Inquiry, BibleGroup, UserProfile } from '../types';
+import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, ExternalLink, Share2, Loader2, Check, X, GraduationCap, Globe, Trash2, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
-import { fetchDefinition } from '../lib/gemini';
 import PremiumOverlay from './PremiumOverlay';
-import { UserProfile } from '../types';
 import { cn } from '../lib/utils';
 
 interface InquiryDetailsProps {
@@ -96,28 +94,8 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   // Image Magnification State
   const [magnifiedImage, setMagnifiedImage] = useState<{ url: string, title: string, description: string } | null>(null);
   
-  // Glossary Selection State (Multi-Platform: iOS / iPadOS / macOS / Windows / Android)
-  const [selectedText, setSelectedText] = useState('');
-  const [selectionPosition, setSelectionPosition] = useState<{
-    x: number;
-    y: number;
-    top: number;
-    left: number;
-    placement: 'top' | 'bottom';
-  } | null>(null);
-  const [isDefining, setIsDefining] = useState(false);
-  const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
-  const [addedSuccess, setAddedSuccess] = useState(false);
-  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
-  const [isDuplicateInLexicon, setIsDuplicateInLexicon] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [deleting, setDeleting] = useState(false);
-
-  const selectedTextRef = useRef('');
-  const isInteractingWithMenuRef = useRef(false);
-  const selectionTimeoutRef = useRef<any>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const studyContainerRef = useRef<HTMLDivElement>(null);
 
   const handleDeleteClick = async () => {
     if (!confirm('Are you sure you wish to remove this seeking from your library? This action cannot be undone.')) return;
@@ -131,188 +109,6 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       handleFirestoreError(error, OperationType.DELETE, docPath);
     } finally {
       setDeleting(false);
-    }
-  };
-
-  const updateSelectionFromDOM = useCallback(() => {
-    if (isInteractingWithMenuRef.current) return;
-
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-      if (!isDefining && !definitionResult && !addedSuccess) {
-        setSelectionPosition(null);
-      }
-      return;
-    }
-
-    const text = selection.toString().trim();
-    if (!text || text.length < 2 || text.length > 80) {
-      if (!isDefining && !definitionResult && !addedSuccess) {
-        setSelectionPosition(null);
-      }
-      return;
-    }
-
-    // Ensure the selection is within our study content area
-    const range = selection.getRangeAt(0);
-    const commonAncestor = range.commonAncestorContainer;
-    if (studyContainerRef.current && !studyContainerRef.current.contains(commonAncestor)) {
-      return;
-    }
-
-    const rect = range.getBoundingClientRect();
-    if (!rect || (rect.width === 0 && rect.height === 0)) {
-      return;
-    }
-
-    selectedTextRef.current = text;
-    setSelectedText(text);
-
-    // Viewport-relative coordinate calculation (since menu uses fixed positioning)
-    const menuWidth = definitionResult ? 320 : 180;
-    const clampedX = Math.max(16, Math.min(window.innerWidth - menuWidth - 16, rect.left + rect.width / 2 - menuWidth / 2));
-    
-    // Check if there is enough room above the selection (at least 75px from top of viewport)
-    const placement: 'top' | 'bottom' = rect.top >= 75 ? 'top' : 'bottom';
-    const calculatedTop = placement === 'top'
-      ? Math.max(12, rect.top - 52)
-      : Math.min(window.innerHeight - 80, rect.bottom + 12);
-
-    setSelectionPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top,
-      top: calculatedTop,
-      left: clampedX,
-      placement
-    });
-  }, [isDefining, definitionResult, addedSuccess]);
-
-  // Global listeners for Apple devices (iOS Safari touch selection, iPadOS, macOS Safari/Chrome)
-  useEffect(() => {
-    const handleSelectionEvent = () => {
-      if (selectionTimeoutRef.current) {
-        clearTimeout(selectionTimeoutRef.current);
-      }
-      // Debounce slightly to allow iOS/iPadOS selection handles to settle
-      selectionTimeoutRef.current = setTimeout(() => {
-        updateSelectionFromDOM();
-      }, 120);
-    };
-
-    const handleGlobalPointerDown = (e: MouseEvent | TouchEvent) => {
-      // If user interacts with our menu, do not clear
-      if (menuRef.current && menuRef.current.contains(e.target as Node)) {
-        isInteractingWithMenuRef.current = true;
-        return;
-      }
-      // If user clicks outside and not defining or displaying a result, dismiss
-      if (!isDefining && !definitionResult && !addedSuccess) {
-        isInteractingWithMenuRef.current = false;
-        setSelectionPosition(null);
-      }
-    };
-
-    document.addEventListener('selectionchange', handleSelectionEvent, { passive: true });
-    document.addEventListener('touchend', handleSelectionEvent, { passive: true });
-    document.addEventListener('mouseup', handleSelectionEvent, { passive: true });
-    document.addEventListener('keyup', handleSelectionEvent, { passive: true });
-    document.addEventListener('mousedown', handleGlobalPointerDown);
-    document.addEventListener('touchstart', handleGlobalPointerDown, { passive: true });
-
-    return () => {
-      if (selectionTimeoutRef.current) clearTimeout(selectionTimeoutRef.current);
-      document.removeEventListener('selectionchange', handleSelectionEvent);
-      document.removeEventListener('touchend', handleSelectionEvent);
-      document.removeEventListener('mouseup', handleSelectionEvent);
-      document.removeEventListener('keyup', handleSelectionEvent);
-      document.removeEventListener('mousedown', handleGlobalPointerDown);
-      document.removeEventListener('touchstart', handleGlobalPointerDown);
-    };
-  }, [updateSelectionFromDOM, isDefining, definitionResult, addedSuccess, isDuplicateInLexicon]);
-
-  const askForMeaning = async () => {
-    const targetText = selectedTextRef.current || selectedText;
-    if (!targetText) return;
-
-    if (!isPremium) {
-      setShowPremiumModal({ isOpen: true, feature: 'Lexicon Glossary' });
-      return;
-    }
-    isInteractingWithMenuRef.current = true;
-    setIsDefining(true);
-    setDuplicateWarning(null);
-    setIsDuplicateInLexicon(false);
-    try {
-      const context = `Biblical study of ${inquiry?.scripture}. Query: ${inquiry?.query}`;
-      const definition = await fetchDefinition(targetText, context);
-      setDefinitionResult({ word: targetText, definition });
-
-      // Proactively check if this word or phrase already exists in user's Lexicon Glossary
-      if (auth?.currentUser && db) {
-        try {
-          const glossaryPath = `users/${auth.currentUser.uid}/glossary`;
-          const snapshot = await getDocs(collection(db, glossaryPath));
-          const normalizedTarget = targetText.trim().toLowerCase();
-          const match = snapshot.docs.find(doc => {
-            const w = doc.data().word;
-            return typeof w === 'string' && w.trim().toLowerCase() === normalizedTarget;
-          });
-          if (match) {
-            setIsDuplicateInLexicon(true);
-            setDuplicateWarning(`"${targetText.trim()}" already exists in your Lexicon Glossary.`);
-          }
-        } catch (checkErr) {
-          console.error("Error checking lexicon duplicate:", checkErr);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsDefining(false);
-    }
-  };
-
-  const addToGlossary = async () => {
-    if (!definitionResult) return;
-    if (!auth || !auth.currentUser || !db) return;
-
-    isInteractingWithMenuRef.current = true;
-    const path = `users/${auth.currentUser.uid}/glossary`;
-    try {
-      // Always verify against database before saving to prevent duplicate entries
-      const snapshot = await getDocs(collection(db, path));
-      const normalizedTarget = definitionResult.word.trim().toLowerCase();
-      const existing = snapshot.docs.find(d => {
-        const w = d.data().word;
-        return typeof w === 'string' && w.trim().toLowerCase() === normalizedTarget;
-      });
-
-      if (existing) {
-        setIsDuplicateInLexicon(true);
-        setDuplicateWarning(`The word or phrase "${definitionResult.word.trim()}" already exists in your Lexicon Glossary.`);
-        return;
-      }
-
-      await addDoc(collection(db, path), {
-        userId: auth.currentUser.uid,
-        word: definitionResult.word.trim(),
-        definition: definitionResult.definition.trim(),
-        createdAt: serverTimestamp()
-      });
-      setAddedSuccess(true);
-      setDuplicateWarning(null);
-      setIsDuplicateInLexicon(false);
-      setTimeout(() => {
-        setAddedSuccess(false);
-        setDefinitionResult(null);
-        setSelectionPosition(null);
-        setSelectedText('');
-        selectedTextRef.current = '';
-        isInteractingWithMenuRef.current = false;
-      }, 1200);
-    } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, path);
-      isInteractingWithMenuRef.current = false;
     }
   };
 
@@ -535,7 +331,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   if (!inquiry) return <div>Inquiry not found.</div>;
 
   return (
-    <div ref={studyContainerRef} className="max-w-5xl mx-auto select-text selection:bg-accent/20 selection:text-text-primary">
+    <div
+      data-lexicon-context={`Biblical study of ${inquiry.scripture}. Query: ${inquiry.query}`}
+      className="max-w-5xl mx-auto select-text selection:bg-accent/20 selection:text-text-primary"
+    >
       <button 
         onClick={onBack}
         className="flex items-center gap-2 text-text-secondary hover:text-accent mb-8 group transition-colors"
@@ -702,6 +501,18 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         {/* Right Column: Content Area */}
         <div className="xl:col-span-2">
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
+             {activeTab !== 'video' && (
+               <div
+                 data-lexicon-ignore="true"
+                 className="mb-8 px-4 py-2.5 rounded-2xl bg-accent/[0.06] border border-accent/20 flex items-center gap-2.5 text-xs text-text-secondary select-none"
+               >
+                 <GraduationCap className="w-4 h-4 text-accent shrink-0" />
+                 <span className="font-serif italic leading-snug">
+                   Highlight any word or phrase below to <strong className="text-text-primary font-sans not-italic">Lookup in XeJesUs</strong> and save to your <strong className="text-accent font-sans not-italic">Lexicon Glossary</strong>.
+                 </span>
+                 <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0 ml-auto" />
+               </div>
+             )}
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
                   <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-3xl leading-relaxed text-text-primary shadow-inner">
@@ -1160,123 +971,6 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                 </p>
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Selection Floating Menu (Multi-Platform: iPhone / iPad / Mac / PC) */}
-      <AnimatePresence>
-        {selectionPosition && (
-          <motion.div
-            ref={menuRef}
-            initial={{ opacity: 0, scale: 0.92, y: selectionPosition.placement === 'top' ? 6 : -6 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.15 }}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              isInteractingWithMenuRef.current = true;
-            }}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              isInteractingWithMenuRef.current = true;
-            }}
-            onTouchStart={(e) => {
-              e.stopPropagation();
-              isInteractingWithMenuRef.current = true;
-            }}
-            className="fixed z-[9999] bg-text-primary text-bg-primary p-2 rounded-2xl shadow-2xl border border-white/20 select-none backdrop-blur-md"
-            style={{ 
-              left: selectionPosition.left,
-              top: selectionPosition.top
-            }}
-          >
-            {isDefining ? (
-              <div className="flex items-center gap-2.5 px-4 py-2">
-                <Loader2 className="w-4 h-4 animate-spin text-accent" />
-                <span className="text-xs font-serif italic text-accent font-bold">Unveiling meaning...</span>
-              </div>
-            ) : addedSuccess ? (
-              <div className="flex items-center gap-2 px-4 py-2 text-emerald-400">
-                <Check className="w-4 h-4" />
-                <span className="text-xs font-sans font-bold uppercase tracking-wider">Added to Lexicon</span>
-              </div>
-            ) : definitionResult ? (
-              <div className="flex flex-col gap-3 p-3.5 w-72 sm:w-80 max-w-[90vw]">
-                <div className="flex justify-between items-start border-b border-white/10 pb-2">
-                  <div className="flex items-center gap-1.5">
-                    <GraduationCap className="w-4 h-4 text-accent" />
-                    <h4 className="text-sm font-serif italic font-bold text-accent capitalize">{definitionResult.word}</h4>
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={() => { 
-                      setDefinitionResult(null); 
-                      setSelectionPosition(null);
-                      setDuplicateWarning(null);
-                      setIsDuplicateInLexicon(false);
-                      isInteractingWithMenuRef.current = false;
-                    }} 
-                    className="text-bg-primary/50 hover:text-bg-primary p-1 rounded transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {isDuplicateInLexicon && (
-                  <div className="flex items-start gap-2 p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-200 text-xs animate-in fade-in duration-200">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-bold text-amber-300">Already in Lexicon</p>
-                      <p className="text-[11px] text-amber-100/90 leading-tight mt-0.5">
-                        {duplicateWarning || `The word or phrase "${definitionResult.word}" already exists in your Lexicon Glossary.`}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="max-h-44 overflow-y-auto pr-1.5 [scrollbar-width:thin] text-xs font-serif leading-relaxed opacity-90 whitespace-pre-wrap select-text">
-                  {definitionResult.definition}
-                </div>
-
-                {isDuplicateInLexicon ? (
-                  <div className="w-full bg-amber-500/15 border border-amber-500/30 text-amber-300 py-2 px-3 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 select-none text-center">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>Already Saved in Lexicon</span>
-                  </div>
-                ) : (
-                  <button 
-                    type="button"
-                    onClick={addToGlossary}
-                    className="w-full bg-accent text-bg-primary hover:opacity-95 active:scale-[0.98] py-2.5 rounded-xl text-xs font-sans font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-                  >
-                    <GraduationCap className="w-3.5 h-3.5" />
-                    Add to Lexicon
-                  </button>
-                )}
-              </div>
-            ) : (
-              <button 
-                type="button"
-                onClick={askForMeaning}
-                className="flex items-center gap-2 px-3.5 py-1.5 hover:bg-white/10 active:bg-white/20 rounded-xl transition-all group cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-accent group-hover:rotate-12 transition-transform" />
-                <span className="text-xs font-sans font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                  Ask for Meaning
-                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                </span>
-              </button>
-            )}
-            
-            {/* Arrow pointing to selection */}
-            {selectionPosition.placement === 'top' ? (
-              <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-text-primary rotate-45 border-r border-b border-white/20" />
-            ) : (
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-text-primary rotate-45 border-l border-t border-white/20" />
-            )}
           </motion.div>
         )}
       </AnimatePresence>
